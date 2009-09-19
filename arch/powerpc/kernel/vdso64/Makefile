@@ -13,7 +13,7 @@ UBSAN_SANITIZE := n
 
 ccflags-y := -shared -fno-common -fno-builtin
 ccflags-y += -nostdlib -Wl,-soname=linux-vdso64.so.1 \
-		 -Wl$(comma)--hash-style=both
+	$(call cc-ldoption, -Wl$(comma)--hash-style=both)
 asflags-y := -D__VDSO64__ -s
 
 obj-y += vdso64_wrapper.o
