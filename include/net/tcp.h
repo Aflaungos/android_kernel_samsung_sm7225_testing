@@ -877,6 +877,7 @@ struct tcp_skb_cb {
 	union {
 		struct {
 			/* There is space for up to 24 bytes */
+			__u32 in_flight;/* Bytes in flight when packet sent */
 			__u32 is_app_limited:1, /* cwnd not fully used? */
 			      unused:31;
 			/* pkts S/ACKed so far upon tx of skb, incl retrans: */
