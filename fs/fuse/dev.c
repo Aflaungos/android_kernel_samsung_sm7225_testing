@@ -62,6 +62,7 @@ static struct fuse_req *__fuse_request_alloc(unsigned npages, gfp_t flags)
 		struct page **pages = NULL;
 		struct fuse_page_desc *page_descs = NULL;
 
+		WARN_ON(npages > FUSE_MAX_MAX_PAGES);
 		if (npages > FUSE_REQ_INLINE_PAGES) {
 			pages = kzalloc(npages * (sizeof(*pages) +
 						  sizeof(*page_descs)), flags);
