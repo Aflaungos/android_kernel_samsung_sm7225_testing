@@ -2007,9 +2007,10 @@ static void rcu_gp_cleanup(void)
 
 	WRITE_ONCE(rsp->gp_activity, jiffies);
 	raw_spin_lock_irq_rcu_node(rnp);
-	gp_duration = jiffies - rsp->gp_start;
-	if (gp_duration > rsp->gp_max)
-		rsp->gp_max = gp_duration;
+	rcu_state.gp_end = jiffies;
+	gp_duration = rcu_state.gp_end - rcu_state.gp_start;
+	if (gp_duration > rcu_state.gp_max)
+		rcu_state.gp_max = gp_duration;
 
 	/*
 	 * We know the grace period is complete, but to everyone else
@@ -2702,6 +2703,8 @@ void rcu_fwd_progress_check(unsigned long j)
 			__func__, jiffies - rcu_state.gp_start);
 		show_rcu_gp_kthreads();
 	} else {
+		pr_info("%s: Last GP end %lu jiffies ago\n",
+			__func__, jiffies - rcu_state.gp_end);
 		preempt_disable();
 		rdp = this_cpu_ptr(&rcu_data);
 		rcu_check_gp_start_stall(rdp->mynode, rdp, j);
