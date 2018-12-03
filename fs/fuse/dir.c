@@ -1217,9 +1217,10 @@ static int fuse_permission(struct inode *inode, int mask)
 	if (fc->default_permissions ||
 	    ((mask & MAY_EXEC) && S_ISREG(inode->i_mode))) {
 		struct fuse_inode *fi = get_fuse_inode(inode);
+		u32 perm_mask = STATX_MODE | STATX_UID | STATX_GID;
 
-		if (time_before64(fi->i_time, get_jiffies_64()) ||
-		    test_bit(FUSE_I_ATTR_FORCE_SYNC, &fi->state)) {
+		if (perm_mask & READ_ONCE(fi->inval_mask) ||
+		    time_before64(fi->i_time, get_jiffies_64())) {
 			refreshed = true;
 
 			err = fuse_perm_getattr(inode, mask);
