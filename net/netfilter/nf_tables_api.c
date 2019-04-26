@@ -1563,8 +1563,8 @@ static struct nft_stats __percpu *nft_stats_alloc(const struct nlattr *attr)
 	struct nft_stats *stats;
 	int err;
 
-	err = nla_parse_nested(tb, NFTA_COUNTER_MAX, attr, nft_counter_policy,
-			       NULL);
+	err = nla_parse_nested_deprecated(tb, NFTA_COUNTER_MAX, attr,
+					  nft_counter_policy, NULL);
 	if (err < 0)
 		return ERR_PTR(err);
 
@@ -1669,8 +1669,9 @@ static int nft_chain_parse_hook(struct net *net,
 	lockdep_assert_held(&nft_net->commit_mutex);
 	lockdep_nfnl_nft_mutex_not_held();
 
-	err = nla_parse_nested(ha, NFTA_HOOK_MAX, nla[NFTA_CHAIN_HOOK],
-			       nft_hook_policy, NULL);
+	err = nla_parse_nested_deprecated(ha, NFTA_HOOK_MAX,
+					  nla[NFTA_CHAIN_HOOK],
+					  nft_hook_policy, NULL);
 	if (err < 0)
 		return err;
 
@@ -2267,7 +2268,8 @@ static int nf_tables_expr_parse(const struct nft_ctx *ctx,
 	struct nlattr *tb[NFTA_EXPR_MAX + 1];
 	int err;
 
-	err = nla_parse_nested(tb, NFTA_EXPR_MAX, nla, nft_expr_policy, NULL);
+	err = nla_parse_nested_deprecated(tb, NFTA_EXPR_MAX, nla,
+					  nft_expr_policy, NULL);
 	if (err < 0)
 		return err;
 
@@ -2276,8 +2278,9 @@ static int nf_tables_expr_parse(const struct nft_ctx *ctx,
 		return PTR_ERR(type);
 
 	if (tb[NFTA_EXPR_DATA]) {
-		err = nla_parse_nested(info->tb, type->maxattr,
-				       tb[NFTA_EXPR_DATA], type->policy, NULL);
+		err = nla_parse_nested_deprecated(info->tb, type->maxattr,
+						  tb[NFTA_EXPR_DATA],
+						  type->policy, NULL);
 		if (err < 0)
 			goto err1;
 	} else
@@ -3594,8 +3597,8 @@ static int nf_tables_set_desc_parse(const struct nft_ctx *ctx,
 	struct nlattr *da[NFTA_SET_DESC_MAX + 1];
 	int err;
 
-	err = nla_parse_nested(da, NFTA_SET_DESC_MAX, nla,
-			       nft_set_desc_policy, NULL);
+	err = nla_parse_nested_deprecated(da, NFTA_SET_DESC_MAX, nla,
+					  nft_set_desc_policy, NULL);
 	if (err < 0)
 		return err;
 
@@ -4453,8 +4456,8 @@ static int nft_get_set_elem(struct nft_ctx *ctx, struct nft_set *set,
 	void *priv;
 	int err;
 
-	err = nla_parse_nested(nla, NFTA_SET_ELEM_MAX, attr,
-			       nft_set_elem_policy, NULL);
+	err = nla_parse_nested_deprecated(nla, NFTA_SET_ELEM_MAX, attr,
+					  nft_set_elem_policy, NULL);
 	if (err < 0)
 		return err;
 
@@ -4678,8 +4681,8 @@ static int nft_add_set_elem(struct nft_ctx *ctx, struct nft_set *set,
 	u8 ulen;
 	int err;
 
-	err = nla_parse_nested(nla, NFTA_SET_ELEM_MAX, attr,
-			       nft_set_elem_policy, NULL);
+	err = nla_parse_nested_deprecated(nla, NFTA_SET_ELEM_MAX, attr,
+					  nft_set_elem_policy, NULL);
 	if (err < 0)
 		return err;
 
@@ -4991,8 +4994,8 @@ static int nft_del_setelem(struct nft_ctx *ctx, struct nft_set *set,
 	void *priv;
 	int err;
 
-	err = nla_parse_nested(nla, NFTA_SET_ELEM_MAX, attr,
-			       nft_set_elem_policy, NULL);
+	err = nla_parse_nested_deprecated(nla, NFTA_SET_ELEM_MAX, attr,
+					  nft_set_elem_policy, NULL);
 	if (err < 0)
 		return err;
 
@@ -5220,8 +5223,8 @@ static struct nft_object *nft_obj_init(const struct nft_ctx *ctx,
 		goto err1;
 
 	if (attr) {
-		err = nla_parse_nested(tb, type->maxattr, attr, type->policy,
-				       NULL);
+		err = nla_parse_nested_deprecated(tb, type->maxattr, attr,
+						  type->policy, NULL);
 		if (err < 0)
 			goto err2;
 	} else {
@@ -5811,8 +5814,8 @@ static int nf_tables_flowtable_parse_hook(const struct nft_ctx *ctx,
 	int hooknum, priority;
 	int err, n = 0, i;
 
-	err = nla_parse_nested(tb, NFTA_FLOWTABLE_HOOK_MAX, attr,
-			       nft_flowtable_hook_policy, NULL);
+	err = nla_parse_nested_deprecated(tb, NFTA_FLOWTABLE_HOOK_MAX, attr,
+					  nft_flowtable_hook_policy, NULL);
 	if (err < 0)
 		return err;
 
@@ -7622,8 +7625,8 @@ static int nft_verdict_init(const struct nft_ctx *ctx, struct nft_data *data,
 	struct nft_chain *chain;
 	int err;
 
-	err = nla_parse_nested(tb, NFTA_VERDICT_MAX, nla, nft_verdict_policy,
-			       NULL);
+	err = nla_parse_nested_deprecated(tb, NFTA_VERDICT_MAX, nla,
+					  nft_verdict_policy, NULL);
 	if (err < 0)
 		return err;
 
@@ -7756,7 +7759,8 @@ int nft_data_init(const struct nft_ctx *ctx,
 	struct nlattr *tb[NFTA_DATA_MAX + 1];
 	int err;
 
-	err = nla_parse_nested(tb, NFTA_DATA_MAX, nla, nft_data_policy, NULL);
+	err = nla_parse_nested_deprecated(tb, NFTA_DATA_MAX, nla,
+					  nft_data_policy, NULL);
 	if (err < 0)
 		return err;
 
