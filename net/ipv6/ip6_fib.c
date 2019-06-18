@@ -397,7 +397,6 @@ int call_fib6_multipath_entry_notifiers(struct net *net,
 		.info.extack = extack,
 		.rt = rt,
 		.nsiblings = nsiblings,
-		.multipath_rt = true,
 	};
 
 	rt->fib6_table->fib_seq++;
@@ -1131,11 +1130,13 @@ next_iter:
 add:
 		nlflags |= NLM_F_CREATE;
 
-		err = call_fib6_entry_notifiers(info->nl_net,
-						FIB_EVENT_ENTRY_ADD,
-						rt, extack);
-		if (err)
-			return err;
+		if (!info->skip_notify_kernel) {
+			err = call_fib6_entry_notifiers(info->nl_net,
+							FIB_EVENT_ENTRY_ADD,
+							rt, extack);
+			if (err)
+				return err;
+		}
 
 		rcu_assign_pointer(rt->fib6_next, iter);
 		fib6_info_hold(rt);
@@ -1160,11 +1161,13 @@ add:
 			return -ENOENT;
 		}
 
-		err = call_fib6_entry_notifiers(info->nl_net,
-						FIB_EVENT_ENTRY_REPLACE,
-						rt, extack);
-		if (err)
-			return err;
+		if (!info->skip_notify_kernel) {
+			err = call_fib6_entry_notifiers(info->nl_net,
+							FIB_EVENT_ENTRY_REPLACE,
+							rt, extack);
+			if (err)
+				return err;
+		}
 
 		fib6_info_hold(rt);
 		rcu_assign_pointer(rt->fib6_node, fn);
@@ -1846,9 +1849,11 @@ static void fib6_del_route(struct fib6_table *table, struct fib6_node *fn,
 
 	fib6_purge_rt(rt, fn, net);
 
-	call_fib6_entry_notifiers(net, FIB_EVENT_ENTRY_DEL, rt, NULL);
+	if (!info->skip_notify_kernel)
+		call_fib6_entry_notifiers(net, FIB_EVENT_ENTRY_DEL, rt, NULL);
 	if (!info->skip_notify)
 		inet6_rt_notify(RTM_DELROUTE, rt, info, 0);
+
 	fib6_info_release(rt);
 }
 
