@@ -38,6 +38,9 @@ as-instr = $(success,printf "%b\n" "$(1)" | $(CC) $(CLANG_FLAGS) -c -x assembler
 $(error-if,$(failure,command -v $(CC)),compiler '$(CC)' not found)
 $(error-if,$(failure,command -v $(LD)),linker '$(LD)' not found)
 
+# Fail if the linker is gold as it's not capable of linking the kernel proper
+$(error-if,$(success, $(LD) -v | grep -q gold), gold linker '$(LD)' not supported)
+
 # gcc version including patch level
 gcc-version := $(shell,$(srctree)/scripts/gcc-version.sh $(CC))
 
