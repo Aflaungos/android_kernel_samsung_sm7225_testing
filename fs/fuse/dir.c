@@ -24,10 +24,33 @@ static void fuse_advise_use_readdirplus(struct inode *dir)
 	set_bit(FUSE_I_ADVISE_RDPLUS, &fi->state);
 }
 
+#if BITS_PER_LONG >= 64
+static inline void __fuse_dentry_settime(struct dentry *entry, u64 time)
+{
+	entry->d_fsdata = (void *) time;
+}
+
+static inline u64 fuse_dentry_time(const struct dentry *entry)
+{
+	return (u64)entry->d_fsdata;
+}
+
+#else
 union fuse_dentry {
 	u64 time;
 	struct rcu_head rcu;
 };
+
+static inline void __fuse_dentry_settime(struct dentry *dentry, u64 time)
+{
+	((union fuse_dentry *) dentry->d_fsdata)->time = time;
+}
+
+static inline u64 fuse_dentry_time(const struct dentry *entry)
+{
+	return ((union fuse_dentry *) entry->d_fsdata)->time;
+}
+#endif
 
 static void fuse_dentry_settime(struct dentry *dentry, u64 time)
 {
@@ -47,12 +70,7 @@ static void fuse_dentry_settime(struct dentry *dentry, u64 time)
 		spin_unlock(&dentry->d_lock);
 	}
 
-	((union fuse_dentry *) dentry->d_fsdata)->time = time;
-}
-
-static inline u64 fuse_dentry_time(const struct dentry *entry)
-{
-	return ((union fuse_dentry *) entry->d_fsdata)->time;
+	__fuse_dentry_settime(dentry, time);
 }
 
 /*
@@ -259,55 +277,7 @@ invalid:
 	goto out;
 }
 
-/*
- * Get the canonical path. Since we must translate to a path, this must be done
- * in the context of the userspace daemon, however, the userspace daemon cannot
- * look up paths on its own. Instead, we handle the lookup as a special case
- * inside of the write request.
- */
-static void fuse_dentry_canonical_path(const struct path *path, struct path *canonical_path) {
-	struct inode *inode = path->dentry->d_inode;
-	struct fuse_conn *fc = get_fuse_conn(inode);
-	struct fuse_req *req;
-	int err;
-	char *path_name;
-
-	req = fuse_get_req(fc, 1);
-	err = PTR_ERR(req);
-	if (IS_ERR(req))
-		goto default_path;
-
-	path_name = (char*)__get_free_page(GFP_KERNEL);
-	if (!path_name) {
-		fuse_put_request(fc, req);
-		goto default_path;
-	}
-
-	req->in.h.opcode = FUSE_CANONICAL_PATH;
-	req->in.h.nodeid = get_node_id(inode);
-	req->in.numargs = 0;
-	req->out.numargs = 1;
-	req->out.args[0].size = PATH_MAX;
-	req->out.args[0].value = path_name;
-	req->canonical_path = canonical_path;
-	req->out.argvar = 1;
-	fuse_request_send(fc, req);
-	err = req->out.h.error;
-	fuse_put_request(fc, req);
-	free_page((unsigned long)path_name);
-	if (!err)
-		return;
-default_path:
-	canonical_path->dentry = path->dentry;
-	canonical_path->mnt = path->mnt;
-	path_get(canonical_path);
-}
-
-static int invalid_nodeid(u64 nodeid)
-{
-	return !nodeid || nodeid == FUSE_ROOT_ID;
-}
-
+#if BITS_PER_LONG < 64
 static int fuse_dentry_init(struct dentry *dentry)
 {
 	dentry->d_fsdata = kzalloc(sizeof(union fuse_dentry), GFP_KERNEL);
@@ -320,6 +290,7 @@ static void fuse_dentry_release(struct dentry *dentry)
 
 	kfree_rcu(fd, rcu);
 }
+#endif
 
 /* @fs.sec -- 63ff82f9216c9b6d003e7d45699d54b833344719 -- */
 static int fuse_dentry_delete(const struct dentry *dentry)
@@ -344,14 +315,18 @@ static int fuse_dentry_delete(const struct dentry *dentry)
 const struct dentry_operations fuse_dentry_operations = {
 	.d_revalidate	= fuse_dentry_revalidate,
 	.d_delete	= fuse_dentry_delete,
+#if BITS_PER_LONG < 64
 	.d_init		= fuse_dentry_init,
 	.d_release	= fuse_dentry_release,
+#endif
 	.d_canonical_path = fuse_dentry_canonical_path,
 };
 
 const struct dentry_operations fuse_root_dentry_operations = {
+#if BITS_PER_LONG < 64
 	.d_init		= fuse_dentry_init,
 	.d_release	= fuse_dentry_release,
+#endif
 	.d_canonical_path = fuse_dentry_canonical_path,
 };
 
