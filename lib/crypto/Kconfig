@@ -99,13 +99,6 @@ config CRYPTO_LIB_POLY1305
 	  by either the generic implementation or an arch-specific one, if one
 	  is available and enabled.
 
-config CRYPTO_LIB_CHACHA20POLY1305
-	tristate
-	depends on CRYPTO_ARCH_HAVE_LIB_CHACHA || !CRYPTO_ARCH_HAVE_LIB_CHACHA
-	depends on CRYPTO_ARCH_HAVE_LIB_POLY1305 || !CRYPTO_ARCH_HAVE_LIB_POLY1305
-	select CRYPTO_LIB_CHACHA
-	select CRYPTO_LIB_POLY1305
-
 config CRYPTO_ARCH_HAVE_LIB_CURVE25519
 	tristate
 	help
@@ -130,3 +123,10 @@ config CRYPTO_LIB_CURVE25519
 	  Enable the Curve25519 library interface. This interface may be
 	  fulfilled by either the generic implementation or an arch-specific
 	  one, if one is available and enabled.
+
+config CRYPTO_LIB_CHACHA20POLY1305
+	tristate "ChaCha20-Poly1305 AEAD support (8-byte nonce library version)"
+	depends on CRYPTO_ARCH_HAVE_LIB_CHACHA || !CRYPTO_ARCH_HAVE_LIB_CHACHA
+	depends on CRYPTO_ARCH_HAVE_LIB_POLY1305 || !CRYPTO_ARCH_HAVE_LIB_POLY1305
+	select CRYPTO_LIB_CHACHA
+	select CRYPTO_LIB_POLY1305
