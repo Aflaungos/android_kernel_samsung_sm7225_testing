@@ -255,6 +255,11 @@ config CRYPTO_GLUE_HELPER_X86
 config CRYPTO_ENGINE
 	tristate
 
+config CRYPTO_CURVE25519
+        tristate "Curve25519 algorithm"
+        select CRYPTO_KPP
+        select CRYPTO_LIB_CURVE25519_GENERIC
+
 config CRYPTO_CURVE25519_X86
 	tristate "x86_64 accelerated Curve25519 scalar multiplication library"
 	depends on X86 && 64BIT
