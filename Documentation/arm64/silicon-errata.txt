@@ -62,6 +62,7 @@ stable kernels.
 | ARM            | Cortex-A55      | #1024718        | ARM64_ERRATUM_1024718       |
 | ARM            | Cortex-A76      | #1463225        | ARM64_ERRATUM_1463225       |
 | ARM            | Cortex-A76      | #3324349        | ARM64_ERRATUM_3194386       |
+| ARM            | Cortex-A77      | #1542418        | ARM64_ERRATUM_1542418       |
 | ARM            | Cortex-A77      | #3324348        | ARM64_ERRATUM_3194386       |
 | ARM            | Cortex-A78      | #3324344        | ARM64_ERRATUM_3194386       |
 | ARM            | Cortex-A78C     | #3324346,3324347| ARM64_ERRATUM_3194386       |
