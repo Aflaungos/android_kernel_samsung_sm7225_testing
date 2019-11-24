@@ -24,9 +24,15 @@ static unsigned int max_boost_freq_little __read_mostly =
 	CONFIG_MAX_BOOST_FREQ_LP;
 static unsigned int max_boost_freq_big __read_mostly =
 	CONFIG_MAX_BOOST_FREQ_PERF;
+static unsigned int cpu_freq_min_little __read_mostly =
+	CONFIG_CPU_FREQ_MIN_LP;
+static unsigned int cpu_freq_min_big __read_mostly =
+	CONFIG_CPU_FREQ_MIN_PERF;
 
 module_param(max_boost_freq_little, uint, 0644);
 module_param(max_boost_freq_big, uint, 0644);
+module_param(cpu_freq_min_little, uint, 0644);
+module_param(cpu_freq_min_big, uint, 0644);
 
 enum {
 	SCREEN_OFF,
@@ -61,6 +67,21 @@ static unsigned int get_max_boost_freq(struct cpufreq_policy *policy)
 
 	return min(freq, policy->max);
 }
+
+static unsigned int get_min_freq(struct cpufreq_policy *policy)
+{
+	unsigned int freq;
+
+	if (cpumask_test_cpu(policy->cpu, cpu_lp_mask))
+		freq = cpu_freq_min_little;
+	else if (cpumask_test_cpu(policy->cpu, cpu_perf_mask))
+		freq = cpu_freq_min_big;
+	else
+		freq = cpu_freq_min_prime;
+
+	return max(freq, policy->cpuinfo.min_freq);
+}
+
 
 static void update_online_cpu_policy(void)
 {
@@ -155,7 +176,7 @@ static int cpu_notifier_cb(struct notifier_block *nb, unsigned long action,
 
 	/* Unboost when the screen is off */
 	if (test_bit(SCREEN_OFF, &b->state)) {
-		policy->min = policy->cpuinfo.min_freq;
+		policy->min = get_min_freq(policy);
 		return NOTIFY_OK;
 	}
 
