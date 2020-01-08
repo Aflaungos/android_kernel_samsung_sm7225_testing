@@ -4013,6 +4013,17 @@ struct find_best_target_env {
 	bool strict_max;
 };
 
+static inline bool prefer_spread_on_idle(int cpu)
+{
+	if (likely(!sysctl_sched_prefer_spread))
+		return false;
+
+	if (is_min_capacity_cpu(cpu))
+		return sysctl_sched_prefer_spread >= 1;
+
+	return sysctl_sched_prefer_spread > 1;
+}
+
 static inline void adjust_cpus_for_packing(struct task_struct *p,
 			int *target_cpu, int *best_idle_cpu,
 			int shallowest_idle_cstate,
@@ -9980,19 +9991,10 @@ static bool update_sd_pick_busiest(struct lb_env *env,
 	if (sgs->group_type < busiest->group_type)
 		return false;
 
-	/*
-	 * This sg and busiest are classified as same. when prefer_spread
-	 * is true, we want to maximize the chance of pulling taks, so
-	 * prefer to pick sg with more runnable tasks and break the ties
-	 * with utilization.
-	 */
-	if (env->prefer_spread) {
-		if (sgs->sum_nr_running < busiest->sum_nr_running)
-			return false;
-		if (sgs->sum_nr_running > busiest->sum_nr_running)
-			return true;
-		return sgs->group_util > busiest->group_util;
-	}
+	if (env->prefer_spread && env->idle != CPU_NOT_IDLE &&
+		(sgs->sum_nr_running > busiest->sum_nr_running) &&
+		(sgs->group_util > busiest->group_util))
+		return true;
 
 	if (sgs->avg_load <= busiest->avg_load)
 		return false;
@@ -10498,6 +10500,15 @@ static inline void calculate_imbalance(struct lb_env *env, struct sd_lb_stats *s
 
 		return fix_small_imbalance(env, sds);
 	}
+
+	/*
+	 * If we couldn't find any imbalance, then boost the imbalance
+	 * with the group util.
+	 */
+	if (env->prefer_spread && !env->imbalance &&
+		env->idle != CPU_NOT_IDLE &&
+		busiest->sum_nr_running > busiest->group_weight)
+		env->imbalance = busiest->group_util;
 }
 
 /******* find_busiest_group() helpers end here *********************/
