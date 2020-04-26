@@ -660,6 +660,8 @@ union bpf_attr {
  * u64 bpf_ktime_get_ns(void)
  * 	Description
  * 		Return the time elapsed since system boot, in nanoseconds.
+ * 		Does not include time the system was suspended.
+ * 		See: clock_gettime(CLOCK_MONOTONIC)
  * 	Return
  * 		Current *ktime*.
  *
