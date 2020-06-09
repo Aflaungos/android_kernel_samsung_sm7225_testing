@@ -97,7 +97,7 @@
 #include <linux/scs.h>
 #include <linux/task_integrity.h>
 
-#include <asm/pgtable.h>
+#include <linux/pgtable.h>
 #include <asm/pgalloc.h>
 #include <linux/uaccess.h>
 #include <asm/mmu_context.h>

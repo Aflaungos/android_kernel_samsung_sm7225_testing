@@ -78,7 +78,7 @@
 #include <linux/uaccess.h>
 #include <asm/tlb.h>
 #include <asm/tlbflush.h>
-#include <asm/pgtable.h>
+#include <linux/pgtable.h>
 
 #ifdef CONFIG_PAGE_BOOST_RECORDING
 #include <linux/io_record.h>
