@@ -815,7 +815,7 @@ static void send_file_work(struct work_struct *data)
 		dev->xfer_result = -EINVAL;
 		return;
 	}
-	
+
 	mtp_log("(%lld %lld)\n", offset, count);
 
 	if (dev->xfer_send_header) {
@@ -934,7 +934,7 @@ static void receive_file_work(struct work_struct *data)
 		dev->xfer_result = -EINVAL;
 		return;
 	}
-	
+
 	mtp_log("(%lld)\n", count);
 	if (!IS_ALIGNED(count, dev->ep_out->maxpacket))
 		mtp_log("- count(%lld) not multiple of mtu(%d)\n",
