@@ -170,8 +170,13 @@ struct kgsl_drawobj_sync_event {
 	struct dma_fence *fence;
 	/** @cb: Callback struct for KGSL_CMD_SYNCPOINT_TYPE_TIMELINE */
 	struct dma_fence_cb cb;
+<<<<<<< HEAD
 	/** @work : work_struct for KGSL_CMD_SYNCPOINT_TYPE_TIMELINE */
 	struct work_struct work;
+=======
+	/** @work : irq worker for KGSL_CMD_SYNCPOINT_TYPE_TIMELINE */
+	struct irq_work work;
+>>>>>>> d01a2bda0399 (msm: kgsl: Add software timelines)
 };
 
 /**
