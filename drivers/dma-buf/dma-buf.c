@@ -111,6 +111,8 @@ static void dma_buf_release(struct dentry *dentry)
 	int dtor_ret = 0;
 
 	dmabuf = dentry->d_fsdata;
+	if (unlikely(!dmabuf))
+		return;
 
 	spin_lock(&dentry->d_lock);
 	dentry->d_fsdata = NULL;
