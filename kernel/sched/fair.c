@@ -3733,6 +3733,8 @@ static inline void update_load_avg(struct cfs_rq *cfs_rq, struct sched_entity *s
 
 	} else if (decayed && (flags & UPDATE_TG))
 		update_tg_load_avg(cfs_rq);
+
+	cfs_rq_util_change(cfs_rq, 0);
 }
 
 #ifndef CONFIG_64BIT
