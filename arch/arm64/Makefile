@@ -57,6 +57,17 @@ KBUILD_AFLAGS	+= $(lseinstr) $(brokengasinst) $(compat_vdso)
 KBUILD_CFLAGS	+= $(call cc-option,-mabi=lp64)
 KBUILD_AFLAGS	+= $(call cc-option,-mabi=lp64)
 
+ifeq ($(cc-name),clang)
+KBUILD_CFLAGS   += -mcpu=cortex-a55
+KBUILD_AFLAGS   += -mcpu=cortex-a55
+ifeq ($(CONFIG_LD_IS_LLD), y)
+KBUILD_LDFLAGS  += -mllvm -mcpu=cortex-a55
+endif
+else
+KBUILD_CFLAGS   += -mcpu=cortex-a77.cortex-a55
+KBUILD_AFLAGS   += -mcpu=cortex-a77.cortex-a55
+endif
+
 ifeq ($(CONFIG_SHADOW_CALL_STACK), y)
 KBUILD_CFLAGS	+= -ffixed-x18
 endif
