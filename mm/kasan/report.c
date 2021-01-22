@@ -28,6 +28,7 @@
 #include <linux/types.h>
 #include <linux/kasan.h>
 #include <linux/module.h>
+#include <trace/events/error_report.h>
 
 #include <asm/sections.h>
 
@@ -85,9 +86,11 @@ static void start_report(unsigned long *flags)
 	spin_lock_irqsave(&report_lock, *flags);
 	pr_err("==================================================================\n");
 }
+
 int kasan_panic = true;
-static void end_report(unsigned long *flags)
+static void end_report(unsigned long *flags, unsigned long addr)
 {
+	trace_error_report_end(ERROR_DETECTOR_KASAN, addr);
 	pr_err("==================================================================\n");
 	add_taint(TAINT_BAD_PAGE, LOCKDEP_NOW_UNRELIABLE);
 	spin_unlock_irqrestore(&report_lock, *flags);
@@ -277,7 +280,7 @@ void kasan_report_invalid_free(void *object, unsigned long ip)
 	print_address_description(object);
 	pr_err("\n");
 	print_shadow_for_address(object);
-	end_report(&flags);
+	end_report(&flags, (unsigned long)object);
 }
 
 void __kasan_report(unsigned long addr, size_t size, bool is_write, unsigned long ip)
@@ -319,5 +322,5 @@ void __kasan_report(unsigned long addr, size_t size, bool is_write, unsigned lon
 		dump_stack();
 	}
 
-	end_report(&flags);
+	end_report(&flags, addr);
 }
