@@ -1,9 +1,4 @@
-#
-# Makefile for CH101 proximity sensors
-#
-# To include ch101 to kernel build add next line to drivers/iio/proximity/Makefile
-# obj-y += inv_ch101/
-#
+# SPDX-License-Identifier: GPL-2.0-only
 
 obj-$(CONFIG_CH101)	+= ch101-core.o
 ch101-core-objs		+= ch101_core.o

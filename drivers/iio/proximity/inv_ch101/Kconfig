@@ -1,9 +1,4 @@
-#
-# ch101 drivers for Invensense CH-101 device
-#
-# To include ch101 to kernel build add next line to drivers/iio/proximity/Kconfig
-# source "drivers/iio/proximity/inv_ch101/Kconfig"
-#
+# SPDX-License-Identifier: GPL-2.0-only
 
 config CH101
 	tristate
