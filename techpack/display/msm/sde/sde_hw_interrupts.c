@@ -951,9 +951,6 @@ static u32 sde_hw_intr_get_interrupt_status(struct sde_hw_intr *intr,
 		SDE_REG_WRITE(&intr->hw, intr->sde_irq_tbl[reg_idx].clr_off,
 				intr_status);
 
-	/* ensure register writes go through */
-	wmb();
-
 	spin_unlock_irqrestore(&intr->irq_lock, irq_flags);
 
 	return intr_status;
