@@ -276,6 +276,7 @@ struct binder_frozen_status_info {
 	__u32 sync_recv;
 	__u32 async_recv;
 };
+
 #define BINDER_WRITE_READ		_IOWR('b', 1, struct binder_write_read)
 #define BINDER_SET_IDLE_TIMEOUT		_IOW('b', 3, __s64)
 #define BINDER_SET_MAX_THREADS		_IOW('b', 5, __u32)
@@ -474,6 +475,7 @@ enum binder_driver_return_protocol {
 	 * The the last transaction (either a bcTRANSACTION or
 	 * a bcATTEMPT_ACQUIRE) failed (e.g. out of memory).  No parameters.
 	 */
+
 	BR_FROZEN_REPLY = _IO('r', 18),
 	/*
 	 * The target of the last transaction (either a bcTRANSACTION or

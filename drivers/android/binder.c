@@ -489,6 +489,8 @@ struct binder_priority {
  *                        bit 1: new pending sync transaction during freezing
  *                        (protected by @inner_lock)
  * @async_recv:           process received async transactions since last frozen
+ * @is_frozen:            process is frozen and unable to service
+ *                        binder transactions
  *                        (protected by @inner_lock)
  * @freeze_wait:          waitqueue of processes waiting for all outstanding
  *                        transactions to be processed
@@ -2892,8 +2894,9 @@ static int binder_fixup_parent(struct binder_transaction *t,
  * If the @thread parameter is not NULL, the transaction is always queued
  * to the waitlist of that specific thread.
  *
- * Return:	true if the transactions was successfully queued
- *		false if the target process or thread is dead
+ * Return:	0 if the transaction was successfully queued
+ *		BR_DEAD_REPLY if the target process or thread is dead
+ *		BR_FROZEN_REPLY if the target process or thread is frozen
  */
 static int binder_proc_transaction(struct binder_transaction *t,
 				    struct binder_proc *proc,
@@ -2924,7 +2927,7 @@ static int binder_proc_transaction(struct binder_transaction *t,
 		proc->sync_recv |= !oneway;
 		proc->async_recv |= oneway;
 	}
-	if ((proc->is_frozen && !oneway) || proc->is_dead || 
+	if ((proc->is_frozen && !oneway) || proc->is_dead ||
 			(thread && thread->is_dead)) {
 		binder_inner_proc_unlock(proc);
 		binder_node_unlock(node);
@@ -3667,8 +3670,9 @@ retry_lowmem:
 	if (reply) {
 		binder_enqueue_thread_work(thread, tcomplete);
 		binder_inner_proc_lock(target_proc);
-		if (target_thread->is_dead) {
-			return_error = BR_DEAD_REPLY;
+		if (target_thread->is_dead || target_proc->is_frozen) {
+			return_error = target_thread->is_dead ?
+				BR_DEAD_REPLY : BR_FROZEN_REPLY;
 			binder_inner_proc_unlock(target_proc);
 			goto err_dead_proc_or_thread;
 		}
@@ -3696,8 +3700,8 @@ retry_lowmem:
 		t->from_parent = thread->transaction_stack;
 		thread->transaction_stack = t;
 		binder_inner_proc_unlock(proc);
-		return_error =
-			binder_proc_transaction(t, target_proc, target_thread);
+		return_error = binder_proc_transaction(t,
+				target_proc, target_thread);
 		if (return_error) {
 			binder_inner_proc_lock(proc);
 			binder_pop_transaction_ilocked(thread, t);
@@ -5161,6 +5165,7 @@ static bool binder_txns_pending_ilocked(struct binder_proc *proc)
 	}
 	return false;
 }
+
 static int binder_ioctl_freeze(struct binder_freeze_info *info,
 			       struct binder_proc *target_proc)
 {
@@ -5237,6 +5242,7 @@ static int binder_ioctl_get_freezer_info(struct binder_frozen_status_info *info)
 
 	return 0;
 }
+
 static long binder_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 {
 	int ret;
@@ -5355,8 +5361,7 @@ static long binder_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		}
 		break;
 	}
-    // ++ Google Freezer
-    case BINDER_FREEZE: {
+	case BINDER_FREEZE: {
 		struct binder_freeze_info info;
 		struct binder_proc **target_procs = NULL, *target_proc;
 		int target_procs_count = 0, i = 0;
