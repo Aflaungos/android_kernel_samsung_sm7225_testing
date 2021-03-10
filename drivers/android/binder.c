@@ -492,6 +492,10 @@ struct binder_priority {
  * @is_frozen:            process is frozen and unable to service
  *                        binder transactions
  *                        (protected by @inner_lock)
+ * @sync_recv:            process received sync transactions since last frozen
+ *                        (protected by @inner_lock)
+ * @async_recv:           process received async transactions since last frozen
+ *                        (protected by @inner_lock)
  * @freeze_wait:          waitqueue of processes waiting for all outstanding
  *                        transactions to be processed
  *                        (protected by @inner_lock)
@@ -2922,6 +2926,10 @@ static int binder_proc_transaction(struct binder_transaction *t,
 	}
 
 	binder_inner_proc_lock(proc);
+	if (proc->is_frozen) {
+		proc->sync_recv |= !oneway;
+		proc->async_recv |= oneway;
+	}
 
 	if (proc->is_frozen) {
 		proc->sync_recv |= !oneway;
@@ -5423,6 +5431,7 @@ static long binder_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 	}
 	case BINDER_GET_FROZEN_INFO: {
 		struct binder_frozen_status_info info;
+
 		if (copy_from_user(&info, ubuf, sizeof(info))) {
 			ret = -EFAULT;
 			goto err;
@@ -5430,6 +5439,7 @@ static long binder_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		ret = binder_ioctl_get_freezer_info(&info);
 		if (ret < 0)
 			goto err;
+
 		if (copy_to_user(ubuf, &info, sizeof(info))) {
 			ret = -EFAULT;
 			goto err;
