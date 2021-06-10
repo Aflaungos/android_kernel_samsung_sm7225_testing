@@ -382,7 +382,7 @@ void kgsl_sync_timeline_detach(struct kgsl_sync_timeline *ktimeline)
 	kgsl_context_put(context);
 }
 
-static void kgsl_sync_timeline_kref_destroy(struct kref *kref)
+static void kgsl_sync_timeline_destroy(struct kref *kref)
 {
 	struct kgsl_sync_timeline *ktimeline =
 		container_of(kref, struct kgsl_sync_timeline, kref);
@@ -394,15 +394,7 @@ static void kgsl_sync_timeline_kref_destroy(struct kref *kref)
 void kgsl_sync_timeline_put(struct kgsl_sync_timeline *ktimeline)
 {
 	if (ktimeline)
-		kref_put(&ktimeline->kref, kgsl_sync_timeline_kref_destroy);
-}
-
-void kgsl_sync_timeline_destroy(struct kgsl_context *context)
-{
-	struct kgsl_sync_timeline *ktimeline = context->ktimeline;
-
-	if (ktimeline)
-		kref_put(&ktimeline->kref, kgsl_sync_timeline_kref_destroy);
+		kref_put(&ktimeline->kref, kgsl_sync_timeline_destroy);
 }
 
 static const struct dma_fence_ops kgsl_sync_fence_ops = {
