@@ -26,6 +26,10 @@ config CLANG_VERSION
 	int
 	default $(shell,$(srctree)/scripts/clang-version.sh $(CC))
 
+config LLD_VERSION
+        int
+        default $(shell,$(srctree)/scripts/lld-version.sh $(LD))
+
 choice
     prompt "Fake uname kernel version"
     default FAKE_UNAME_NONE
