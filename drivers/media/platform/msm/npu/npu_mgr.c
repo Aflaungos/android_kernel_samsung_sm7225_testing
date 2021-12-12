@@ -282,7 +282,6 @@ int load_fw(struct npu_device *npu_dev)
 static void complete_pending_commands(struct npu_host_ctx *host_ctx)
 {
 	struct npu_network *network = NULL;
-	struct npu_kevent kevt;
 	struct npu_network_cmd *cmd;
 	struct npu_misc_cmd *misc_cmd;
 	int i;
@@ -293,26 +292,10 @@ static void complete_pending_commands(struct npu_host_ctx *host_ctx)
 		if (!network->is_valid || !network->fw_error)
 			continue;
 
-		if (network->is_async) {
-			NPU_DBG("async cmd, queue ssr event\n");
-			kevt.evt.type = MSM_NPU_EVENT_TYPE_SSR;
-			kevt.evt.u.ssr.network_hdl =
-				network->network_hdl;
-			if (npu_queue_event(network->client, &kevt))
-				NPU_ERR("queue npu event failed\n");
-
-			while (!list_empty(&network->cmd_list)) {
-				cmd = list_first_entry(&network->cmd_list,
-					struct npu_network_cmd, list);
-				npu_dequeue_network_cmd(network, cmd);
-				npu_free_network_cmd(host_ctx, cmd);
-			}
-		} else {
-			list_for_each_entry(cmd, &network->cmd_list, list) {
-				NPU_INFO("complete network %llx trans_id %d\n",
-					network->id, cmd->trans_id);
-				complete(&cmd->cmd_done);
-			}
+		list_for_each_entry(cmd, &network->cmd_list, list) {
+			NPU_INFO("complete network %llx trans_id %d\n",
+				network->id, cmd->trans_id);
+			complete(&cmd->cmd_done);
 		}
 	}
 
@@ -1642,7 +1625,6 @@ static int app_msg_proc(struct npu_host_ctx *host_ctx, uint32_t *msg)
 	struct npu_misc_cmd *misc_cmd = NULL;
 	int need_ctx_switch = 0;
 
-	memset(&kevt, 0, sizeof(kevt));
 	msg_id = msg[1];
 	switch (msg_id) {
 	case NPU_IPC_MSG_EXECUTE_DONE:
