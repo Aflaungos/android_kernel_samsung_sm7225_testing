@@ -13,7 +13,7 @@ obj-$(CONFIG_CRYPTO_FIPS) += fips140_test.o
 obj-$(CONFIG_CRYPTO_FIPS) += fips140_test_tv.o
 
 obj-$(CONFIG_CRYPTO) += crypto.o
-crypto-y := api.o cipher.o compress.o memneq.o
+crypto-y := api.o cipher.o compress.o
 
 obj-$(CONFIG_CRYPTO_WORKQUEUE) += crypto_wq.o
 
