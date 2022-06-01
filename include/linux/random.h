@@ -21,31 +21,14 @@ struct random_ready_callback {
 extern void add_device_randomness(const void *, unsigned int);
 extern void add_bootloader_randomness(const void *, unsigned int);
 
-#if defined(CONFIG_GCC_PLUGIN_LATENT_ENTROPY) && !defined(__CHECKER__)
 static inline void add_latent_entropy(void)
 {
-	add_device_randomness((const void *)&latent_entropy,
-			      sizeof(latent_entropy));
-}
+#if defined(LATENT_ENTROPY_PLUGIN) && !defined(__CHECKER__)
+	add_device_randomness((const void *)&latent_entropy, sizeof(latent_entropy));
 #else
-static inline void add_latent_entropy(void) {}
+	add_device_randomness(NULL, 0);
 #endif
-
-extern void add_input_randomness(unsigned int type, unsigned int code,
-				 unsigned int value) __latent_entropy;
-extern void add_interrupt_randomness(int irq, int irq_flags) __latent_entropy;
-
-extern void get_random_bytes(void *buf, int nbytes);
-extern int wait_for_random_bytes(void);
-extern int __init rand_initialize(void);
-extern bool rng_is_initialized(void);
-extern int add_random_ready_callback(struct random_ready_callback *rdy);
-extern void del_random_ready_callback(struct random_ready_callback *rdy);
-extern int __must_check get_random_bytes_arch(void *buf, int nbytes);
-
-#ifndef MODULE
-extern const struct file_operations random_fops, urandom_fops;
-#endif
+}
 
 u32 get_random_u32(void);
 u64 get_random_u64(void);
