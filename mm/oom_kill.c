@@ -629,7 +629,6 @@ void dump_tasks(struct mem_cgroup *memcg, const nodemask_t *nodemask)
 			heaviest_comm, heaviest_pid, K(heaviest_rss_sum),
 			K(total_rss_sum), K(totalram_pages));
 #undef K
-	ion_account_print_usage();
 }
 
 static void dump_header(struct oom_control *oc, struct task_struct *p)
