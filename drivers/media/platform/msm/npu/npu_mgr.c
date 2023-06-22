@@ -2600,6 +2600,8 @@ int32_t npu_host_unload_network(struct npu_client *client,
 		goto free_network;
 	}
 
+	network->is_unloading = true;
+
 	NPU_DBG("Unload network %lld\n", network->id);
 	/* prepare IPC packet for UNLOAD */
 	unload_packet.header.cmd_type = NPU_IPC_CMD_UNLOAD;
