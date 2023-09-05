@@ -11944,8 +11944,7 @@ static void nohz_balancer_kick(struct rq *rq)
 	 * happens from the tickpath.
 	 */
 	if (sched_energy_enabled()) {
-		if (rq->nr_running >= 2 && (cpu_overutilized(cpu) ||
-			prefer_spread_on_idle(cpu, false)))
+		if (rq->nr_running >= 2 && (cpu_overutilized(cpu)))
 			flags = NOHZ_KICK_MASK;
 		goto out;
 	}
