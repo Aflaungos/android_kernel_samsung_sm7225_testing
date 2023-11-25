@@ -111,7 +111,7 @@ enum sched_tunable_scaling sysctl_sched_tunable_scaling = SCHED_TUNABLESCALING_N
 unsigned int sysctl_sched_base_slice			= 750000ULL;
 unsigned int normalized_sysctl_sched_base_slice		= 750000ULL;
 
-const_debug unsigned int sysctl_sched_migration_cost	= 500000UL;
+const_debug unsigned int sysctl_sched_migration_cost	= 0UL;
 DEFINE_PER_CPU_READ_MOSTLY(int, sched_load_boost);
 
 int sched_thermal_decay_shift;
