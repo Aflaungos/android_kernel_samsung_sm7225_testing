@@ -8680,7 +8680,6 @@ static void check_preempt_wakeup(struct rq *rq, struct task_struct *p, int wake_
 	struct task_struct *curr = rq->curr;
 	struct sched_entity *se = &curr->se, *pse = &p->se;
 	struct cfs_rq *cfs_rq = task_cfs_rq(curr);
-	int next_buddy_marked = 0;
 #ifdef CONFIG_SCHED_SEC_TASK_BOOST
 	int curr_cpu = cpu_of(rq);
 	struct root_domain *rd = cpu_rq(smp_processor_id())->rd;
@@ -8700,7 +8699,6 @@ static void check_preempt_wakeup(struct rq *rq, struct task_struct *p, int wake_
 
 	if (sched_feat(NEXT_BUDDY) && !(wake_flags & WF_FORK)) {
 		set_next_buddy(pse);
-		next_buddy_marked = 1;
 	}
 
 #ifdef CONFIG_SCHED_SEC_TASK_BOOST
