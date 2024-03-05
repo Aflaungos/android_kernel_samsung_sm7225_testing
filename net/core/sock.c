@@ -620,7 +620,7 @@ static int sock_setbindtodevice(struct sock *sk, sockptr_t optval, int optlen)
 
 	/* Sorry... */
 	ret = -EPERM;
-	if (!ns_capable(net->user_ns, CAP_NET_RAW))
+	if (sk->sk_bound_dev_if && !ns_capable(net->user_ns, CAP_NET_RAW))
 		goto out;
 
 	ret = -EINVAL;
