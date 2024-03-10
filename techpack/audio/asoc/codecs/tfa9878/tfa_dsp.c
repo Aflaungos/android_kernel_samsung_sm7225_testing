@@ -81,6 +81,20 @@ static enum tfa98xx_error tfa_calibration_range_check(struct tfa_device *tfa,
 static enum tfa98xx_error tfa_process_re25(struct tfa_device *tfa);
 static enum tfa98xx_error _dsp_msg(struct tfa_device *tfa, int lastmessage);
 
+enum tfa_error tfa98xxTotfa(enum tfa98xx_error err)
+{
+	switch(err) {
+	case TFA98XX_ERROR_OK:
+		return tfa_error_ok;
+	case TFA98XX_ERROR_DEVICE:
+		return tfa_error_device;
+	case TFA98XX_ERROR_BAD_PARAMETER:
+		return tfa_error_bad_param;
+	default:
+		return tfa_error_bad_param;
+	}
+}
+
 #if defined(TFA_WAIT_CAL_IN_WORKQUEUE)
 /* enqueue work to separate thread after calibration */
 static void tfa_wait_cal_work(struct work_struct *work)
@@ -4702,6 +4716,7 @@ static void individual_calibration_results(struct tfa_device *tfa)
 enum tfa98xx_error tfa_wait_cal(struct tfa_device *tfa)
 {
 	enum tfa98xx_error cal_err = TFA98XX_ERROR_OK;
+	enum tfa_error ret;
 	int calibration_done = 0;
 	int need_restore = 0;
 #if defined(WRITE_CALIBRATION_DATA_TO_MTP)
@@ -4822,11 +4837,11 @@ enum tfa98xx_error tfa_wait_cal(struct tfa_device *tfa)
 			pr_info("%s: apply the whole profile setting at success\n",
 				__func__);
 
-			err = tfa_dev_switch_profile(ntfa,
+			ret = tfa_dev_switch_profile(ntfa,
 				ntfa->next_profile, ntfa->vstep);
-			if (err != TFA98XX_ERROR_OK)
+			if (ret != tfa_error_ok)
 				pr_err("%s: error in switch profile (%d)\n",
-					__func__, err);
+					__func__, ret);
 		}
 	}
 
@@ -5509,7 +5524,7 @@ tfa_dev_start_exit:
 		tfa_set_status_flag(tfa, TFA_SET_DEVICE, -1);
 	mutex_unlock(&dev_lock);
 
-	return err;
+	return tfa98xxTotfa(err);
 }
 
 enum tfa_error tfa_dev_switch_profile(struct tfa_device *tfa,
@@ -5553,7 +5568,7 @@ enum tfa_error tfa_dev_switch_profile(struct tfa_device *tfa,
 
 		err = tfa_cont_write_profile(tfa, next_profile, vstep);
 		if (err != TFA98XX_ERROR_OK)
-			return err;
+			return tfa98xxTotfa(err);
 	}
 
 	/* If the profile contains the .standby suffix go
@@ -5568,7 +5583,7 @@ enum tfa_error tfa_dev_switch_profile(struct tfa_device *tfa,
 		pr_info("%s: skip switching dev %d for standby profile\n",
 			__func__, tfa->dev_idx);
 
-		return err;
+		return tfa98xxTotfa(err);
 	} else if (TFA_GET_BF(tfa, PWDN) != 0) {
 		err = tfa98xx_powerdown(tfa, 0);
 	}
@@ -5580,18 +5595,18 @@ enum tfa_error tfa_dev_switch_profile(struct tfa_device *tfa,
 		&& (vstep != tfa->vstep) && (vstep != -1)) {
 		err = tfa_cont_write_files_vstep(tfa, next_profile, vstep);
 		if (err != TFA98XX_ERROR_OK)
-			return err;
+			return tfa98xxTotfa(err);
 	}
 
 	/* Always search and apply filters after a startup */
 	err = tfa_set_filters(tfa, next_profile);
 	if (err != TFA98XX_ERROR_OK)
-		return err;
+		return tfa98xxTotfa(err);
 
 	tfa_dev_set_swprof(tfa, (unsigned short)next_profile);
 	tfa_dev_set_swvstep(tfa, (unsigned short)vstep);
 
-	return err;
+	return tfa98xxTotfa(err);
 }
 
 enum tfa_error tfa_dev_stop(struct tfa_device *tfa)
@@ -5617,7 +5632,7 @@ enum tfa_error tfa_dev_stop(struct tfa_device *tfa)
 	/* powerdown CF */
 	err = tfa98xx_powerdown(tfa, 1);
 	if (err != TFA98XX_ERROR_OK)
-		return err;
+		return tfa98xxTotfa(err);
 
 	/* disable I2S output on TFA1 devices without TDM */
 	err = tfa98xx_aec_output(tfa, 0);
@@ -5656,7 +5671,7 @@ enum tfa_error tfa_dev_stop(struct tfa_device *tfa)
 		tfa_reset_active_handle(tfa);
 	}
 
-	return err;
+	return tfa98xxTotfa(err);
 }
 
 #if defined(TFA_CHANGE_PCM_FORMAT)
@@ -7164,14 +7179,14 @@ enum tfa_error tfa_dev_mtp_set(struct tfa_device *tfa,
 
 	switch (item) {
 	case TFA_MTP_OTC:
-		err = tfa98xx_set_mtp(tfa, (uint16_t)
+		err = tfa98xxTotfa(tfa98xx_set_mtp(tfa, (uint16_t)
 			(value << TFA98XX_KEY2_PROTECTED_MTP0_MTPOTC_POS),
-			TFA98XX_KEY2_PROTECTED_MTP0_MTPOTC_MSK);
+			TFA98XX_KEY2_PROTECTED_MTP0_MTPOTC_MSK));
 		break;
 	case TFA_MTP_EX:
-		err = tfa98xx_set_mtp(tfa, (uint16_t)
+		err = tfa98xxTotfa(tfa98xx_set_mtp(tfa, (uint16_t)
 			(value << TFA98XX_KEY2_PROTECTED_MTP0_MTPEX_POS),
-			TFA98XX_KEY2_PROTECTED_MTP0_MTPEX_MSK);
+			TFA98XX_KEY2_PROTECTED_MTP0_MTPEX_MSK));
 		if (err == tfa_error_ok && value == 0)
 			tfa->reset_mtpex = 0;
 		break;
