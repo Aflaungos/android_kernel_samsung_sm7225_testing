@@ -408,7 +408,6 @@ static long sync_file_ioctl_fence_info(struct sync_file *sync_file,
 				       unsigned long arg)
 {
 	struct sync_file_info info;
-	struct sync_fence_info *fence_info = NULL;
 	struct dma_fence **fences;
 	__u32 size;
 	int num_fences, ret, i;
