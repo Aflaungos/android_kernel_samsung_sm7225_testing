@@ -58,7 +58,9 @@
 #include "braille.h"
 #include "internal.h"
 
+#if defined(CONFIG_SEC_DEBUG) || defined(CONFIG_SEC_LOG_BUF_NO_CONSOLE)
 #include <linux/sec_debug.h>
+#endif
 
 #ifdef CONFIG_SEC_LOG_BUF
 #define _ALIGN_DOWN(addr, size)  ((addr)&(~((size)-1)))
@@ -388,7 +390,12 @@ __packed __aligned(4)
 #ifdef CONFIG_SEC_LOG_BUF
 static void inline save_process(struct printk_log *msg)
 {
+#ifdef CONFIG_SEC_DEBUG
 	sec_debug_strcpy_task_comm(msg->process, current->comm);
+#else
+	*(unsigned __int128 *)msg->process =
+		*(unsigned __int128 *)current->comm;
+#endif
 	msg->pid = task_pid_nr(current);
 	msg->cpu = smp_processor_id();
 	msg->in_interrupt = in_interrupt() ? true : false;
