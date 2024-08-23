@@ -70,7 +70,6 @@ struct sugov_cpu {
 };
 
 static DEFINE_PER_CPU(struct sugov_cpu, sugov_cpu);
-static unsigned int stale_ns;
 
 /************************ Governor internals ***********************/
 
@@ -620,21 +619,6 @@ static unsigned int sugov_next_freq_shared(struct sugov_cpu *sg_cpu, u64 time)
 	for_each_cpu(j, policy->cpus) {
 		struct sugov_cpu *j_sg_cpu = &per_cpu(sugov_cpu, j);
 	        unsigned long boost;
-		s64 delta_ns;
-
-		/*
-		 * If the CPU utilization was last updated before the previous
-		 * frequency update and the time elapsed between the last update
-		 * of the CPU utilization and the last frequency update is long
-		 * enough, don't take the CPU into account as it probably is
-		 * idle now (and clear iowait_boost for it).
-		 */
-		delta_ns = last_freq_update_time - j_sg_cpu->last_update;
-		if (delta_ns > stale_ns) {
-			sugov_iowait_reset(j_sg_cpu, last_freq_update_time,
-					   false);
-			continue;
-		}
 
 		boost = sugov_iowait_apply(j_sg_cpu, time, max_cap);
 		sugov_get_util(j_sg_cpu, boost);
@@ -882,8 +866,6 @@ static int sugov_init(struct cpufreq_policy *policy)
 
 	policy->governor_data = sg_policy;
 	sg_policy->tunables = tunables;
-
-	stale_ns = sched_ravg_window + (sched_ravg_window >> 3);
 
 	ret = kobject_init_and_add(&tunables->attr_set.kobj, &sugov_tunables_ktype,
 				   get_governor_parent_kobj(policy), "%s",
