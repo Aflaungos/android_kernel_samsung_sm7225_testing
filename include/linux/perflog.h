@@ -115,7 +115,7 @@ union _uPLogPacket {
 	struct _PLogPacket itemes;
 	char stream[PERFLOG_HEADER_SIZE + PERFLOG_BUFF_STR_MAX_SIZE];
 };
-#pragma pack(0) 
+#pragma pack() 
 
 // Start API
 int perflog_write(char const * fmt, ...);
