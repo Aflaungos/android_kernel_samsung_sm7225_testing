@@ -79,40 +79,35 @@ CONTINUE() {
 	echo " "
 	echo " "
 	echo " "
-	if [ -e "out" ]; then
-    		read -p "${BLUE}Do you wish to continue last build (Dirty build)? (y/n)? " yn
-    		case $yn in
-        	[Yy]* )
-	    		if [ -e "out" ]; then
-			echo -e "/out folder found! Building dirty..."
-            		export LOCALVERSION=-🔥⚙️BoostKernelv$KERNELVERSION⚙️🔥
-            		CLANG="${HOME}/linux-x86-main/clang-r487747c/bin"
-            		export CLANG_TRIPLE=aarch64-linux-gnu-
-            		export PATH="$CLANG:$PATH"
-            		make -j$CORES O=out ARCH=arm64 SUBARCH=arm64 CC=clang LLVM_IAS=1 LLVM=1 $DEFCONFIG > /dev/null
-            		make -j$CORES O=out \
-                		ARCH=arm64 \
-                		SUBARCH=arm64 \
-                		CC=clang \
-                		LLVM_IAS=1 LLVM=1
-				export DIRTY_BUILD=1
-	   		else
-				return
-	    		fi
-            		;;
-        	[Nn]* ) 
-            		echo "Building Clean..."
-			export DIRTY_BUILD=0
-	    		return
-            		;;
-        	* ) 
-            		echo "Please choose Y or N."
-            		;;
-    		esac
-	else
-		sleep 0.1
+    read -p "${BLUE}Do you wish to continue last build (Dirty build)? (y/n)? " yn
+    case $yn in
+        [Yy]* )
+	    if [ -e "out" ]; then
+		echo -e "/out folder found! Building dirty..."
+            	export LOCALVERSION=-🔥⚙️BoostKernelv$KERNELVERSION⚙️🔥
+            	CLANG="${HOME}/linux-x86-main/clang-r487747c/bin"
+            	export CLANG_TRIPLE=aarch64-linux-gnu-
+            	export PATH="$CLANG:$PATH"
+            	make -j$CORES O=out ARCH=arm64 SUBARCH=arm64 CC=clang LLVM_IAS=1 LLVM=1 $DEFCONFIG > /dev/null
+            	make -j$CORES O=out \
+                	ARCH=arm64 \
+                	SUBARCH=arm64 \
+                	CC=clang \
+                	LLVM_IAS=1 LLVM=1
+		return 0
+	    else
+		echo "${RED}No /out folder found!" >&2
 		return
-	fi
+	    fi
+            ;;
+        [Nn]* ) 
+            echo "Building Clean..."
+	    return
+            ;;
+        * ) 
+            echo "Please choose Y or N."
+            ;;
+    esac
 }
 
 CLEAN_OUT() {
