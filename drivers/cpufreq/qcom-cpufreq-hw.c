@@ -193,7 +193,7 @@ static void limits_dcvsh_poll(struct work_struct *work)
 
 	dcvsh_freq = qcom_cpufreq_hw_get(cpu);
 
-	if (freq_limit != dcvsh_freq) {
+	if (freq_limit < dcvsh_freq) {
 #ifdef CONFIG_SEC_PM
 	if ((c->limiting == true) && (freq_limit < c->lowest_freq))
 			c->lowest_freq = freq_limit;
