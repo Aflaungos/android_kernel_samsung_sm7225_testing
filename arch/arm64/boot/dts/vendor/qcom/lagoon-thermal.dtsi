@@ -1267,7 +1267,7 @@
 				type = "passive";
 			};
 
-			gold_trip: gold-trip2 {
+			gold_trip2: gold-trip2 {
 				temperature = <60000>;
 				hysteresis = <0>;
 				type = "passive";
@@ -1303,7 +1303,7 @@
 				type = "passive";
 			};
 
-			silver_trip: silver-trip1 {
+			silver_trip1: silver-trip1 {
 				temperature = <60000>;
 				hysteresis = <0>;
 				type = "passive";
