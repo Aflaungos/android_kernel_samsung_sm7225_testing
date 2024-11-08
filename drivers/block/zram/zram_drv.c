@@ -3398,9 +3398,6 @@ static int zram_add(void)
 	spin_lock_init(&zram->bitmap_lock);
 	mutex_init(&zram->blk_bitmap_lock);
 #endif
-#ifdef CONFIG_ZRAM_DEDUP
-	zram->use_dedup = true;
-#endif
 	queue = blk_alloc_queue(GFP_KERNEL);
 	if (!queue) {
 		pr_err("Error allocating disk queue for device %d\n",
