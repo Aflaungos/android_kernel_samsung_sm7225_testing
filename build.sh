@@ -19,6 +19,8 @@
 
 set -e
 
+DIRTY_BUILD=0
+
 # Set default directories
 ROOT_DIR=$(pwd)
 # OUT_DIR=$ROOT_DIR/out
@@ -90,13 +92,12 @@ CONTINUE() {
                 	LLVM_IAS=1 LLVM=1
 		return 0
 	    else
-		echo "${RED}No /out folder found!" >&2
+		echo "${RED}No /out folder found!"
 		return
 	    fi
             ;;
         [Nn]* ) 
             echo "Building Clean..."
-	    export DIRTY_BUILD=0
 	    return
             ;;
         * ) 
@@ -165,7 +166,7 @@ COMMON_STEPS() {
 	echo " ${ON_BLUE}Starting compilation ${STD}"
 	echo " "
 	echo " ${GREEN}Defconfig loaded: $DEFCONFIG ${STD}"
-	sleep 1
+	sleep 0.2
 	echo " ${BLUE}"
 	CLANG_BUILD
 	echo " ${STD}"
@@ -192,13 +193,13 @@ BUILD_KERNEL() {
 	CONTINUE
 	sleep 1
 	clear
-	if [ "$DIRTY_BUILD" -eq 1 ]; then
-        	echo "Skipping clear /out folder..."
-    	else
-        	CLEAN_OUT
+	if [ "$DIRTY_BUILD" -eq 0 ]; then
+		if [ -e "out" ]; then
+        		CLEAN_OUT
+			sleep 1
+			clear
+		fi
     	fi
-	sleep 1
-	clear
 	USER
 	clear
 	echo "*******************************************************"
