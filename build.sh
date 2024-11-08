@@ -28,12 +28,6 @@ DTBO_DIR=./arch/arm64/boot/dts/samsung/m23/m23xq
 # Set default kernel variables
 PROJECT_NAME="m23xq"
 CORES=$(nproc --all)
-GCC_ARM64_FILE=aarch64-linux-gnu-
-GCC_ARM32_FILE=arm-linux-gnueabi-
-
-# Export Telegram variables
-export CHAT_ID=-0000000000000
-export BOT_TOKEN=0
 
 # Export commands
 export KBUILD_BUILD_USER=Mrsiri
@@ -83,8 +77,8 @@ CONTINUE() {
     case $yn in
         [Yy]* )
 	    if [ -e "out" ]; then
-		echo -e "/out folder found! Building dirty..."
-            	export LOCALVERSION=-🔥⚙️BoostKernelv$KERNELVERSION⚙️🔥
+		echo -e "Building dirty..."
+		export DIRTY_BUILD=1
             	CLANG="${HOME}/linux-x86-main/clang-r487747c/bin"
             	export CLANG_TRIPLE=aarch64-linux-gnu-
             	export PATH="$CLANG:$PATH"
@@ -102,6 +96,7 @@ CONTINUE() {
             ;;
         [Nn]* ) 
             echo "Building Clean..."
+	    export DIRTY_BUILD=0
 	    return
             ;;
         * ) 
@@ -115,13 +110,6 @@ CLEAN_OUT() {
 	echo " "
 
 	rm -rf out
-#	if [ -e "Anykernel/Image" ]; then
-#		{
-#			rm -rf Anykernel/Image
-#			rm -rf Anykernel/dtbo.img
-#			rm -rf Anykernel/dtb.img
-#		}
-#	fi
 }
 
 DTBO_BUILD() {
@@ -129,7 +117,6 @@ DTBO_BUILD() {
 }
 
 CLANG_BUILD() {
-	export LOCALVERSION=-🔥⚙️BoostKernelv$KERNELVERSION⚙️🔥
 	CLANG="${HOME}/linux-x86-main/clang-r487747c/bin"
 	export CLANG_TRIPLE=aarch64-linux-gnu-
 	export PATH="$CLANG:$PATH"
@@ -139,60 +126,6 @@ CLANG_BUILD() {
 	SUBARCH=arm64 \
 	CC=clang \
 	LLVM_IAS=1 LLVM=1
-}
-
-ZIPPIFY() {
-	# Make flashable zip
-	if [ -e "arch/$ARCH/boot/Image" ]; then
-		{
-			echo -e " "
-			echo -e " ${ON_BLUE}Building Anykernel flashable zip ${STD}"
-			echo -e " "
-
-			# Copy Image, dtb.img and dtbo.img to anykernel directory
-			cp -f /home/mrsiri/android_kernel_samsung_sm7225/out/arch/arm64/boot/Image /home/mrsiri/android_kernel_samsung_sm7225/AnyKernel/Image
-
-			cp -f /home/mrsiri/android_kernel_samsung_sm7225/out/arch/arm64/boot/dts/vendor/qcom/lagoon.dtb /home/mrsiri/android_kernel_samsung_sm7225/AnyKernel/lagoon.dtb
-
-			mv /home/mrsiri/android_kernel_samsung_sm7225/AnyKernel/lagoon.dtb /home/mrsiri/android_kernel_samsung_sm7225/AnyKernel/dtb
-
-			cp -f /home/mrsiri/android_kernel_samsung_sm7225/out/arch/arm64/boot/dtbo.img /home/mrsiri/android_kernel_samsung_sm7225/AnyKernel/dtbo.img
-
-			# Go to anykernel directory
-			cd Anykernel
-
-			zip -r9 $ZIPNAME META-INF tools anykernel.sh Image dtb.img dtbo.img > /dev/null
-
-			chmod 0777 $ZIPNAME
-			
-			# Go back into kernel source directory
-			cd ../..
-			sleep 1
-		}
-	fi
-}
-
-AROMA() {
-	# Make AROMA Installer zip
-	echo -e " "
-	echo -e " ${ON_BLUE}Building AROMA flashable zip ${STD}"
-	echo -e " "
-	cd Anykernel
-
-	# Copy dtbo from anykernel folder
-	if [ ! -e "../aroma/dtbo" ]; then
-		mkdir ../aroma/dtbo
-		chmod 0777 ../aroma/dtbo
-	fi
-
-	cp -f dtbo.img ../aroma/dtbo/
-
-	cd aroma
-	cp $ZIPNAME kernel/AnykernelFile.zip
-	zip -r9 $AROMAZIPNAME META-INF dtb dtbo kernel tools > /dev/null
-	rm -f AnykernelFile.zip
-	rm -rf dtbo
-	cd ../..
 }
 
 USER() {
@@ -210,46 +143,6 @@ USER() {
 		echo " Using '$USER' as build_user ${STD}"
 	fi
 	sleep 2
-}
-
-RENAME() {
-	# Give proper name to kernel and zip name
-	VERSION="BoostKernel_"$CODENAME"_"$KERNELVERSION""
-	ZIPNAME="BoostKernel_"$CODENAME"_"$KERNELVERSION"_"$DATE".zip"
-	AROMAZIPNAME="BoostKernel_AROMA_"$CODENAME"_"$KERNELVERSION"_"$DATE".zip"
-}
-
-TELEGRAM_UPLOAD() {
-	# Telegram functions.
-	function tg_sendText() {
-		curl -s "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
-		-d "parse_mode=html" \
-		-d text="${1}" \
-		-d chat_id=$CHAT_ID \
-		-d "disable_web_page_preview=true"
-	}
-	function tg_sendFile() {
-		curl -s "https://api.telegram.org/bot$BOT_TOKEN/sendDocument" \
-		-F parse_mode=markdown \
-		-F chat_id=$CHAT_ID \
-		-F document=@${1} \
-		-F "caption=$POST_CAPTION"
-	}
-
-	POST_CAPTION="Boostkernel for $CODENAME"
-
-	if [ "${BOT_TOKEN}" == "0" ]; then
-		echo " ${RED}ERROR! Please configure Telegram vars properly."
-		echo " ${RED}Not Uploading to Telegram..."
-		sleep 1
-	else
-		echo " "
-		echo " ${ON_BLUE}Uploading to Telegram ${STD}"
-		echo " "
-
-		# Upload anykernel zip
-		tg_sendFile "kernel_zip/anykernel/$ZIPNAME" > /dev/null
-	fi
 }
 
 DISPLAY_ELAPSED_TIME() {
@@ -272,21 +165,15 @@ COMMON_STEPS() {
 	echo " ${ON_BLUE}Starting compilation ${STD}"
 	echo " "
 	echo " ${GREEN}Defconfig loaded: $DEFCONFIG ${STD}"
-	RENAME
 	sleep 1
 	echo " ${BLUE}"
 	CLANG_BUILD
 	echo " ${STD}"
 	sleep 1
 	DTBO_BUILD
-	sleep 1
-	ZIPPIFY
-	sleep 1
-	AROMA
+	clear
 	sleep 1
 	echo " "
-	TELEGRAM_UPLOAD
-	DISPLAY_ELAPSED_TIME
 	echo " ${BLUE}"
 	echo " __________                       __   ____  __.                         .__     "
 	echo " \______   \ ____   ____  _______/  |_|    |/ _|___________  ____   ____ |  |    "
@@ -297,13 +184,7 @@ COMMON_STEPS() {
 	echo " "
 	echo "                                 Build Complete.                                 "
 	echo " "
-}
-
-KERNELVERSION_SELECT() {
-	read -p " Please enter the Kernel Version: ${STD}" kernel_version
-	export KERNELVERSION="$kernel_version"
-	echo "${BLUE}KERNELVERSION is set to: $KERNELVERSION"
-	sleep 1
+	DISPLAY_ELAPSED_TIME
 }
 
 BUILD_KERNEL() {
@@ -329,7 +210,6 @@ BUILD_KERNEL() {
 	echo -e "*******************************************************"
 	echo " "
 	echo " ${STD}"
-	KERNELVERSION_SELECT
 	echo " "
 	COMMON_STEPS
 }
