@@ -1,3 +1,0 @@
-config CAM_RECLAIM
-	bool "reclaim pages under camera condition"
-	default n
