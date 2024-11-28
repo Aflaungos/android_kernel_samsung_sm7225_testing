@@ -1,3 +1,0 @@
-config MI_RECLAIM
-	bool "reclaim pages"
-	default y
