@@ -90,7 +90,7 @@ static long perf_mgr_ioctl(struct file *file, unsigned int cmd, unsigned long ar
 		g_fps = pFps;
 
 		if (g_fps <= 60)
-			fps_margin_percent = 20;
+			fps_margin_percent = 10;
 
 		us_frame_time = 1000000 / g_fps;
 #endif
@@ -386,7 +386,7 @@ int panel_timing_changed_data_notify(struct notifier_block *nb,
 			return 0;
 
 		if (g_fps <= 60)
-			fps_margin_percent = 20;
+			fps_margin_percent = 10;
 
 		us_frame_time = 1000000 / g_fps;
 	}
@@ -499,7 +499,7 @@ static int __init perf_mgr_dev_init(void)
 	us_frame_time = 0;
 	g_fps = 0;
 	fps_margin_percent = 30;
-	hold_frame_count = 4;
+	hold_frame_count = 2;
 
 	s->orig_fps_info.tid = 0;
 	s->orig_fps_info.duration = 0;
