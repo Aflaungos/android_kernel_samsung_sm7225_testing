@@ -2947,6 +2947,7 @@ out:
 
 out_err:
 	security_free_mnt_opts(&opts);
+
 	if (rc)
 		return rc;
 
