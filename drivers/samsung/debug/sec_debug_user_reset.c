@@ -34,9 +34,6 @@
 #include <linux/sec_param.h>
 #include <linux/sec_class.h>
 
-#ifdef CONFIG_RKP_CFP_ROPP
-#include <linux/rkp_cfp.h>
-#endif
 #ifdef CONFIG_CFP_ROPP
 #include <linux/cfp.h>
 #endif
@@ -1490,7 +1487,7 @@ void sec_debug_backtrace(void)
 	static int once;
 	struct stackframe frame;
 	int skip_callstack = 0;
-#if defined (CONFIG_CFP_ROPP) || defined(CONFIG_RKP_CFP_ROPP)
+#if defined (CONFIG_CFP_ROPP)
 	unsigned long where = 0x0;
 #endif
 
@@ -1512,7 +1509,7 @@ void sec_debug_backtrace(void)
 				break;
 
 			if (skip_callstack++ > 3) {
-#if defined (CONFIG_CFP_ROPP) || defined(CONFIG_RKP_CFP_ROPP)
+#if defined (CONFIG_CFP_ROPP)
 				where = frame.pc;
 				if (where>>40 != 0xffffff)
 					where = ropp_enable_backtrace(where,
