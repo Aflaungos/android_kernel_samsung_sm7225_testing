@@ -43,7 +43,9 @@ jobs:
           git clone https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86 --depth=1 --single-branch --no-tags -b main aosp-clang/clang  
 
       - name: Setup submodules
-        run: git submodule update --init --recursive --depth 0
+        run: |
+          cd kernel-source
+          git submodule update --init --recursive --depth 0
           
       - name: Checkout Anykernel
         uses: actions/checkout@v4
