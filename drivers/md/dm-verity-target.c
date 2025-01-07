@@ -552,6 +552,7 @@ static int verity_verify_io(struct dm_verity_io *io)
 			add_fc_blks_entry(cur_block,v->data_dev->name);
 #endif
 			continue;
+		}
 		else {
 			if (bio->bi_status) {
 				/*
