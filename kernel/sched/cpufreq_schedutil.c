@@ -537,6 +537,10 @@ static void sugov_update_single(struct update_util_data *hook, u64 time,
 	if (!sugov_should_update_freq(sg_policy, time))
 		return;
 
+	/* Limits may have changed, don't skip frequency update */
+	busy = use_pelt() && !sg_policy->need_freq_update &&
+		sugov_cpu_is_busy(sg_cpu);
+
 	sg_cpu->util = util = sugov_get_util(sg_cpu);
 	max = sg_cpu->max;
 	sg_cpu->flags = flags;
