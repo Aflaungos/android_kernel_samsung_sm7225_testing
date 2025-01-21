@@ -341,7 +341,7 @@ Description:
 return:
 	n.a.
 *******************************************************/
-void nvt_irq_enable(bool enable)
+void __always_inline nvt_irq_enable(bool enable)
 {
 	struct irq_desc *desc;
 
@@ -3691,7 +3691,7 @@ Description:
 return:
 	Executive outcomes. 0---succeed.
 *******************************************************/
-int32_t nvt_ts_suspend(struct device *dev)
+int32_t __always_inline nvt_ts_suspend(struct device *dev)
 {
 	struct nvt_ts_data *ts = dev_get_drvdata(dev);
 	int enter_force_ed_mode = 0;
@@ -3796,7 +3796,7 @@ Description:
 return:
 	Executive outcomes. 0---succeed.
 *******************************************************/
-int32_t nvt_ts_resume(struct device *dev)
+int32_t __always_inline nvt_ts_resume(struct device *dev)
 {
 	struct nvt_ts_data *ts = dev_get_drvdata(dev);
 #if SEC_LPWG_DUMP
