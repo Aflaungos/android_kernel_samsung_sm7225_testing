@@ -1824,7 +1824,7 @@ static int __do_execve_file(int fd, struct filename *filename,
 			bprm.interp_flags |= BINPRM_FLAGS_PATH_INACCESSIBLE;
 		bprm.filename = pathbuf;
 	}
-	bprm.interp = bprm->filename;
+	bprm.interp = bprm.filename;
 
 	retval = bprm_mm_init(&bprm);
 	if (retval)
