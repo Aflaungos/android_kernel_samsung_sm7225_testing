@@ -5870,16 +5870,12 @@ static ssize_t read_support_feature(struct device *dev,
 	if (ts->platdata->enable_settings_aot)
 		feature |= INPUT_FEATURE_ENABLE_SETTINGS_AOT;
 
-	if (ts->platdata->enable_sysinput_enabled)
-		feature |= INPUT_FEATURE_ENABLE_SYSINPUT_ENABLED;
-
 	if (ts->platdata->prox_lp_scan_enabled)
 		feature |= INPUT_FEATURE_ENABLE_PROX_LP_SCAN_ENABLED;
 
 	input_info(true, &ts->client->dev, "%s: %d%s%s%s\n",
 				__func__, feature,
 				feature & INPUT_FEATURE_ENABLE_SETTINGS_AOT ? " aot" : "",
-				feature & INPUT_FEATURE_ENABLE_SYSINPUT_ENABLED ? " SE" : "",
 				feature & INPUT_FEATURE_ENABLE_PROX_LP_SCAN_ENABLED ? " LPSCAN" : "");
 
 	return snprintf(buf, SEC_CMD_BUF_SIZE, "%d", feature);

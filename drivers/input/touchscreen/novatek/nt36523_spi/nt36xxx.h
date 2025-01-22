@@ -255,7 +255,6 @@ struct nvt_ts_platdata {
 	struct pinctrl *pinctrl;
 	bool support_ear_detect;
 	bool enable_settings_aot;
-	bool enable_sysinput_enabled;
 	bool prox_lp_scan_enabled;
 	bool enable_glove_mode;
 	const char *firmware_name;

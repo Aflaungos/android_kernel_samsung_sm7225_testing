@@ -1611,10 +1611,6 @@ static int nvt_parse_dt(struct device *dev)
 	input_info(true, dev, "%s: AOT mode %s\n",
 				__func__, platdata->enable_settings_aot ? "ON" : "OFF");
 
-	platdata->enable_sysinput_enabled = of_property_read_bool(np, "novatek,enable_sysinput_enabled");
-	input_info(true, dev, "%s: Sysinput enabled %s\n",
-				__func__, platdata->enable_sysinput_enabled ? "ON" : "OFF");
-
 	platdata->prox_lp_scan_enabled = of_property_read_bool(np, "novatek,prox_lp_scan_enabled");
 	input_info(true, dev, "%s: Prox LP Scan enabled %s\n",
 				__func__, platdata->prox_lp_scan_enabled ? "ON" : "OFF");
