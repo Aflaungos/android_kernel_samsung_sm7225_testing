@@ -3350,12 +3350,26 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 	nvt_irq_enable(true);
 	input_info(true, &client->dev, "%s : end\n", __func__);
 
+#if defined(CONFIG_FB)
+	ts->fb_notif.notifier_call = nvt_fb_notifier_callback;
+	ret = fb_register_client(&ts->fb_notif);
+	if(ret) {
+		NVT_ERR("register fb_notifier failed. ret=%d\n", ret);
+		goto err_register_fb_notif_failed;
+	}
+#endif
+
 	return 0;
 
 err_init_sec_fn:
 	nvt_ts_sec_fn_remove(ts);
 #if NVT_TOUCH_EXT_PROC
 	nvt_extra_proc_deinit();
+#if defined(CONFIG_FB)
+err_register_fb_notif_failed:
+	if (fb_unregister_client(&ts->fb_notif))
+		NVT_ERR("Error occurred while unregistering fb_notifier.\n");
+#endif
 err_extra_proc_init_failed:
 #endif
 #if NVT_TOUCH_PROC
