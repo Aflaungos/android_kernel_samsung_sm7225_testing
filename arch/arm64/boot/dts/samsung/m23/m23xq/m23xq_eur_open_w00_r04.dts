@@ -6239,7 +6239,6 @@
 				novatek,enable_settings_aot;
 				novatek,support_ear_detect_mode;
 				novatek,prox_lp_scan_enabled;
-				novatek,enable_sysinput_enabled;
 				novatek,lcdid1-gpio = <0xffffffff 0x62 0x0>;
 				novatek,lcdid2-gpio = <0xffffffff 0x63 0x0>;
 				novatek,lcdid3-gpio = <0xffffffff 0x64 0x0>;
