@@ -282,6 +282,9 @@ struct nvt_ts_data {
 	struct input_dev *input_dev_proximity;
 	uint16_t addr;
 	int8_t phys[32];
+#if defined(CONFIG_FB)
+	struct notifier_block fb_notif;
+#endif
 	uint8_t fw_ver;
 //	uint8_t x_num;
 //	uint8_t y_num;
