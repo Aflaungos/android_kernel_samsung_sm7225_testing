@@ -26,11 +26,6 @@
 #include <linux/of_irq.h>
 #include <uapi/linux/sched/types.h>
 
-#if defined(CONFIG_FB)
-#include <linux/notifier.h>
-#include <linux/fb.h>
-#endif
-
 #include "nt36xxx.h"
 #if NVT_TOUCH_ESD_PROTECT
 #include <linux/jiffies.h>
@@ -59,10 +54,6 @@ struct nvt_ts_data *ts;
 uint32_t ENG_RST_ADDR  = 0x7FFF80;
 uint32_t SWRST_N8_ADDR = 0; //read from dtsi
 uint32_t SPI_RD_FAST_ADDR = 0;	//read from dtsi
-
-#if defined(CONFIG_FB)
-static int nvt_fb_notifier_callback(struct notifier_block *self, unsigned long event, void *data);
-#endif
 
 #if TOUCH_KEY_NUM > 0
 const uint16_t touch_key_array[TOUCH_KEY_NUM] = {
@@ -3401,11 +3392,6 @@ static int32_t nvt_ts_remove(struct spi_device *client)
 {
 	input_info(true, &client->dev, "%s : Removing driver...\n", __func__);
 
-#if defined(CONFIG_FB)
-	if (fb_unregister_client(&ts->fb_notif))
-		NVT_ERR("Error occurred while unregistering fb_notifier.\n");
-#endif
-
 #if IS_ENABLED(CONFIG_VBUS_NOTIFIER)
 	cancel_delayed_work_sync(&ts->work_vbus);
 #endif
@@ -3525,12 +3511,6 @@ static void nvt_ts_shutdown(struct spi_device *client)
 	ts->power_status = POWER_OFF_STATUS;
 
 	nvt_irq_enable(false);
-
-#if defined(CONFIG_FB)
-	if (fb_unregister_client(&ts->fb_notif))
-		NVT_ERR("Error occurred while unregistering fb_notifier.\n");
-#endif
-
 	pinctrl_configure(ts, false);
 
 	nvt_ts_sec_fn_remove(ts);
@@ -3908,33 +3888,6 @@ int32_t __always_inline nvt_ts_resume(struct device *dev)
 
 	return 0;
 }
-
-#if defined(CONFIG_FB)
-static int nvt_fb_notifier_callback(struct notifier_block *self,
-	unsigned long event, void *data)
-{
-	struct fb_event *evdata = data;
-	int *blank;
-	struct nvt_ts_data *ts =
-		container_of(self, struct nvt_ts_data, fb_notif);
-
-	if (evdata && evdata->data && event == FB_EARLY_EVENT_BLANK) {
-		blank = evdata->data;
-		if (*blank == FB_BLANK_POWERDOWN) {
-			NVT_LOG("event=%lu, *blank=%d\n", event, *blank);
-			nvt_ts_suspend(&ts->client->dev);
-		}
-	} else if (evdata && evdata->data && event == FB_EVENT_BLANK) {
-		blank = evdata->data;
-		if (*blank == FB_BLANK_UNBLANK) {
-			NVT_LOG("event=%lu, *blank=%d\n", event, *blank);
-			nvt_ts_resume(&ts->client->dev);
-		}
-	}
-
-	return 0;
-}
-#endif
 
 #if IS_ENABLED(CONFIG_PM)
 static int nvt_pm_suspend(struct device *dev)
