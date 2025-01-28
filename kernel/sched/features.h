@@ -84,9 +84,15 @@
 #define SCHED_FEAT_RT_PUSH_IPI 1
 #endif
 
-#define SCHED_FEAT_RT_RUNTIME_SHARE 0
+<<<<<<< HEAD
+SCHED_FEAT(RT_RUNTIME_SHARE, false)
+SCHED_FEAT(LB_MIN, false)
+SCHED_FEAT(ATTACH_AGE_LOAD, true)
+=======
+#define SCHED_FEAT_RT_RUNTIME_SHARE 1
 #define SCHED_FEAT_LB_MIN 0
 #define SCHED_FEAT_ATTACH_AGE_LOAD 1
+>>>>>>> eeeb8a9bf760... sched: Resolve sched_feat() at compile time to improve code optimization
 
 #define SCHED_FEAT_WA_IDLE 1
 #define SCHED_FEAT_WA_WEIGHT 1
@@ -126,11 +132,15 @@
  * If disabled, this behaviour will only apply to tasks of the
  * RT class.
  */
-#define SCHED_FEAT_SCHEDTUNE_BOOST_HOLD_ALL 0
+<<<<<<< HEAD
+SCHED_FEAT(SCHEDTUNE_BOOST_HOLD_ALL, false)
 
 /*
  * Inflate the effective utilization of SchedTune-boosted tasks, which
  * generally leads to usage of higher frequencies.
  * If disabled, boosts will only bias tasks to higher-capacity CPUs.
  */
-#define SCHED_FEAT_SCHEDTUNE_BOOST_UTIL 0
+SCHED_FEAT(SCHEDTUNE_BOOST_UTIL, false)
+=======
+#define SCHED_FEAT_SCHEDTUNE_BOOST_HOLD_ALL 0
+>>>>>>> eeeb8a9bf760... sched: Resolve sched_feat() at compile time to improve code optimization
