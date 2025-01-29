@@ -667,7 +667,7 @@ struct zone {
 	 * mem_hotplug_begin/end(). Any reader who can't tolerant drift of
 	 * present_pages should get_online_mems() to get a stable value.
 	 */
-	atomic_long_t		managed_pages;
+	unsigned long		managed_pages;
 	unsigned long		spanned_pages;
 	unsigned long		present_pages;
 
@@ -762,10 +762,6 @@ enum pgdat_flags {
 					 */
 	PGDAT_RECLAIM_LOCKED,		/* prevents concurrent reclaim */
 };
-static inline unsigned long zone_managed_pages(struct zone *zone)
-{
-	return (unsigned long)atomic_long_read(&zone->managed_pages);
-}
 
 enum zone_flags {
 	ZONE_BOOSTED_WATERMARK,		/* zone recently boosted watermarks.
@@ -1079,7 +1075,7 @@ static inline bool is_dev_zone(const struct zone *zone)
  */
 static inline bool managed_zone(struct zone *zone)
 {
-	return zone_managed_pages(zone);
+	return zone->managed_pages;
 }
 
 /* Returns true if a zone has memory */
