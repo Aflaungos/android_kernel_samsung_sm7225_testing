@@ -1272,6 +1272,9 @@ struct task_struct {
 #endif
 	struct list_head		pi_state_list;
 	struct futex_pi_state		*pi_state_cache;
+#if defined(CONFIG_KSU_SUSFS)
+	u64 susfs_task_state;
+#endif
 	struct mutex			futex_exit_mutex;
 	unsigned int			futex_state;
 #endif
@@ -1495,13 +1498,9 @@ struct task_struct {
 #endif
 	/* task is frozen/stopped (used by the cgroup freezer) */
 	ANDROID_KABI_USE(1, unsigned frozen:1);
-#if defined(CONFIG_KSU_SUSFS)
-	ANDROID_KABI_USE(6, u64 susfs_task_state);
-#endif
 #ifdef CONFIG_KSU_SUSFS
 	ANDROID_KABI_USE(8, u64 susfs_last_fake_mnt_id);
 #endif
-
 	/*
 	 * New fields for task_struct should be added above here, so that
 	 * they are included in the randomized portion of task_struct.
