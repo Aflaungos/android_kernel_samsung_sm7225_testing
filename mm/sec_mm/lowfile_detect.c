@@ -35,7 +35,6 @@ static unsigned long lowfile_count(struct shrinker *s,
 		mm_debug_show_free_areas();
 #endif
 		mm_debug_dump_tasks();
-		ion_account_print_usage();
 	}
 
 	return 0; /* return 0 not to call to scan_objects */
