@@ -30,8 +30,12 @@ static unsigned long lowfile_count(struct shrinker *s,
 		pr_info("low file detected : %lukB < %luKB\n", K(file),
 			K(min_file));
 #ifdef CONFIG_SEC_MM
-                show_mem(0, NULL);
+		show_mem(0, NULL);
+#else
+		mm_debug_show_free_areas();
 #endif
+		mm_debug_dump_tasks();
+		ion_account_print_usage();
 	}
 
 	return 0; /* return 0 not to call to scan_objects */
