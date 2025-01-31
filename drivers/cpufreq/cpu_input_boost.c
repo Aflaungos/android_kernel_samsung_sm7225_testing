@@ -20,8 +20,6 @@
 #include <uapi/linux/sched/types.h>
 #endif
 
-static unsigned int dynamic_stune_boost __read_mostly = 5;
-
 static unsigned int max_boost_freq_little __read_mostly =
 	CONFIG_MAX_BOOST_FREQ_LP;
 static unsigned int max_boost_freq_big __read_mostly =
@@ -123,10 +121,6 @@ static void __cpu_input_boost_kick_max(struct boost_drv *b,
 	if (test_bit(SCREEN_OFF, &b->state))
 		return;
 
-#ifdef CONFIG_DYNAMIC_STUNE_BOOST
-	do_stune_boost("foreground", dynamic_stune_boost);
-#endif
-
 	do {
 		curr_expires = atomic_long_read(&b->max_boost_expires);
 		new_expires = jiffies + boost_jiffies;
@@ -157,9 +151,6 @@ static void max_unboost_worker(struct work_struct *work)
 
 	clear_bit(MAX_BOOST, &b->state);
 	wake_up(&b->boost_waitq);
-#ifdef CONFIG_DYNAMIC_STUNE_BOOST
-	reset_stune_boost("foreground");
-#endif
 }
 
 static int cpu_boost_thread(void *data)
