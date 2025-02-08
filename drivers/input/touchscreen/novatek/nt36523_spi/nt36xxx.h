@@ -627,10 +627,10 @@ int nvt_ts_fw_update_from_external(struct nvt_ts_data *ts, const char *file_path
 int nvt_get_checksum(struct nvt_ts_data *ts, u8 *csum_result, u8 csum_size);
 int32_t nvt_set_page(uint32_t addr);
 #if PROXIMITY_FUNCTION
-int set_ear_detect(struct nvt_ts_data *ts, int mode, bool print_log);
-int nvt_ts_mode_switch_extened(struct nvt_ts_data *ts, u8 *cmd, u8 len, bool print_log);
+int set_ear_detect(struct nvt_ts_data *ts, int mode, bool stored);
+int nvt_ts_mode_switch_extended(struct nvt_ts_data *ts, u8 *cmd, u8 len, bool stored);
 #endif
-int nvt_ts_mode_switch(struct nvt_ts_data *ts, u8 cmd, bool print_log);
+int nvt_ts_mode_switch(struct nvt_ts_data *ts, u8 cmd, bool stored);
 int pinctrl_configure(struct nvt_ts_data *ts, bool enable);
 void nvt_irq_enable(bool enable);
 bool nvt_ts_lcd_power_check(void);

@@ -1580,12 +1580,12 @@ u16 nvt_ts_mode_read(struct nvt_ts_data *ts)
 	return mode_masked;
 }
 
-int nvt_ts_mode_switch(struct nvt_ts_data *ts, u8 cmd, bool print_log)
+int nvt_ts_mode_switch(struct nvt_ts_data *ts, u8 cmd, bool stored)
 {
 	int i, retry = 5;
 	u8 buf[3] = { 0 };
 
-	input_info(true, &ts->client->dev, "%s : cmd(0x%X)\n", __func__, cmd);
+	input_info(true, &ts->client->dev, "%s : cmd(0x%X) stored(%d)\n", __func__, cmd, stored);
 
 	//---set xdata index to EVENT BUF ADDR---
 	nvt_set_page(ts->mmap->EVENT_BUF_ADDR | EVENT_MAP_HOST_CMD);
@@ -1621,23 +1621,24 @@ int nvt_ts_mode_switch(struct nvt_ts_data *ts, u8 cmd, bool print_log)
 		return -EIO;
 	}
 
-	if (print_log) {
-		u16 read_ic_mode;
-		msleep(20);
-		read_ic_mode = nvt_ts_mode_read(ts);
-		input_info(true, &ts->client->dev,"%s : cmd(0x%X) sec_function : 0x%02X & nvt_ts_mode_read : 0x%02X\n",
-					__func__, cmd, ts->sec_function, read_ic_mode);
-	}
+	if (stored) {
+		msleep(10);
+		input_info(true, &ts->client->dev,"%s : before stored sec_function : 0x%02X\n", __func__, ts->sec_function);
+		ts->sec_function = nvt_ts_mode_read(ts);
+		input_info(true, &ts->client->dev,"%s : after  stored sec_function : 0x%02X\n", __func__, ts->sec_function);
+	} else
+		input_info(true, &ts->client->dev,"%s : mode from fw 0x%02X\n", __func__, nvt_ts_mode_read(ts));
+
 	return 0;
 }
 #if PROXIMITY_FUNCTION
-int nvt_ts_mode_switch_extended(struct nvt_ts_data *ts, u8 *cmd, u8 len, bool print_log)
+int nvt_ts_mode_switch_extended(struct nvt_ts_data *ts, u8 *cmd, u8 len, bool stored)
 {
 	int i, retry = 5;
 	u8 buf[4] = { 0 };
 
-	input_info(true, &ts->client->dev, "%s : cmd(0x%X/0x%X/0x%X)\n",
-				__func__, cmd[0], cmd[1], cmd[2]);
+	input_info(true, &ts->client->dev, "%s : cmd(0x%X/0x%X/0x%X) stored(%d)\n",
+				__func__, cmd[0], cmd[1], cmd[2], stored);
 
 	//---set xdata index to EVENT BUF ADDR---
 	buf[0] = cmd[0];
@@ -1661,18 +1662,17 @@ int nvt_ts_mode_switch_extended(struct nvt_ts_data *ts, u8 *cmd, u8 len, bool pr
 	}
 
 	if (unlikely(i == retry)) {
-		input_err(true, &ts->client->dev, "failed to switch mode - buf:0x%02X 0x%02X, cmd:0x%02X 0x%02X\n",
-				buf[0], buf[1], cmd[0], cmd[1]);
+		input_err(true, &ts->client->dev, "failed to switch mode - 0x%02X 0x%02X\n", buf[0], buf[1]);
 		return -EIO;
 	}
 
-	if (print_log) {
-		u16 read_ic_mode;
-		msleep(20);
-		read_ic_mode = nvt_ts_mode_read(ts);
-		input_info(true, &ts->client->dev,"%s : sec_function : 0x%02X & nvt_ts_mode_read : 0x%02X\n",
-				__func__, ts->sec_function, read_ic_mode);
-	}
+	if (stored) {
+		usleep_range(10000, 10000);
+		input_info(true, &ts->client->dev,"%s : before stored sec_function : 0x%02X\n", __func__, ts->sec_function);
+		ts->sec_function = nvt_ts_mode_read(ts);
+		input_info(true, &ts->client->dev,"%s : after  stored sec_function : 0x%02X\n", __func__, ts->sec_function);
+	} else
+		input_info(true, &ts->client->dev,"%s : mode from fw 0x%02X\n", __func__, nvt_ts_mode_read(ts));
 
 	return 0;
 }
@@ -2170,14 +2170,14 @@ static void glove_mode(void *device_data)
 }
 
 #ifdef PROXIMITY_FUNCTION
-int set_ear_detect(struct nvt_ts_data *ts, int mode, bool print_log)
+int set_ear_detect(struct nvt_ts_data *ts, int mode, bool stored)
 {
 	int ret;
 	u8 reg;
 	u8 buf[3];
 	u8 subcmd;
 
-	input_info(true, &ts->client->dev, "%s: set ear mode(%d)\n", __func__, mode);
+	input_info(true, &ts->client->dev, "%s: set ear mode(%d) stored(%d)\n", __func__, mode, stored);
 
 	reg = mode ? PROXIMITY_ENTER : PROXIMITY_LEAVE;
 
@@ -2192,7 +2192,7 @@ int set_ear_detect(struct nvt_ts_data *ts, int mode, bool print_log)
 	buf[0] = EVENT_MAP_HOST_CMD;
 	buf[1] = reg;
 	buf[2] = subcmd;
-	ret = nvt_ts_mode_switch_extended(ts, buf, 3, print_log);
+	ret = nvt_ts_mode_switch_extended(ts, buf, 3, stored);
 	if (ret) {
 		input_err(true, &ts->client->dev, "%s failed to switch ed\n", __func__);
 	}
