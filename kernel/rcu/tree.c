@@ -1356,7 +1356,6 @@ static bool rcu_start_this_gp(struct rcu_node *rnp_start, struct rcu_data *rdp,
 			      unsigned long gp_seq_req)
 {
 	bool ret = false;
-	struct rcu_state *rsp = &rcu_state;
 	struct rcu_node *rnp;
 
 	/*
@@ -2098,7 +2097,7 @@ static int __noreturn rcu_gp_kthread(void *unused)
 			if (rcu_gp_init())
 				break;
 			cond_resched_tasks_rcu_qs();
-			WRITE_ONCE(rsp->gp_activity, jiffies);
+			WRITE_ONCE(rcu_state.gp_activity, jiffies);
 			WARN_ON(signal_pending(current));
 			trace_rcu_grace_period(rcu_state.name, rcu_state.gp_seq,
 					       TPS("reqwaitsig"));
@@ -2108,9 +2107,9 @@ static int __noreturn rcu_gp_kthread(void *unused)
 		rcu_gp_fqs_loop();
 
 		/* Handle grace-period end. */
-		rsp->gp_state = RCU_GP_CLEANUP;
+		rcu_state.gp_state = RCU_GP_CLEANUP;
 		rcu_gp_cleanup();
-		rsp->gp_state = RCU_GP_CLEANED;
+		rcu_state.gp_state = RCU_GP_CLEANED;
 	}
 }
 

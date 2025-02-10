@@ -672,13 +672,13 @@ static void rcu_preempt_check_blocked_tasks(struct rcu_node *rnp)
 }
 
 /*
- * Check for a quiescent state from the current CPU.  When a task blocks,
- * the task is recorded in the corresponding CPU's rcu_node structure,
- * which is checked elsewhere.
- *
- * Caller must disable hard irqs.
+ * Check for a quiescent state from the current CPU, including voluntary
+ * context switches for Tasks RCU.  When a task blocks, the task is
+ * recorded in the corresponding CPU's rcu_node structure, which is checked
+ * elsewhere, hence this function need only check for quiescent states
+ * related to the current CPU, not to those related to tasks.
  */
-static void rcu_flavor_check_callbacks(int user)
+static void rcu_flavor_sched_clock_irq(int user)
 {
 	struct task_struct *t = current;
 
@@ -910,6 +910,30 @@ static void rcu_preempt_deferred_qs(struct task_struct *t) { }
 static void rcu_preempt_check_blocked_tasks(struct rcu_node *rnp)
 {
 	WARN_ON_ONCE(rnp->qsmask);
+}
+
+/*
+ * Check to see if this CPU is in a non-context-switch quiescent state,
+ * namely user mode and idle loop.
+ */
+static void rcu_flavor_sched_clock_irq(int user)
+{
+	if (user || rcu_is_cpu_rrupt_from_idle()) {
+
+		/*
+		 * Get here if this CPU took its interrupt from user
+		 * mode or from the idle loop, and if this is not a
+		 * nested interrupt.  In this case, the CPU is in
+		 * a quiescent state, so note it.
+		 *
+		 * No memory barrier is required here because rcu_qs()
+		 * references only CPU-local variables that other CPUs
+		 * neither access nor modify, at least not while the
+		 * corresponding CPU is online.
+		 */
+
+		rcu_qs();
+	}
 }
 
 /*
