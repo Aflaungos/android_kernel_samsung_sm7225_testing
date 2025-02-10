@@ -968,6 +968,8 @@ __mutex_lock_common(struct mutex *lock, long state, unsigned int subclass,
 	if(lock != 0) {
 		lock->time = jiffies;
 	}
+#endif
+
 #ifdef CONFIG_DEBUG_MUTEXES
 	DEBUG_LOCKS_WARN_ON(lock->magic != lock);
 #endif
