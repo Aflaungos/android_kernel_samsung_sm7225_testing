@@ -81,7 +81,7 @@ jobs:
           $GITHUB_WORKSPACE/kernel-source//tools/mkdtimg create $GITHUB_WORKSPACE/kernel-source/out/arch/arm64/boot/dtbo.img --page_size=4096 $(find out/arch/arm64/boot/dts/samsung/m23/m23xq/ -name *.dtbo)
           
       - name: Upload BoostKernel-${{ matrix.device }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: BoostKernel-${{ matrix.device }}
           path: kernel-source/out/arch/arm64/boot/*
