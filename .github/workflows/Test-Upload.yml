@@ -1,0 +1,3 @@
+name: Build BoostKernel A14 KSU
+on:
+  workflow_dispatch:
