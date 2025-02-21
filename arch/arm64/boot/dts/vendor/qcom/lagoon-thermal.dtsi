@@ -1299,6 +1299,12 @@
 				type = "passive";
 			};
 
+			gold_trip3: gold-trip3 {
+				temperature = <80000>;
+				hysteresis = <0>;
+				type = "passive";
+			};
+
 			skin_batt_modem_trip: batt-modem-skin-trip {
 				temperature = <50000>;
 				hysteresis = <4000>;
@@ -1308,12 +1314,6 @@
 			skin_batt_trip2: batt-skin-trip2 {
 				temperature = <45000>;
 				hysteresis = <2000>;
-				type = "passive";
-			};
-
-			gpu_skin_trip: gpu-skin-trip {
-				temperature = <65000>;
-				hysteresis = <3000>;
 				type = "passive";
 			};
 
@@ -1335,6 +1335,12 @@
 				type = "passive";
 			};
 
+			silver_trip2: silver-trip2 {
+				temperature = <80000>;
+				hysteresis = <0>;
+				type = "passive";
+			};
+
 			skin_batt_trip4: batt-skin-trip4 {
 				temperature = <50000>;
 				hysteresis = <1000>;
@@ -1342,7 +1348,7 @@
 			};
 
 			cx_emer_trip: cx-emer-trip {
-				temperature = <70000>;
+				temperature = <85000>;
 				hysteresis = <4000>;
 				type = "passive";
 			};
@@ -1363,6 +1369,20 @@
 							(THERMAL_MAX_LIMIT-8)>;
 			};
 
+			skin_cpu8 {
+				trip = <&gold_trip3>;
+					/* throttle from fmax to 1248000KHz */
+				cooling-device = <&CPU6 THERMAL_NO_LIMIT
+							(THERMAL_MAX_LIMIT-4)>;
+			};
+
+			skin_cpu_emrg1 {
+				trip = <&cx_emer_trip>;
+					/* throttle from fmax to 979000KHz */
+				cooling-device = <&CPU6 (THERMAL_MAX_LIMIT-2)
+							(THERMAL_MAX_LIMIT-2)>;
+			};
+
 			skin_cpu0 {
 				trip = <&silver_trip>;
 					/* throttle from fmax to 1516800KHz */
@@ -1377,15 +1397,23 @@
 							(THERMAL_MAX_LIMIT-7)>;
 			};
 
-			skin_gpu {
-				trip = <&gpu_skin_trip>;
-					/* throttle to 650000000Hz */
-				cooling-device = <&msm_gpu (THERMAL_MAX_LIMIT-4)
-						(THERMAL_MAX_LIMIT-4)>;
+			skin_cpu2 {
+				trip = <&silver_trip2>;
+					/* throttle from fmax to 1248000KHz */
+				cooling-device = <&CPU0 THERMAL_NO_LIMIT
+							(THERMAL_MAX_LIMIT-4)>;
+			};
+
+			skin_cpu_emrg2 {
+				trip = <&cx_emer_trip>;
+					/* throttle from fmax to 768000KHz */
+				cooling-device = <&CPU0 (THERMAL_MAX_LIMIT-2)
+							(THERMAL_MAX_LIMIT-2)>;
 			};
 
 			skin_gpu_emrg {
 				trip = <&cx_emer_trip>;
+					/* throttle from fmax to 430000KHz */
 				cooling-device = <&msm_gpu (THERMAL_MAX_LIMIT-2)
 							(THERMAL_MAX_LIMIT-2)>;
 			};
