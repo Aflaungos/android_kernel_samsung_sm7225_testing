@@ -516,14 +516,6 @@ static void complete_commit_cleanup(struct msm_commit *c)
 int ss_get_vdd_ndx_from_state(struct drm_atomic_state *old_state);
 #endif
 
-static void complete_commit_cleanup(struct work_struct *work)
-{
-	struct msm_commit *c = container_of(work, typeof(*c), clean_work);
-	struct drm_atomic_state *state = c->state;
-
-	end_atomic(priv, c->crtc_mask, c->plane_mask);
-}
-
 /* The (potentially) asynchronous part of the commit.  At this point
  * nothing can fail short of armageddon.
  */
