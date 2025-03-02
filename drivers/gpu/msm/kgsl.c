@@ -5448,11 +5448,7 @@ int kgsl_device_platform_probe(struct kgsl_device *device)
 #ifdef CONFIG_SMP
 #ifdef CONFIG_DISPLAY_SAMSUNG
 	device->pwrctrl.pm_qos_req_dma.type = PM_QOS_REQ_AFFINE_CORES;
-	cpumask_empty(&device->pwrctrl.pm_qos_req_dma.cpus_affine);
-	for_each_possible_cpu(cpu) {
-		if ((1 << cpu) & 0xf)
-			cpumask_set_cpu(cpu, &device->pwrctrl.pm_qos_req_dma.cpus_affine);
-	}
+	device->pwrctrl.pm_qos_req_dma.cpus_affine = BIT(0) | BIT(1) | BIT(2) | BIT(3);
 #else
 	device->pwrctrl.pm_qos_req_dma.type = PM_QOS_REQ_AFFINE_IRQ;
 	device->pwrctrl.pm_qos_req_dma.irq = device->pwrctrl.interrupt_num;
@@ -5461,22 +5457,6 @@ int kgsl_device_platform_probe(struct kgsl_device *device)
 	pm_qos_add_request(&device->pwrctrl.pm_qos_req_dma,
 				PM_QOS_CPU_DMA_LATENCY,
 				PM_QOS_DEFAULT_VALUE);
-
-	if (device->pwrctrl.l2pc_cpus_mask) {
-		struct pm_qos_request *qos = &device->pwrctrl.l2pc_cpus_qos;
-
-		qos->type = PM_QOS_REQ_AFFINE_CORES;
-
-		cpumask_empty(&qos->cpus_affine);
-		for_each_possible_cpu(cpu) {
-			if ((1 << cpu) & device->pwrctrl.l2pc_cpus_mask)
-				cpumask_set_cpu(cpu, &qos->cpus_affine);
-		}
-
-		pm_qos_add_request(&device->pwrctrl.l2pc_cpus_qos,
-				PM_QOS_CPU_DMA_LATENCY,
-				PM_QOS_DEFAULT_VALUE);
-	}
 
 	device->events_wq = alloc_workqueue("kgsl-events",
 		WQ_MEM_RECLAIM | WQ_SYSFS | WQ_HIGHPRI, 0);
@@ -5514,8 +5494,6 @@ void kgsl_device_platform_remove(struct kgsl_device *device)
 	kgsl_pwrctrl_uninit_sysfs(device);
 
 	pm_qos_remove_request(&device->pwrctrl.pm_qos_req_dma);
-	if (device->pwrctrl.l2pc_cpus_mask)
-		pm_qos_remove_request(&device->pwrctrl.l2pc_cpus_qos);
 
 	idr_destroy(&device->context_idr);
 
