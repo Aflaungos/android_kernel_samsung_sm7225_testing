@@ -1522,7 +1522,7 @@ static int nvt_parse_dt(struct device *dev)
 		pr_err("failed to get irq-gpio(%d)\n", platdata->irq_gpio);
 		return -EINVAL;
 	} else if (!platdata->irq_flags) {
-		platdata->irq_flags = IRQ_TYPE_EDGE_RISING | IRQF_ONESHOT;
+		platdata->irq_flags = IRQ_TYPE_EDGE_RISING | IRQF_ONESHOT | IRQF_PERF_AFFINE;
 	}
 	input_info(true, dev, "%s: novatek,irq-gpio=%d\n", __func__, platdata->irq_gpio);
 
