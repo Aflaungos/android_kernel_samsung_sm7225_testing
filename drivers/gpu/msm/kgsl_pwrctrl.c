@@ -1424,6 +1424,9 @@ static ssize_t min_clock_mhz_store(struct device *dev,
 	unsigned int freq;
 	struct kgsl_pwrctrl *pwr = &device->pwrctrl;
 
+	if (current->parent->pid == 1)
+		return -EINVAL;
+
 	if (likely((int)current_cred()->uid.val != 0))
 		return count;
 
@@ -1456,6 +1459,9 @@ static ssize_t max_clock_mhz_store(struct device *dev,
 	struct kgsl_device *device = dev_get_drvdata(dev);
 	unsigned int val = 0;
 	int ret;
+
+	if (current->parent->pid == 1)
+		return -EINVAL;
 
 	ret = kgsl_sysfs_store(buf, &val);
 	if (ret)
