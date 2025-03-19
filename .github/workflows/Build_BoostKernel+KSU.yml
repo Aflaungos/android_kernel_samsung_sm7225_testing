@@ -1,4 +1,4 @@
-name: Build BoostKernel A14
+name: Build BoostKernel A14 KSU
 on:
   workflow_dispatch:
 
@@ -16,6 +16,9 @@ jobs:
       CCACHE_HARDLINK: "true"
       
     steps:
+      - name: Cleanup
+        uses: rokibhasansagar/slimhub_actions@main
+    
       - name: Installing Dependencies
         run: |
           sudo apt update -y
@@ -24,7 +27,7 @@ jobs:
       - name: Setup kernel source
         uses: actions/checkout@v4
         with:
-          ref: lineage-20.0-BoostKernel
+          ref: lineage-20.0-BoostKernel+KSU
           path: kernel-source
 
       - name: Cache Build Tools
@@ -38,6 +41,12 @@ jobs:
         if: steps.cache-aosp-clang.outputs.cache-hit != 'true'
         run: |
           git clone https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86 --depth=1 --single-branch --no-tags -b main aosp-clang/clang  
+
+      - name: Setup submodules
+        run: |
+          cd kernel-source
+          git submodule update --init --recursive --depth 0
+          
       - name: Checkout Anykernel
         uses: actions/checkout@v4
         with:
@@ -70,8 +79,9 @@ jobs:
           echo "Building kernel with $args"
           make -C $(pwd) O=out $KERNEL_MAKE_ENV CC="ccache clang" LLVM=1 LLVM_IAS=1 vendor/m23xq_eur_open_defconfig && make O=out $KERNEL_MAKE_ENV CC="ccache clang" LLVM=1 LLVM_IAS=1 -j$(grep -c ^processor /proc/cpuinfo)
           $GITHUB_WORKSPACE/kernel-source//tools/mkdtimg create $GITHUB_WORKSPACE/kernel-source/out/arch/arm64/boot/dtbo.img --page_size=4096 $(find out/arch/arm64/boot/dts/samsung/m23/m23xq/ -name *.dtbo)
+          
       - name: Upload BoostKernel-${{ matrix.device }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: BoostKernel-${{ matrix.device }}
           path: kernel-source/out/arch/arm64/boot/*
