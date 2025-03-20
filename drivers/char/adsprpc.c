@@ -1014,8 +1014,7 @@ static int fastrpc_mmap_create(struct fastrpc_file *fl, int fd,
 		map->va = (uintptr_t)region_vaddr;
 	} else if (mflags == FASTRPC_DMAHANDLE_NOMAP) {
 		if (map->attr & FASTRPC_ATTR_KEEP_MAP) {
-			pr_err("adsprpc: %s: Invalid attribute 0x%x for fd %d\n",
-				__func__, map->attr, fd);
+			pr_err("adsprpc: Invalid attribute 0x%x for fd %d\n", map->attr, fd);
 			err = -EINVAL;
 			goto bail;
 		}
