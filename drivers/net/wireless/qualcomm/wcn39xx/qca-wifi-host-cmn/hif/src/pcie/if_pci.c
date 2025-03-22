@@ -2608,10 +2608,12 @@ void hif_pci_disable_bus(struct hif_softc *scn)
 	mem = (void __iomem *)sc->mem;
 	if (mem) {
 		hif_dump_pipe_debug_count(scn);
+#ifdef CONFIG_ATH_PROCFS_DIAG_SUPPORT
 		if (scn->athdiag_procfs_inited) {
 			athdiag_procfs_remove();
 			scn->athdiag_procfs_inited = false;
 		}
+#endif
 		sc->hif_pci_deinit(sc);
 		scn->mem = NULL;
 	}
