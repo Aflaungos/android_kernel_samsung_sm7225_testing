@@ -23,7 +23,6 @@ DIRTY_BUILD=0
 
 # Set default directories
 ROOT_DIR=$(pwd)
-# OUT_DIR=$ROOT_DIR/out
 KERNEL_DIR=$ROOT_DIR
 DTBO_DIR=./arch/arm64/boot/dts/samsung/m23/m23xq
 
@@ -53,7 +52,7 @@ STD=`echo -e "\033[0m"`
 
 SM_M236B() {
 	DEVICE_NAME="Samsung Galaxy M23/F23 5G"
-	CODENAME=SM-M236B/SM-E236B
+	CODENAME=SM-M236B
 	DEFCONFIG=vendor/m23xq_eur_open_defconfig
 }
 
@@ -75,11 +74,11 @@ CONTINUE() {
 	echo " "
 	echo " "
 	echo " "
+if [ -d "out" ]; then
     read -p "${BLUE}Do you wish to continue last build (Dirty build)? (y/n)? " yn
     case $yn in
         [Yy]* )
 	    if [ -e "out" ]; then
-		echo -e "Building dirty..."
 		export DIRTY_BUILD=1
             	CLANG="${HOME}/linux-x86-main/clang-r487747c/bin"
             	export CLANG_TRIPLE=aarch64-linux-gnu-
@@ -92,24 +91,21 @@ CONTINUE() {
                 	LLVM_IAS=1 LLVM=1
 		return 0
 	    else
-		echo "${RED}No /out folder found!"
 		return
 	    fi
             ;;
         [Nn]* ) 
-            echo "Building Clean..."
 	    return
             ;;
         * ) 
             echo "Please choose Y or N."
             ;;
     esac
+fi
 }
 
 CLEAN_OUT() {
-	echo " ${ON_BLUE}Cleaning kernel source ${STD}"
 	echo " "
-
 	rm -rf out
 }
 
@@ -129,23 +125,6 @@ CLANG_BUILD() {
 	LLVM_IAS=1 LLVM=1
 }
 
-USER() {
-	# Setup KBUILD_BUILD_USER
-	username="$(who | sed 's/  .*//' | head -1)"
-	USER=${username^}
-	echo " ${ON_BLUE}Current build_user is $USER ${STD}"
-	echo " "
-
-	export user=""
-
-	if [ "${user}" == "" ]; then
-		export KBUILD_BUILD_USER=$USER
-		echo " "
-		echo " Using '$USER' as build_user ${STD}"
-	fi
-	sleep 2
-}
-
 DISPLAY_ELAPSED_TIME() {
 	# Find out how much time build has taken
 	BUILD_END=$(date +"%s")
@@ -162,18 +141,11 @@ DISPLAY_ELAPSED_TIME() {
 }
 
 COMMON_STEPS() {
-	clear
-	echo " ${ON_BLUE}Starting compilation ${STD}"
-	echo " "
-	echo " ${GREEN}Defconfig loaded: $DEFCONFIG ${STD}"
 	sleep 0.2
 	echo " ${BLUE}"
 	CLANG_BUILD
 	echo " ${STD}"
-	sleep 1
 	DTBO_BUILD
-	clear
-	sleep 1
 	echo " "
 	echo " ${BLUE}"
 	echo " __________                       __   ____  __.                         .__     "
@@ -189,29 +161,15 @@ COMMON_STEPS() {
 }
 
 BUILD_KERNEL() {
-	clear
 	CONTINUE
-	sleep 1
-	clear
-	if [ "$DIRTY_BUILD" -eq 0 ]; then
+	sleep 0.2
+	if [ "$DIRTY_BUILD" -eq 0 ] && [ -e "out" ]; then
 		if [ -e "out" ]; then
         		CLEAN_OUT
 			sleep 1
 			clear
 		fi
     	fi
-	USER
-	clear
-	echo "*******************************************************"
-	echo "*           Some informations about parameters set:	*"
-	echo -e "* > Architecture: $ARCH				*"
-	echo "*    > Num. Cores: $CORES					*"
-	echo "*    > Build user: $KBUILD_BUILD_USER			*"
-	echo "*    > Build machine: $KBUILD_BUILD_HOST			*"
-	echo -e "*******************************************************"
-	echo " "
-	echo " ${STD}"
-	echo " "
 	COMMON_STEPS
 }
 
