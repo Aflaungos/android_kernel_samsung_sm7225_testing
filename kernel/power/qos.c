@@ -591,7 +591,6 @@ static void pm_qos_irq_notify(struct irq_affinity_notify *notify,
 					struct pm_qos_request, irq_notify);
 	struct pm_qos_constraints *c =
 				pm_qos_array[req->pm_qos_class]->constraints;
-	struct irq_desc *desc = irq_to_desc(req->irq);
 
 	pm_qos_update_target_cpus(c, &req->node, PM_QOS_UPDATE_REQ,
 				  req->node.prio, *cpumask_bits(mask));
