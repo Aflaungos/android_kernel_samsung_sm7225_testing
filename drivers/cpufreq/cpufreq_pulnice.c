@@ -24,8 +24,8 @@ struct pulnice_policy {
     unsigned int last_freq;
 };
 
-#define DEFAULT_UTIL_HIGH      70
-#define DEFAULT_UTIL_LOW       40
+#define DEFAULT_UTIL_HIGH      80
+#define DEFAULT_UTIL_LOW       50
 #define DEFAULT_RATE_LIMIT_US  20000  // 20ms
 
 /*********************
