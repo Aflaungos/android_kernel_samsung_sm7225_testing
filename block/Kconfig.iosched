@@ -18,6 +18,13 @@ config IOSCHED_ANXIETY
 	  READ requests are given priority over WRITE requests due to their
 	  essentiality in determining load-time latency.
 
+config IOSCHED_ZENIO
+	tristate "Zenio I/O scheduler"
+	default y
+	---help---
+	  A minimal, EAS-aware, low-latency and efficient I/O scheduler
+	  tuned for balanced performance and responsiveness.
+
 config IOSCHED_NOOP
 	bool
 	default y

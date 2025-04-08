@@ -119,11 +119,18 @@ config CPU_FREQ_DEFAULT_GOV_SCHEDUTIL
 
 config CPU_FREQ_DEFAULT_GOV_PULNICE  
 	bool "pulnice"
-	depends on CPU_FREQ_GOV_PULNICE
-	default n
+	select CPU_FREQ_GOV_PULNICE
 	help
 	  Use the Pulnice CPU governor by default. The fallback governor 
 	  will be 'performance'.
+
+config CPU_FREQ_DEFAULT_GOV_ZENCORE
+	bool "zencore"
+	select CPU_FREQ_GOV_ZENCORE
+	help
+	  This governor provides a lightweight, EAS-aware frequency scaling policy
+	  that balances performance, thermal management, and power efficiency.
+	  It features cluster-based tuning, thermal throttling, and boost logic.
 endchoice
 
 config CPU_FREQ_GOV_PERFORMANCE
@@ -206,10 +213,17 @@ config CPU_FREQ_GOV_CONSERVATIVE
 	  If in doubt, say N.
 
 config CPU_FREQ_GOV_PULNICE
-	tristate "'pulnice' cpufreq policy governor"
-	default y
+	tristate "'pulnice' cpufreq governor"
+	depends on CPU_FREQ
 	help
 	  Governor made for casual randomness.
+
+config CPU_FREQ_GOV_ZENCORE
+	tristate "'zencore' cpufreq governor"
+	depends on CPU_FREQ
+	help
+	  The ZenCore CPUFreq governor balances performance and efficiency
+	  using cluster-aware, EAS-friendly logic with thermal and boost support.
 
 config CPU_BOOST
 	tristate "Event base short term CPU freq boost"
