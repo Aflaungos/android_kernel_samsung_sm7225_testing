@@ -1270,7 +1270,7 @@
 			};
 
 			modem_skin_trip1: modem-skin-trip1 {
-				temperature = <51000>;
+				temperature = <50000>;
 				hysteresis = <4000>;
 				type = "passive";
 			};
@@ -1282,7 +1282,7 @@
 			};
 
 			modem_skin_trip2: modem-skin-trip2 {
-				temperature = <52000>;
+				temperature = <51000>;
 				hysteresis = <4000>;
 				type = "passive";
 			};
@@ -1312,7 +1312,7 @@
 			};
 
 			gpu_skin_trip: gpu-skin-trip {
-				temperature = <72000>;
+				temperature = <65000>;
 				hysteresis = <3000>;
 				type = "passive";
 			};
@@ -1342,7 +1342,7 @@
 			};
 
 			cx_emer_trip: cx-emer-trip {
-				temperature = <75000>;
+				temperature = <70000>;
 				hysteresis = <4000>;
 				type = "passive";
 			};
@@ -1386,9 +1386,8 @@
 
 			skin_gpu_emrg {
 				trip = <&cx_emer_trip>;
-					/* throttle to 565000000Hz */
-				cooling-device = <&msm_gpu (THERMAL_MAX_LIMIT-3)
-							(THERMAL_MAX_LIMIT-3)>;
+				cooling-device = <&msm_gpu (THERMAL_MAX_LIMIT-2)
+							(THERMAL_MAX_LIMIT-2)>;
 			};
 
 			skin_cdsp {
