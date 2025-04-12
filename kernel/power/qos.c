@@ -365,7 +365,6 @@ static int pm_qos_update_target_cpus(struct pm_qos_constraints *c,
 {
 	struct pm_qos_request *req = container_of(node, typeof(*req), node);
 	int prev_value, curr_value, new_value;
-	unsigned long cpus = 0;
 	int ret;
 
 	spin_lock(&pm_qos_lock);
@@ -398,7 +397,7 @@ static int pm_qos_update_target_cpus(struct pm_qos_constraints *c,
 
 	curr_value = pm_qos_get_value(c);
 	pm_qos_set_value(c, curr_value);
-	ret = pm_qos_set_value_for_cpus(req, c, &cpus, new_cpus, action);
+	ret = pm_qos_set_value_for_cpus(req, c, cpus, new_cpus, action);
 
 	spin_unlock(&pm_qos_lock);
 
