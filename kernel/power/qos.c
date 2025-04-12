@@ -360,7 +360,6 @@ static inline int pm_qos_set_value_for_cpus(struct pm_qos_request *new_req,
 static int pm_qos_update_target_cpus(struct pm_qos_constraints *c,
 				     struct plist_node *node,
 				     enum pm_qos_req_action action, int value,
-				     unsigned long *cpus,
 				     unsigned long new_cpus)
 {
 	struct pm_qos_request *req = container_of(node, typeof(*req), node);
@@ -434,7 +433,7 @@ static int pm_qos_update_target_cpus(struct pm_qos_constraints *c,
 int pm_qos_update_target(struct pm_qos_constraints *c, struct plist_node *node,
 			 enum pm_qos_req_action action, int value)
 {
-	return pm_qos_update_target_cpus(c, node, action, value, NULL, 0);
+	return pm_qos_update_target_cpus(c, node, action, value, 0);
 }
 
 /**
@@ -581,7 +580,7 @@ static void pm_qos_irq_release(struct kref *ref)
 				pm_qos_array[req->pm_qos_class]->constraints;
 
 	pm_qos_update_target_cpus(c, &req->node, PM_QOS_UPDATE_REQ,
-				  c->default_value, NULL, CPUMASK_ALL);
+				  c->default_value, CPUMASK_ALL);
 }
 
 static void pm_qos_irq_notify(struct irq_affinity_notify *notify,
@@ -593,7 +592,7 @@ static void pm_qos_irq_notify(struct irq_affinity_notify *notify,
 				pm_qos_array[req->pm_qos_class]->constraints;
 
 	pm_qos_update_target_cpus(c, &req->node, PM_QOS_UPDATE_REQ,
-				  req->node.prio, NULL, *cpumask_bits(mask));
+				  req->node.prio, *cpumask_bits(mask));
 }
 #endif
 
