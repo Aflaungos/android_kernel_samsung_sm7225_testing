@@ -571,7 +571,6 @@ static unsigned int sugov_next_freq_shared(struct sugov_cpu *sg_cpu, u64 time)
 	for_each_cpu(j, policy->cpus) {
 		struct sugov_cpu *j_sg_cpu = &per_cpu(sugov_cpu, j);
 		unsigned long j_util, j_max;
-		s64 delta_ns;
 
 		/*
 		 * If the util value for all CPUs in a policy is 0, just using >
