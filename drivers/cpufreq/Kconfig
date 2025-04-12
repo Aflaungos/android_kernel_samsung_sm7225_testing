@@ -120,7 +120,6 @@ config CPU_FREQ_DEFAULT_GOV_SCHEDUTIL
 config CPU_FREQ_DEFAULT_GOV_PULNICE  
 	bool "pulnice"
 	depends on CPU_FREQ_GOV_PULNICE
-	default n
 	help
 	  Use the Pulnice CPU governor by default. The fallback governor 
 	  will be 'performance'.
