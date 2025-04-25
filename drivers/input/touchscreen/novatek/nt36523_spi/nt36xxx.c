@@ -25,11 +25,6 @@
 #include <linux/of_gpio.h>
 #include <linux/of_irq.h>
 
-#if defined(CONFIG_FB)
-#include <linux/notifier.h>
-#include <linux/fb.h>
-#endif
-
 #include "nt36xxx.h"
 #if NVT_TOUCH_ESD_PROTECT
 #include <linux/jiffies.h>
@@ -58,10 +53,6 @@ struct nvt_ts_data *ts;
 uint32_t ENG_RST_ADDR  = 0x7FFF80;
 uint32_t SWRST_N8_ADDR = 0; //read from dtsi
 uint32_t SPI_RD_FAST_ADDR = 0;	//read from dtsi
-
-#if defined(CONFIG_FB)
-static int nvt_fb_notifier_callback(struct notifier_block *self, unsigned long event, void *data);
-#endif
 
 #if TOUCH_KEY_NUM > 0
 const uint16_t touch_key_array[TOUCH_KEY_NUM] = {
@@ -1609,6 +1600,10 @@ static int nvt_parse_dt(struct device *dev)
 	platdata->enable_settings_aot = of_property_read_bool(np, "novatek,enable_settings_aot");
 	input_info(true, dev, "%s: AOT mode %s\n",
 				__func__, platdata->enable_settings_aot ? "ON" : "OFF");
+
+	platdata->enable_sysinput_enabled = of_property_read_bool(np, "novatek,enable_sysinput_enabled");
+	input_info(true, dev, "%s: Sysinput enabled %s\n",
+				__func__, platdata->enable_sysinput_enabled ? "ON" : "OFF");
 
 	platdata->prox_lp_scan_enabled = of_property_read_bool(np, "novatek,prox_lp_scan_enabled");
 	input_info(true, dev, "%s: Prox LP Scan enabled %s\n",
@@ -3289,26 +3284,12 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 	nvt_irq_enable(true);
 	input_info(true, &client->dev, "%s : end\n", __func__);
 
-#if defined(CONFIG_FB)
-	ts->fb_notif.notifier_call = nvt_fb_notifier_callback;
-	ret = fb_register_client(&ts->fb_notif);
-	if(ret) {
-		NVT_ERR("register fb_notifier failed. ret=%d\n", ret);
-		goto err_register_fb_notif_failed;
-	}
-#endif
-
 	return 0;
 
 err_init_sec_fn:
 	nvt_ts_sec_fn_remove(ts);
 #if NVT_TOUCH_EXT_PROC
 	nvt_extra_proc_deinit();
-#if defined(CONFIG_FB)
-err_register_fb_notif_failed:
-	if (fb_unregister_client(&ts->fb_notif))
-		NVT_ERR("Error occurred while unregistering fb_notifier.\n");
-#endif
 err_extra_proc_init_failed:
 #endif
 #if NVT_TOUCH_PROC
@@ -3402,11 +3383,6 @@ return:
 static int32_t nvt_ts_remove(struct spi_device *client)
 {
 	input_info(true, &client->dev, "%s : Removing driver...\n", __func__);
-
-#if defined(CONFIG_FB)
-	if (fb_unregister_client(&ts->fb_notif))
-		NVT_ERR("Error occurred while unregistering fb_notifier.\n");
-#endif
 
 #if IS_ENABLED(CONFIG_VBUS_NOTIFIER)
 	cancel_delayed_work_sync(&ts->work_vbus);
@@ -3527,12 +3503,6 @@ static void nvt_ts_shutdown(struct spi_device *client)
 	ts->power_status = POWER_OFF_STATUS;
 
 	nvt_irq_enable(false);
-
-#if defined(CONFIG_FB)
-	if (fb_unregister_client(&ts->fb_notif))
-		NVT_ERR("Error occurred while unregistering fb_notifier.\n");
-#endif
-
 	pinctrl_configure(ts, false);
 
 	nvt_ts_sec_fn_remove(ts);
@@ -3910,33 +3880,6 @@ int32_t nvt_ts_resume(struct device *dev)
 
 	return 0;
 }
-
-#if defined(CONFIG_FB)
-static int nvt_fb_notifier_callback(struct notifier_block *self,
-	unsigned long event, void *data)
-{
-	struct fb_event *evdata = data;
-	int *blank;
-	struct nvt_ts_data *ts =
-		container_of(self, struct nvt_ts_data, fb_notif);
-
-	if (evdata && evdata->data && event == FB_EARLY_EVENT_BLANK) {
-		blank = evdata->data;
-		if (*blank == FB_BLANK_POWERDOWN) {
-			NVT_LOG("event=%lu, *blank=%d\n", event, *blank);
-			nvt_ts_suspend(&ts->client->dev);
-		}
-	} else if (evdata && evdata->data && event == FB_EVENT_BLANK) {
-		blank = evdata->data;
-		if (*blank == FB_BLANK_UNBLANK) {
-			NVT_LOG("event=%lu, *blank=%d\n", event, *blank);
-			nvt_ts_resume(&ts->client->dev);
-		}
-	}
-
-	return 0;
-}
-#endif
 
 #if IS_ENABLED(CONFIG_PM)
 static int nvt_pm_suspend(struct device *dev)
