@@ -19,7 +19,7 @@
 
 set -e
 
-DIRTY_BUILD=0
+DIRTY_BUILD=false
 
 # Set default directories
 ROOT_DIR=$(pwd)
@@ -41,11 +41,11 @@ BUILD_START=$(date +"%s")
 
 ######################### Colours ############################
 
-ON_BLUE=`echo -e "\033[44m"`
-RED=`echo -e "\033[1;31m"`
-BLUE=`echo -e "\033[1;34m"`
-GREEN=`echo -e "\033[1;32m"`
-STD=`echo -e "\033[0m"`
+ON_BLUE=$(echo -e "\033[44m")
+RED=$(echo -e "\033[1;31m")
+BLUE=$(echo -e "\033[1;34m")
+GREEN=$(echo -e "\033[1;32m")
+STD=$(echo -e "\033[0m")
 
 
 ####################### Devices List #########################
@@ -58,55 +58,15 @@ SM_M236B() {
 
 ################### Executable functions #######################
 
-CONTINUE() {
-	SM_M236B
-	sleep 0.3
-    	echo " ${BLUE}"
-	echo " __________                       __   ____  __.                         .__     "
-	echo " \______   \ ____   ____  _______/  |_|    |/ _|___________  ____   ____ |  |    "
-	echo "  |    |  _//  _ \ /  _ \/  ___/\   __\      <_/ __ \_  __ \/    \_/ __ \|  |    "
-	echo "  |    |   (  <_> |  <_> )___ \  |  | |    |  \  ___/|  | \/   |  \  ___/|  |__  "
-	echo "  |______  /\____/ \____/____  > |__| |____|__ \___  >__|  |___|  /\___  >____/  "
-	echo "         \/                  \/               \/   \/           \/     \/        "
-	echo " "
-	echo "                      BoostKernel for $CODENAME ${STD}                           "
-	echo " "
-	echo " "
-	echo " "
-	echo " "
-if [ -d "out" ]; then
-    read -p "${BLUE}Do you wish to continue last build (Dirty build)? (y/n)? " yn
-    case $yn in
-        [Yy]* )
-	    if [ -e "out" ]; then
-		export DIRTY_BUILD=1
-            	CLANG="${HOME}/linux-x86-main/clang-r487747c/bin"
-            	export CLANG_TRIPLE=aarch64-linux-gnu-
-            	export PATH="$CLANG:$PATH"
-            	make -j$CORES O=out ARCH=arm64 SUBARCH=arm64 CC=clang LLVM_IAS=1 LLVM=1 $DEFCONFIG > /dev/null
-            	make -j$CORES O=out \
-                	ARCH=arm64 \
-                	SUBARCH=arm64 \
-                	CC=clang \
-                	LLVM_IAS=1 LLVM=1
-		return 0
-	    else
-		return
-	    fi
-            ;;
-        [Nn]* ) 
-	    return
-            ;;
-        * ) 
-            echo "Please choose Y or N."
-            ;;
-    esac
-fi
-}
-
-CLEAN_OUT() {
-	echo " "
-	rm -rf out
+PRINT_BANNER() {
+    echo " ${BLUE}"
+    echo " __________                       __   ____  __.                         .__     "
+    echo " \______   \ ____   ____  _______/  |_|    |/ _|___________  ____   ____ |  |    "
+    echo "  |    |  _//  _ \ /  _ \/  ___/\   __\      <_/ __ \_  __ \/    \_/ __ \|  |    "
+    echo "  |    |   (  <_> |  <_> )___ \  |  | |    |  \  ___/|  | \/   |  \  ___/|  |__  "
+    echo "  |______  /\____/ \____/____  > |__| |____|__ \___  >__|  |___|  /\___  >____/  "
+    echo "         \/                  \/               \/   \/           \/     \/        "
+    echo " "
 }
 
 DTBO_BUILD() {
@@ -140,37 +100,48 @@ DISPLAY_ELAPSED_TIME() {
 	sleep 1
 }
 
-COMMON_STEPS() {
-	sleep 0.2
+PACKAGE_KERNEL() {
+	echo " ${STD}Zipping up Kernel..."
+	cd ..
+	cd ${HOME}/Anykernel3
+	echo " ${BLUE}"
+	./zip_up_kernel.sh
+	cd ..
+	cd ${HOME}/android_kernel_samsung_sm7225
+}
+
+BUILD_KERNEL() {
+	SM_M236B
+	sleep 0.3
+    	PRINT_BANNER
+	echo "                    BoostKernel for $DEVICE_NAME ${STD}                          "
+	echo " "
+	echo " "
+	echo " "
+	echo " "
+	if [[ -e "out" ]]; then
+ 		while true; do
+     			read -p "${BLUE}Do you wish to continue last build (Dirty build)? (y/n)? ${STD}" yn
+     			case $yn in
+         			[Yy]* ) DIRTY_BUILD=true; break ;;
+         			[Nn]* ) DIRTY_BUILD=false; break ;;
+         			* ) echo "Please choose Y or N." ;;
+     			esac
+ 		done
+ 	fi
+	if [[ "$DIRTY_BUILD" == "false" && -e "out" ]]; then
+        	rm -rf out
+    	fi
 	echo " ${BLUE}"
 	CLANG_BUILD
 	echo " ${STD}"
 	DTBO_BUILD
+	PACKAGE_KERNEL
 	echo " "
-	echo " ${BLUE}"
-	echo " __________                       __   ____  __.                         .__     "
-	echo " \______   \ ____   ____  _______/  |_|    |/ _|___________  ____   ____ |  |    "
-	echo "  |    |  _//  _ \ /  _ \/  ___/\   __\      <_/ __ \_  __ \/    \_/ __ \|  |    "
-	echo "  |    |   (  <_> |  <_> )___ \  |  | |    |  \  ___/|  | \/   |  \  ___/|  |__  "
-	echo "  |______  /\____/ \____/____  > |__| |____|__ \___  >__|  |___|  /\___  >____/  "
-	echo "         \/                  \/               \/   \/           \/     \/        "
-	echo " "
-	echo "                                 Build Complete.                                 "
+	PRINT_BANNER
+	echo "${GREEN}                        Build Complete.                                 "
 	echo " "
 	DISPLAY_ELAPSED_TIME
-}
-
-BUILD_KERNEL() {
-	CONTINUE
-	sleep 0.2
-	if [ "$DIRTY_BUILD" -eq 0 ] && [ -e "out" ]; then
-		if [ -e "out" ]; then
-        		CLEAN_OUT
-			sleep 1
-			clear
-		fi
-    	fi
-	COMMON_STEPS
 }
 
 
