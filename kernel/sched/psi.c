@@ -432,7 +432,7 @@ static u64 update_averages(struct psi_group *group, u64 now)
 			total_some = div_u64(group->total[PSI_AVGS][some], NSEC_PER_USEC);
 			total_full = div_u64(group->total[PSI_AVGS][full], NSEC_PER_USEC);
 
-			perflog(PERFLOG_UNKNOWN, "[PSI][%s][%s] avg10=[%lu.%02lu/%lu.%02lu]  avg60=[%lu.%02lu/%lu.%02lu]  avg300=[%lu.%02lu/%lu.%02lu] total=[%llu/%llu]",
+			/*perflog(PERFLOG_UNKNOWN, "[PSI][%s][%s] avg10=[%lu.%02lu/%lu.%02lu]  avg60=[%lu.%02lu/%lu.%02lu]  avg300=[%lu.%02lu/%lu.%02lu] total=[%llu/%llu]",
 				   strtitle, (group == &psi_system) ? "SYSTEM" : "CGROUP",
 				   LOAD_INT(group->avg[some][AVG10]), LOAD_FRAC(group->avg[some][AVG10]),
 				   LOAD_INT(group->avg[full][AVG10]), LOAD_FRAC(group->avg[full][AVG10]),
@@ -440,7 +440,7 @@ static u64 update_averages(struct psi_group *group, u64 now)
 				   LOAD_INT(group->avg[full][AVG60]), LOAD_FRAC(group->avg[full][AVG60]),
 				   LOAD_INT(group->avg[some][AVG300]), LOAD_FRAC(group->avg[some][AVG300]),
 				   LOAD_INT(group->avg[full][AVG300]), LOAD_FRAC(group->avg[full][AVG300]),
-				   total_some, total_full);
+				   total_some, total_full);*/
 		}
 	}
 

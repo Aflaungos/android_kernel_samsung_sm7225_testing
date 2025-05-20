@@ -2289,9 +2289,6 @@ static int cpufreq_set_policy(struct cpufreq_policy *policy,
 	trace_cpu_frequency_limits(policy);
 	if(policy->cpu < NR_CPUS) {
 		if(/*core_min_max_policy[policy->cpu].min != policy->min ||*/ core_min_max_policy[policy->cpu].max != policy->max) {
-			if(policy->max < OLOG_CPU_FREQ_FILTER || core_min_max_policy[policy->cpu].max < OLOG_CPU_FREQ_FILTER) {
-				perflog(PERFLOG_CPUFREQ, "[%d] %lu, %lu", policy->cpu, policy->min / 1000, policy->max / 1000);
-			}
 			core_min_max_policy[policy->cpu].min = policy->min;
 			core_min_max_policy[policy->cpu].max = policy->max;
 		}
