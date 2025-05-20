@@ -44,6 +44,9 @@ CONFIG_KSU_SUSFS_OPEN_REDIRECT=y
 # Disable trace_printk()
 CONFIG_DISABLE_TRACE_PRINTK=y
 
+# Enable SBalance
+CONFIG_IRQ_SBALANCE=y
+
 #
 # General setup
 #
