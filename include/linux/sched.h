@@ -1508,7 +1508,7 @@ struct task_struct {
 	 * New fields for task_struct should be added above here, so that
 	 * they are included in the randomized portion of task_struct.
 	 */
-#if defined(CONFIG_KSU_SUSFS)
+#if defined(CONFIG_KSU_SUSFS) && !defined(ANDROID_KABI_RESERVE)
 	u64 susfs_task_state;
 #endif
 #if defined(CONFIG_KSU_SUSFS) && !defined(ANDROID_KABI_RESERVE)
