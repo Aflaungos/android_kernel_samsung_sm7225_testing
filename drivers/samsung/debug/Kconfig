@@ -26,7 +26,6 @@ choice
 
 config SEC_LOG_BUF_NO_CONSOLE
 	bool "Direct copying form __log_buf"
-	default y
 	help
 	  Kernel log will be copied directly from __log_buf.
 
