@@ -65,6 +65,13 @@ struct cred init_cred = {
 	.group_info		= &init_groups,
 };
 
+static inline void set_cred_subscribers(struct cred *cred, int n)
+{
+#ifdef CONFIG_DEBUG_CREDENTIALS
+	atomic_set(&cred->subscribers, n);
+#endif
+}
+
 static inline int read_cred_subscribers(const struct cred *cred)
 {
 #ifdef CONFIG_DEBUG_CREDENTIALS
