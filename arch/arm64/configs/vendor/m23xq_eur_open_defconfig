@@ -483,11 +483,6 @@ CONFIG_COMPAT=y
 CONFIG_KUSER_HELPERS=y
 
 #
-# Hypervisor
-#
-# CONFIG_UH is not set
-
-#
 # Power management options
 #
 CONFIG_SUSPEND=y

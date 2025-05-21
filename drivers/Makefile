@@ -201,9 +201,6 @@ obj-y				+= switch/
 # COMBO REDRIVER
 obj-$(CONFIG_COMBO_REDRIVER_PS5169)	+= redriver/
 
-# uH
-obj-$(CONFIG_UH)        += uh/
-
 # SPU signature verify
 obj-$(CONFIG_SPU_VERIFY) += spu_verify/
 
