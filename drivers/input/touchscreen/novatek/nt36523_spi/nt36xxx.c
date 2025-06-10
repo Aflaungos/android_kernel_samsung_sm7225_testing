@@ -3104,7 +3104,7 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 // Rissu: Arghh! Fixing dex touchpad on NVT-ts is REALLY painful due
 // to novatek's spaghetti codes. Hopefully, there's nothing went wrong.
 #if SEC_DEXPAD
-	//---allocate input sec touchpad device---Add commentMore actions
+	//---allocate input sec touchpad device---
 	ts->input_dev_dexpad = input_allocate_device();
 	if (ts->input_dev_dexpad == NULL) {
 		input_err(true, &ts->client->dev, "%s: allocate input dexpad device failed\n", __func__);
@@ -3171,7 +3171,7 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 	ts->input_dev_proximity->id.bustype = BUS_SPI;
 #endif
 
-#if SEC_DEXPADAdd commentMore actions
+#if SEC_DEXPAD
 	// Rissu: Here we go! Set the prop for this really
 	// odd and very diff. from ilitek or synaptics.
 	// Oh well, just do it.
@@ -3196,7 +3196,7 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 	input_set_abs_params(ts->input_dev_dexpad, ABS_MT_TOUCH_MINOR, 0, 255, 0, 0);
 	input_set_abs_params(ts->input_dev_dexpad, ABS_MT_CUSTOM, 0, 0xFFFFFFFF, 0, 0);
 
-	input_mt_init_slots(ts->input_dev_dexpad, ts->platdata->max_touch_num, INPUT_MT_POINTER);Add commentMore actions
+	input_mt_init_slots(ts->input_dev_dexpad, ts->platdata->max_touch_num, INPUT_MT_POINTER);
 #endif
 
 	//---register input device---
@@ -3885,7 +3885,6 @@ int32_t __always_inline nvt_ts_resume(struct device *dev)
 	ts->prox_power_off = 0;
 	ts->power_status = POWER_ON_STATUS;
 
-	// please make sure display reset(RESX) sequence and mipi dsi cmds sent before this
 #if NVT_TOUCH_SUPPORT_HW_RST
 	gpio_set_value(ts->reset_gpio, 1);
 #endif
@@ -3897,23 +3896,6 @@ int32_t __always_inline nvt_ts_resume(struct device *dev)
 	}
 
 	nvt_ts_mode_restore(ts);
-
-	if (ts->ear_detect_mode) {
-		set_ear_detect(ts, ts->ear_detect_mode, false);
-	} else {
-		if (ts->ed_reset_flag) {
-			input_info(true, &ts->client->dev, "%s : set ed on & off\n", __func__);
-			set_ear_detect(ts, 1, false);
-			set_ear_detect(ts, 0, false);
-		}
-	}
-	ts->ed_reset_flag = false;
-
-#if NVT_TOUCH_ESD_PROTECT
-	nvt_esd_check_enable(false);
-	queue_delayed_work(nvt_esd_check_wq, &nvt_esd_check_work,
-			msecs_to_jiffies(NVT_TOUCH_ESD_CHECK_PERIOD));
-#endif /* #if NVT_TOUCH_ESD_PROTECT */
 
 	mutex_unlock(&ts->lock);
 
