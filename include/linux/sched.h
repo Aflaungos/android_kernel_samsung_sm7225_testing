@@ -1495,9 +1495,6 @@ struct task_struct {
 #endif
 	/* task is frozen/stopped (used by the cgroup freezer) */
 	ANDROID_KABI_USE(1, unsigned frozen:1);
-#if defined(CONFIG_KSU_SUSFS)
-	ANDROID_KABI_USE(6, u64 susfs_task_state);
-#endif
 #ifdef CONFIG_KSU_SUSFS
 	ANDROID_KABI_USE(8, u64 susfs_last_fake_mnt_id);
 #endif
