@@ -43,7 +43,6 @@ static int rmnet_shs_freq_notify(struct notifier_block *nb,
 {
 	struct cpufreq_policy *policy = data;
 	unsigned int cpu = policy->cpu;
-	struct cpu_freq *boost = &per_cpu(cpu_boosts, cpu);
 
 	switch (val) {
 	case CPUFREQ_ADJUST:
@@ -53,9 +52,11 @@ static int rmnet_shs_freq_notify(struct notifier_block *nb,
 	return NOTIFY_OK;
 }
 
+/*
 static struct notifier_block freq_boost_nb = {
 	.notifier_call = rmnet_shs_freq_notify,
 };
+*/
 
 static void update_cpu_policy(struct work_struct *work)
 {
