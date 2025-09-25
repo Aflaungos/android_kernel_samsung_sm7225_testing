@@ -2218,7 +2218,12 @@ static void ear_detect_enable(void *device_data)
 		input_err(true, &ts->client->dev, "%s: invalid parameter %d\n", __func__, sec->cmd_param[0]);
 		goto out;
 	} else {
-		ts->ear_detect_mode = sec->cmd_param[0];
+		/* In normal power mode,force 5cm range (mode 3) */
+		if (ts->power_status != LP_MODE_STATUS && ts->power_status != POWER_OFF_STATUS) {
+			ts->ear_detect_mode = sec->cmd_param[0] != 0 ? 3 : 0;
+		} else {
+			ts->ear_detect_mode = sec->cmd_param[0];
+		}
 	}
 
 	if (ts->power_status == POWER_OFF_STATUS || ts->power_status == LP_MODE_EXIT) {
