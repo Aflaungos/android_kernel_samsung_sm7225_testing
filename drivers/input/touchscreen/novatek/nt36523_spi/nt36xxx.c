@@ -2400,15 +2400,13 @@ void nvt_ts_proximity_report(uint8_t *data)
 
 	status = p_event_proximity->status;
 
-	status = !status;
+	status = (status == 5 || !status);
 
 	input_info(true, &ts->client->dev,"proximity->status = %d\n", status);
 
 	input_info(true, &ts->client->dev, "%s hover : %d\n", __func__, status);
 	ts->hover_event = status;
 	input_report_abs(ts->input_dev_proximity, ABS_MT_CUSTOM, status);
-	input_set_capability(ts->input_dev_proximity, EV_SW, SW_FRONT_PROXIMITY);
-	input_report_switch(ts->input_dev_proximity, SW_FRONT_PROXIMITY, status);
 	input_sync(ts->input_dev_proximity);
 
 #if 0
