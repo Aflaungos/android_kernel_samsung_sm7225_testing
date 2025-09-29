@@ -3929,6 +3929,17 @@ int32_t __always_inline nvt_ts_resume(struct device *dev)
 
 	nvt_ts_mode_restore(ts);
 
+	if (ts->ear_detect_mode) {
+		set_ear_detect(ts, ts->ear_detect_mode, false);
+	} else {
+		if (ts->ed_reset_flag) {
+			input_info(true, &ts->client->dev, "%s : set ed on & off\n", __func__);
+			set_ear_detect(ts, 1, false);
+			set_ear_detect(ts, 0, false);
+		}
+	}
+	ts->ed_reset_flag = false;
+
 	mutex_unlock(&ts->lock);
 
 #if SEC_FW_STATUS
