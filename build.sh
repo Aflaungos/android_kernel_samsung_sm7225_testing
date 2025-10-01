@@ -54,6 +54,7 @@ SM_M236B() {
 	DEVICE_NAME="Samsung Galaxy M23/F23 5G"
 	CODENAME=SM-M236B
 	DEFCONFIG=vendor/m23xq_eur_open_defconfig
+	DEFCONFIG_LINEAGE=vendor/lineage-m23xq_defconfig
 }
 
 ################### Executable functions #######################
@@ -77,7 +78,7 @@ CLANG_BUILD() {
 	CLANG="${HOME}/linux-x86-main/clang-r487747c/bin"
 	export CLANG_TRIPLE=aarch64-linux-gnu-
 	export PATH="$CLANG:$PATH"
-	make -j$CORES O=out ARCH=arm64 SUBARCH=arm64 CC=clang LLVM_IAS=1 LLVM=1 $DEFCONFIG > /dev/null
+	make -j$CORES O=out ARCH=arm64 SUBARCH=arm64 CC=clang LLVM_IAS=1 LLVM=1 $SELECTED_DEFCONFIG > /dev/null
 	make -j$CORES O=out \
 	ARCH=arm64 \
 	SUBARCH=arm64 \
@@ -100,16 +101,6 @@ DISPLAY_ELAPSED_TIME() {
 	sleep 1
 }
 
-PACKAGE_KERNEL() {
-	echo " ${STD}Zipping up Kernel..."
-	cd ..
-	cd ${HOME}/Anykernel3
-	echo " ${BLUE}"
-	./zip_up_kernel.sh
-	cd ..
-	cd ${HOME}/android_kernel_samsung_sm7225
-}
-
 BUILD_KERNEL() {
 	SM_M236B
 	sleep 0.3
@@ -119,6 +110,25 @@ BUILD_KERNEL() {
 	echo " "
 	echo " "
 	echo " "
+	while true; do
+    		echo "Select ROM type:"
+    		echo "  1) LineageOS"
+    		echo "  2) Stock ROM"
+    		read -p "Enter choice [1 or 2]: " choice
+    		case $choice in
+        		1 ) 
+            		    SELECTED_DEFCONFIG=$DEFCONFIG_LINEAGE
+            		    echo -e "${GREEN}You selected: LineageOS ($SELECTED_DEFCONFIG)${STD}"
+            		    break 
+            		    ;;
+        		2 ) 
+            		    SELECTED_DEFCONFIG=$DEFCONFIG
+            		    echo -e "${GREEN}You selected: Stock ROM ($SELECTED_DEFCONFIG)${STD}"
+            		    break 
+            		    ;;
+        		* ) echo "Please choose 1 or 2." ;;
+	    	esac
+	done
 	if [[ -e "out" ]]; then
  		while true; do
      			read -p "${BLUE}Do you wish to continue last build (Dirty build)? (y/n)? ${STD}" yn
@@ -136,7 +146,6 @@ BUILD_KERNEL() {
 	CLANG_BUILD
 	echo " ${STD}"
 	DTBO_BUILD
-	PACKAGE_KERNEL
 	echo " "
 	PRINT_BANNER
 	echo "${GREEN}                        Build Complete.                                 "
