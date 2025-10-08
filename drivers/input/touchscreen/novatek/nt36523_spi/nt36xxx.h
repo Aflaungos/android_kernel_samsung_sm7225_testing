@@ -290,9 +290,6 @@ struct nvt_ts_data {
 #endif
 	uint16_t addr;
 	int8_t phys[32];
-#if defined(CONFIG_FB)
-	struct notifier_block fb_notif;
-#endif
 	uint8_t fw_ver;
 //	uint8_t x_num;
 //	uint8_t y_num;

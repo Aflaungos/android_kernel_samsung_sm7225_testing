@@ -26,14 +26,18 @@
 #include <linux/input/mt.h>
 #endif
 
+#if IS_ENABLED(CONFIG_SEC_PANEL_NOTIFIER)
+#include <linux/sec_panel_notifier.h>
+#else
+#include "../../../techpack/display/msm/samsung/ss_panel_notify.h"
+#endif
+
+extern int ss_panel_notifier_register(struct notifier_block *nb);
+extern int ss_panel_notifier_unregister(struct notifier_block *nb);
+
 #include <linux/of_gpio.h>
 #include <linux/of_irq.h>
 #include <linux/input/mt.h>
-
-#if defined(CONFIG_FB)
-#include <linux/notifier.h>
-#include <linux/fb.h>
-#endif
 
 #include "nt36xxx.h"
 #if NVT_TOUCH_ESD_PROTECT
@@ -56,17 +60,11 @@ extern int32_t nvt_extra_proc_init(void);
 extern void nvt_extra_proc_deinit(void);
 #endif
 
-
-
 struct nvt_ts_data *ts;
 
 uint32_t ENG_RST_ADDR  = 0x7FFF80;
 uint32_t SWRST_N8_ADDR = 0; //read from dtsi
 uint32_t SPI_RD_FAST_ADDR = 0;	//read from dtsi
-
-#if defined(CONFIG_FB)
-static int nvt_fb_notifier_callback(struct notifier_block *self, unsigned long event, void *data);
-#endif
 
 #if TOUCH_KEY_NUM > 0
 const uint16_t touch_key_array[TOUCH_KEY_NUM] = {
@@ -2874,6 +2872,27 @@ static void nvt_vbus_work(struct work_struct *work)
 	mutex_unlock(&ts->lock);
 }
 
+int nvt_panel_notifier_callback(struct notifier_block *n, unsigned long data, void *v)
+{
+	struct panel_state_data *d = (struct panel_state_data *)v;
+
+	if (data == PANEL_EVENT_STATE_CHANGED) {
+	    if (d->state == PANEL_ON) {
+	    	input_info(true, &ts->client->dev, "%s: Screen on, resume touch\n", __func__);
+		nvt_ts_resume(&ts->client->dev);
+	    } else if (d->state == PANEL_OFF) {
+		input_info(true, &ts->client->dev, "%s: Screen off, suspend touch\n", __func__);
+		nvt_ts_suspend(&ts->client->dev);
+	    }
+	}
+	return 0;
+}
+
+static struct notifier_block nvt_panel_notifier_callback_notifier = {
+	.notifier_call = nvt_panel_notifier_callback,
+	.priority = 1,
+};
+
 static int tsp_vbus_notification(struct notifier_block *nb,
 		unsigned long cmd, void *data)
 {
@@ -2974,6 +2993,7 @@ return:
 static int32_t nvt_ts_probe(struct spi_device *client)
 {
 	int32_t ret = 0;
+
 #if ((TOUCH_KEY_NUM > 0) || WAKEUP_GESTURE)
 	int32_t retry = 0;
 #endif
@@ -3070,6 +3090,8 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 
 	mutex_init(&ts->lock);
 	mutex_init(&ts->xbuf_lock);
+
+	ss_panel_notifier_register(&nvt_panel_notifier_callback_notifier);
 
 	//---eng reset before TP_RESX high
 	ts->power_status = POWER_ON_STATUS;
@@ -3350,26 +3372,12 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 	nvt_irq_enable(true);
 	input_info(true, &client->dev, "%s : end\n", __func__);
 
-#if defined(CONFIG_FB)
-	ts->fb_notif.notifier_call = nvt_fb_notifier_callback;
-	ret = fb_register_client(&ts->fb_notif);
-	if(ret) {
-		NVT_ERR("register fb_notifier failed. ret=%d\n", ret);
-		goto err_register_fb_notif_failed;
-	}
-#endif
-
 	return 0;
 
 err_init_sec_fn:
 	nvt_ts_sec_fn_remove(ts);
 #if NVT_TOUCH_EXT_PROC
 	nvt_extra_proc_deinit();
-#if defined(CONFIG_FB)
-err_register_fb_notif_failed:
-	if (fb_unregister_client(&ts->fb_notif))
-		NVT_ERR("Error occurred while unregistering fb_notifier.\n");
-#endif
 err_extra_proc_init_failed:
 #endif
 #if NVT_TOUCH_PROC
@@ -3464,11 +3472,6 @@ static int32_t nvt_ts_remove(struct spi_device *client)
 {
 	input_info(true, &client->dev, "%s : Removing driver...\n", __func__);
 
-#if defined(CONFIG_FB)
-	if (fb_unregister_client(&ts->fb_notif))
-		NVT_ERR("Error occurred while unregistering fb_notifier.\n");
-#endif
-
 #if IS_ENABLED(CONFIG_VBUS_NOTIFIER)
 	cancel_delayed_work_sync(&ts->work_vbus);
 #endif
@@ -3482,6 +3485,8 @@ static int32_t nvt_ts_remove(struct spi_device *client)
 #if NVT_TOUCH_PROC
 	nvt_flash_proc_deinit();
 #endif
+
+	ss_panel_notifier_unregister(&nvt_panel_notifier_callback_notifier);
 
 #if IS_ENABLED(CONFIG_VBUS_NOTIFIER)
 	vbus_notifier_unregister(&ts->vbus_nb);
@@ -3588,11 +3593,6 @@ static void nvt_ts_shutdown(struct spi_device *client)
 	ts->power_status = POWER_OFF_STATUS;
 
 	nvt_irq_enable(false);
-
-#if defined(CONFIG_FB)
-	if (fb_unregister_client(&ts->fb_notif))
-		NVT_ERR("Error occurred while unregistering fb_notifier.\n");
-#endif
 
 	pinctrl_configure(ts, false);
 
@@ -3964,33 +3964,6 @@ int32_t __always_inline nvt_ts_resume(struct device *dev)
 
 	return 0;
 }
-
-#if defined(CONFIG_FB)
-static int nvt_fb_notifier_callback(struct notifier_block *self,
-	unsigned long event, void *data)
-{
-	struct fb_event *evdata = data;
-	int *blank;
-	struct nvt_ts_data *ts =
-		container_of(self, struct nvt_ts_data, fb_notif);
-
-	if (evdata && evdata->data && event == FB_EARLY_EVENT_BLANK) {
-		blank = evdata->data;
-		if (*blank == FB_BLANK_POWERDOWN) {
-			NVT_LOG("event=%lu, *blank=%d\n", event, *blank);
-			nvt_ts_suspend(&ts->client->dev);
-		}
-	} else if (evdata && evdata->data && event == FB_EVENT_BLANK) {
-		blank = evdata->data;
-		if (*blank == FB_BLANK_UNBLANK) {
-			NVT_LOG("event=%lu, *blank=%d\n", event, *blank);
-			nvt_ts_resume(&ts->client->dev);
-		}
-	}
-
-	return 0;
-}
-#endif
 
 #if IS_ENABLED(CONFIG_PM)
 static int nvt_pm_suspend(struct device *dev)
