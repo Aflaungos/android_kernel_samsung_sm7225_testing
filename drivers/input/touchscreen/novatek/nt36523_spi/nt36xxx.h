@@ -80,12 +80,14 @@ extern void stui_tsp_init(int (*stui_tsp_enter)(void), int (*stui_tsp_exit)(void
 //---SPI driver info.---
 #define NVT_SPI_NAME "NVT-ts"
 
+#if 0
 #if NVT_DEBUG
 #define NVT_LOG(fmt, args...)    pr_err("[%s] %s %d: " fmt, NVT_SPI_NAME, __func__, __LINE__, ##args)
 #else
 #define NVT_LOG(fmt, args...)    pr_info("[%s] %s %d: " fmt, NVT_SPI_NAME, __func__, __LINE__, ##args)
 #endif
 #define NVT_ERR(fmt, args...)    pr_err("[%s] %s %d: " fmt, NVT_SPI_NAME, __func__, __LINE__, ##args)
+#endif
 
 //---Input device info.---
 //#define NVT_TS_NAME "NVTCapacitiveTouchScreen"
@@ -111,13 +113,6 @@ extern const uint16_t touch_key_array[TOUCH_KEY_NUM];
 //#define NVT_TOUCH_MP 1
 //#define MT_PROTOCOL_B 1
 #define WAKEUP_GESTURE 1
-
-#ifdef TOUCHSCREEN_NOVATEK_NT36523_SPI_DEX
-#define SEC_DEXPAD 1
-#else
-#define SEC_DEXPAD 0
-#endif
-
 #if WAKEUP_GESTURE
 extern const uint16_t gesture_key_array[];
 #endif
@@ -259,6 +254,7 @@ struct nvt_ts_platdata {
 	struct pinctrl *pinctrl;
 	bool support_ear_detect;
 	bool enable_settings_aot;
+	bool enable_sysinput_enabled;
 	bool prox_lp_scan_enabled;
 	bool enable_glove_mode;
 	const char *firmware_name;
@@ -285,9 +281,6 @@ struct nvt_ts_data {
 	u8 touch_count;
 	struct input_dev *input_dev;
 	struct input_dev *input_dev_proximity;
-#ifdef TOUCHSCREEN_NOVATEK_NT36523_SPI_DEX
-	struct input_dev *input_dev_dexpad;
-#endif
 	uint16_t addr;
 	int8_t phys[32];
 	uint8_t fw_ver;
@@ -635,10 +628,10 @@ int nvt_ts_fw_update_from_external(struct nvt_ts_data *ts, const char *file_path
 int nvt_get_checksum(struct nvt_ts_data *ts, u8 *csum_result, u8 csum_size);
 int32_t nvt_set_page(uint32_t addr);
 #if PROXIMITY_FUNCTION
-int set_ear_detect(struct nvt_ts_data *ts, int mode, bool stored);
-int nvt_ts_mode_switch_extended(struct nvt_ts_data *ts, u8 *cmd, u8 len, bool stored);
+int set_ear_detect(struct nvt_ts_data *ts, int mode, bool print_log);
+int nvt_ts_mode_switch_extened(struct nvt_ts_data *ts, u8 *cmd, u8 len, bool print_log);
 #endif
-int nvt_ts_mode_switch(struct nvt_ts_data *ts, u8 cmd, bool stored);
+int nvt_ts_mode_switch(struct nvt_ts_data *ts, u8 cmd, bool print_log);
 int pinctrl_configure(struct nvt_ts_data *ts, bool enable);
 void nvt_irq_enable(bool enable);
 bool nvt_ts_lcd_power_check(void);

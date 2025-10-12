@@ -21,23 +21,9 @@
 #include <linux/irq.h>
 #include <linux/gpio.h>
 #include <linux/proc_fs.h>
-
-#ifdef TOUCHSCREEN_NOVATEK_NT36523_SPI_DEX
 #include <linux/input/mt.h>
-#endif
-
-#if IS_ENABLED(CONFIG_SEC_PANEL_NOTIFIER)
-#include <linux/sec_panel_notifier.h>
-#else
-#include "../../../techpack/display/msm/samsung/ss_panel_notify.h"
-#endif
-
-extern int ss_panel_notifier_register(struct notifier_block *nb);
-extern int ss_panel_notifier_unregister(struct notifier_block *nb);
-
 #include <linux/of_gpio.h>
 #include <linux/of_irq.h>
-#include <linux/input/mt.h>
 
 #include "nt36xxx.h"
 #if NVT_TOUCH_ESD_PROTECT
@@ -59,6 +45,8 @@ uint8_t esd_retry = 0;
 extern int32_t nvt_extra_proc_init(void);
 extern void nvt_extra_proc_deinit(void);
 #endif
+
+
 
 struct nvt_ts_data *ts;
 
@@ -1613,6 +1601,10 @@ static int nvt_parse_dt(struct device *dev)
 	input_info(true, dev, "%s: AOT mode %s\n",
 				__func__, platdata->enable_settings_aot ? "ON" : "OFF");
 
+	platdata->enable_sysinput_enabled = of_property_read_bool(np, "novatek,enable_sysinput_enabled");
+	input_info(true, dev, "%s: Sysinput enabled %s\n",
+				__func__, platdata->enable_sysinput_enabled ? "ON" : "OFF");
+
 	platdata->prox_lp_scan_enabled = of_property_read_bool(np, "novatek,prox_lp_scan_enabled");
 	input_info(true, dev, "%s: Prox LP Scan enabled %s\n",
 				__func__, platdata->prox_lp_scan_enabled ? "ON" : "OFF");
@@ -2407,8 +2399,6 @@ void nvt_ts_proximity_report(uint8_t *data)
 
 	status = p_event_proximity->status;
 
-	status = (status == 5 || !status);
-
 	input_info(true, &ts->client->dev,"proximity->status = %d\n", status);
 
 	input_info(true, &ts->client->dev, "%s hover : %d\n", __func__, status);
@@ -2872,27 +2862,6 @@ static void nvt_vbus_work(struct work_struct *work)
 	mutex_unlock(&ts->lock);
 }
 
-int nvt_panel_notifier_callback(struct notifier_block *n, unsigned long data, void *v)
-{
-	struct panel_state_data *d = (struct panel_state_data *)v;
-
-	if (data == PANEL_EVENT_STATE_CHANGED) {
-	    if (d->state == PANEL_ON) {
-	    	input_info(true, &ts->client->dev, "%s: Screen on, resume touch\n", __func__);
-		nvt_ts_resume(&ts->client->dev);
-	    } else if (d->state == PANEL_OFF) {
-		input_info(true, &ts->client->dev, "%s: Screen off, suspend touch\n", __func__);
-		nvt_ts_suspend(&ts->client->dev);
-	    }
-	}
-	return 0;
-}
-
-static struct notifier_block nvt_panel_notifier_callback_notifier = {
-	.notifier_call = nvt_panel_notifier_callback,
-	.priority = 1,
-};
-
 static int tsp_vbus_notification(struct notifier_block *nb,
 		unsigned long cmd, void *data)
 {
@@ -2993,7 +2962,6 @@ return:
 static int32_t nvt_ts_probe(struct spi_device *client)
 {
 	int32_t ret = 0;
-
 #if ((TOUCH_KEY_NUM > 0) || WAKEUP_GESTURE)
 	int32_t retry = 0;
 #endif
@@ -3091,8 +3059,6 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 	mutex_init(&ts->lock);
 	mutex_init(&ts->xbuf_lock);
 
-	ss_panel_notifier_register(&nvt_panel_notifier_callback_notifier);
-
 	//---eng reset before TP_RESX high
 	ts->power_status = POWER_ON_STATUS;
 	nvt_eng_reset();
@@ -3131,22 +3097,6 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 		input_err(true, &ts->client->dev, "%s: allocate input proximity device failed\n", __func__);
 		ret = -ENOMEM;
 		goto err_input_dev_prox_alloc_failed;
-	}
-#endif
-
-// Rissu: Arghh! Fixing dex touchpad on NVT-ts is REALLY painful due
-// to novatek's spaghetti codes. Hopefully, there's nothing went wrong.
-#if SEC_DEXPAD
-	//---allocate input sec touchpad device---
-	ts->input_dev_dexpad = input_allocate_device();
-	if (ts->input_dev_dexpad == NULL) {
-		input_err(true, &ts->client->dev, "%s: allocate input dexpad device failed\n", __func__);
-		ret = -ENOMEM;
-		// rather than using goto, just copy!!
-		if (ts->input_dev_dexpad) {
-			input_free_device(ts->input_dev_dexpad);
-			ts->input_dev_dexpad = NULL;
-		}
 	}
 #endif
 
@@ -3204,34 +3154,6 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 	ts->input_dev_proximity->id.bustype = BUS_SPI;
 #endif
 
-#if SEC_DEXPAD
-	// Rissu: Here we go! Set the prop for this really
-	// odd and very diff. from ilitek or synaptics.
-	// Oh well, just do it.
-
-	//---set input dexpad device info.---
-
-	ts->input_dev_dexpad->name = "sec_touchpad";
-	ts->input_dev_dexpad->phys = ts->phys;
-	ts->input_dev_dexpad->id.bustype = BUS_SPI;
-
-	ts->input_dev_dexpad->evbit[0] = BIT_MASK(EV_SYN) | BIT_MASK(EV_KEY) | BIT_MASK(EV_ABS) | BIT_MASK(EV_SW);
-	ts->input_dev_dexpad->keybit[BIT_WORD(BTN_TOUCH)] = BIT_MASK(BTN_TOUCH);
-	ts->input_dev_dexpad->keybit[BIT_WORD(BTN_TOOL_FINGER)] = BIT_MASK(BTN_TOOL_FINGER);
-	ts->input_dev_dexpad->keybit[BIT_WORD(KEY_BLACK_UI_GESTURE)] = BIT_MASK(KEY_BLACK_UI_GESTURE);
-	ts->input_dev_dexpad->keybit[BIT_WORD(KEY_INT_CANCEL)] = BIT_MASK(KEY_INT_CANCEL);
-	ts->input_dev_dexpad->propbit[0] = BIT(INPUT_PROP_POINTER);
-	ts->input_dev_dexpad->keybit[BIT_WORD(KEY_HOMEPAGE)] = BIT_MASK(KEY_HOMEPAGE);
-
-	input_set_abs_params(ts->input_dev_dexpad, ABS_MT_POSITION_X, 0, ts->platdata->abs_x_max, 0, 0);
-	input_set_abs_params(ts->input_dev_dexpad, ABS_MT_POSITION_Y, 0, ts->platdata->abs_y_max, 0, 0);
-	input_set_abs_params(ts->input_dev_dexpad, ABS_MT_TOUCH_MAJOR, 0, 255, 0, 0);
-	input_set_abs_params(ts->input_dev_dexpad, ABS_MT_TOUCH_MINOR, 0, 255, 0, 0);
-	input_set_abs_params(ts->input_dev_dexpad, ABS_MT_CUSTOM, 0, 0xFFFFFFFF, 0, 0);
-
-	input_mt_init_slots(ts->input_dev_dexpad, ts->platdata->max_touch_num, INPUT_MT_POINTER);
-#endif
-
 	//---register input device---
 	ret = input_register_device(ts->input_dev);
 	if (ret) {
@@ -3245,16 +3167,6 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 	if (ret) {
 		input_err(true, &client->dev,"register input proximity device (%s) failed. ret=%d\n", ts->input_dev_proximity->name, ret);
 		goto err_input_register_proximity_device_failed;
-	}
-#endif
-
-#if SEC_DEXPAD
-	//---register input dexpad device---
-	ret = input_register_device(ts->input_dev_dexpad);
-	if (ret) {
-		input_err(true, &client->dev, "register input dexpad device (%s) failed. ret=%d\n", ts->input_dev_dexpad->name, ret);
-		input_unregister_device(ts->input_dev_dexpad);
-		ts->input_dev_dexpad = NULL;
 	}
 #endif
 
@@ -3486,8 +3398,6 @@ static int32_t nvt_ts_remove(struct spi_device *client)
 	nvt_flash_proc_deinit();
 #endif
 
-	ss_panel_notifier_unregister(&nvt_panel_notifier_callback_notifier);
-
 #if IS_ENABLED(CONFIG_VBUS_NOTIFIER)
 	vbus_notifier_unregister(&ts->vbus_nb);
 #endif
@@ -3593,7 +3503,6 @@ static void nvt_ts_shutdown(struct spi_device *client)
 	ts->power_status = POWER_OFF_STATUS;
 
 	nvt_irq_enable(false);
-
 	pinctrl_configure(ts, false);
 
 	nvt_ts_sec_fn_remove(ts);
@@ -3921,6 +3830,7 @@ int32_t __always_inline nvt_ts_resume(struct device *dev)
 	ts->prox_power_off = 0;
 	ts->power_status = POWER_ON_STATUS;
 
+	// please make sure display reset(RESX) sequence and mipi dsi cmds sent before this
 #if NVT_TOUCH_SUPPORT_HW_RST
 	gpio_set_value(ts->reset_gpio, 1);
 #endif
@@ -3943,6 +3853,12 @@ int32_t __always_inline nvt_ts_resume(struct device *dev)
 		}
 	}
 	ts->ed_reset_flag = false;
+
+#if NVT_TOUCH_ESD_PROTECT
+	nvt_esd_check_enable(false);
+	queue_delayed_work(nvt_esd_check_wq, &nvt_esd_check_work,
+			msecs_to_jiffies(NVT_TOUCH_ESD_CHECK_PERIOD));
+#endif /* #if NVT_TOUCH_ESD_PROTECT */
 
 	mutex_unlock(&ts->lock);
 
