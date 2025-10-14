@@ -2413,6 +2413,20 @@ void nvt_ts_proximity_report(uint8_t *data)
 		input_report_abs(ts->input_dev_proximity, ABS_MT_CUSTOM, status);
 		input_sync(ts->input_dev_proximity);
 		input_info(true, &ts->client->dev, "%s hover : %d\n", __func__, status);
+
+		if (ts->power_status == LP_MODE_STATUS) {
+			if (status == 0) {
+				if (ts->ear_detect_mode) {
+					set_prox_lp_scan_detect(ts, 1, true);
+					input_info(true, &ts->client->dev, "%s: enabled proximity scan (screen off, proximity near)\n", __func__);
+				}
+			} else {
+				if (ts->ear_detect_mode) {
+					set_prox_lp_scan_detect(ts, 0, true);
+					input_info(true, &ts->client->dev, "%s: disabled proximity scan (screen off, proximity far)\n", __func__);
+				}
+			}
+		}
 	}
 
 #if 0
@@ -3936,6 +3950,10 @@ int32_t nvt_ts_resume(struct device *dev)
 	schedule_work(&ts->work_print_info.work);
 
 	input_info(true, &ts->client->dev, "%s : end\n", __func__);
+
+	input_info(true, &ts->client->dev, "%s : ed:%d, lp:%d, prox:%ld, test:%d, prox_in_aot:%d\n",
+			__func__, ts->ear_detect_mode, ts->lowpower_mode, ts->prox_power_off,
+			ts->lcdoff_test, ts->prox_in_aot);
 
 	return 0;
 }
