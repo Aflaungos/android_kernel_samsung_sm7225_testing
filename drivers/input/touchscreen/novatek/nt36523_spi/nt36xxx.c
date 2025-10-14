@@ -3547,6 +3547,7 @@ static void nvt_ts_shutdown(struct spi_device *client)
 	ts->power_status = POWER_OFF_STATUS;
 
 	nvt_irq_enable(false);
+
 	pinctrl_configure(ts, false);
 
 	nvt_ts_sec_fn_remove(ts);
