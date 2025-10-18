@@ -30,7 +30,6 @@
 #if defined(CONFIG_KSU_SUSFS_SUS_MOUNT) || defined(CONFIG_KSU_SUSFS_TRY_UMOUNT)
 #include <linux/susfs_def.h>
 #endif
-#include <linux/fslog.h>
 
 #include <linux/fslog.h>
 
@@ -712,6 +711,7 @@ static void free_vfsmnt(struct mount *mnt)
 {
 	kfree(mnt->mnt.data);
 	kfree_const(mnt->mnt_devname);
+
 #ifdef CONFIG_SMP
 	free_percpu(mnt->mnt_pcp);
 #endif
