@@ -316,7 +316,7 @@
 	};
 
 	chosen {
-		bootargs = "rcupdate.rcu_expedited=1 rcu_nocbs=0-7 kpti=off cgroup_disable=pressure";
+		bootargs = "rcupdate.rcu_expedited=1 rcu_nocbs=0-7 kpti=off quiet noirqdebug nodebugmon cgroup_disable=pressure";
 	};
 
 	soc: soc { };
