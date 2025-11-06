@@ -28,7 +28,7 @@ DTBO_DIR=./arch/arm64/boot/dts/samsung/m23/m23xq
 
 # Set default kernel variables
 PROJECT_NAME="m23xq"
-CORES=$(nproc --all)
+CORES=8
 
 # Export commands
 export KBUILD_BUILD_USER=Mrsiri
@@ -79,7 +79,7 @@ CLANG_BUILD() {
 	export CLANG_TRIPLE=aarch64-linux-gnu-
 	export PATH="$CLANG:$PATH"
 	make -j$CORES O=out ARCH=arm64 SUBARCH=arm64 CC=clang LLVM_IAS=1 LLVM=1 $SELECTED_DEFCONFIG > /dev/null
-	make -j$CORES O=out \
+	make -j$CORES O=out ARCH=arm64 SUBARCH=arm64 CC=clang LLVM_IAS=1 LLVM=1 \
 	ARCH=arm64 \
 	SUBARCH=arm64 \
 	CC=clang \
