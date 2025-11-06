@@ -37,27 +37,6 @@ struct workqueue_struct *shs_boost_wq;
 static DEFINE_PER_CPU(struct cpu_freq, cpu_boosts);
 static struct work_struct boost_cpu;
 
-static int rmnet_shs_freq_notify(struct notifier_block *nb,
-				 unsigned long val,
-				 void *data)
-{
-	struct cpufreq_policy *policy = data;
-	unsigned int cpu = policy->cpu;
-
-	switch (val) {
-	case CPUFREQ_ADJUST:
-		break;
-	}
-
-	return NOTIFY_OK;
-}
-
-/*
-static struct notifier_block freq_boost_nb = {
-	.notifier_call = rmnet_shs_freq_notify,
-};
-*/
-
 static void update_cpu_policy(struct work_struct *work)
 {
 	unsigned int i;
