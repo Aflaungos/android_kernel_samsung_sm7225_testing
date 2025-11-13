@@ -1575,7 +1575,7 @@ u16 nvt_ts_mode_read(struct nvt_ts_data *ts)
 					__func__, buf[2], buf[1], mode_masked);
 
 	ts->noise_mode = (mode_masked & NOISE_MASK) ? 1 : 0;
-	ts->prox_in_aot = (mode_masked & DOUBLE_CLICK_MASK) ? 1 : 0;
+	ts->prox_in_aot = (buf[3] << 16) & PROX_IN_AOT_MASK) ? 1 : 0;
 
 	return mode_masked;
 }
