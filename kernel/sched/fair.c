@@ -10520,7 +10520,7 @@ static struct sched_group *find_busiest_group(struct lb_env *env)
 			int cpu_local, cpu_busiest;
 			unsigned long capacity_local, capacity_busiest;
 
-			if (env->idle != CPU_NEWLY_IDLE && !env->prefer_spread)
+			if (env->idle != CPU_NEWLY_IDLE)
 				goto out_balanced;
 
 			if (!sds.local || !sds.busiest)
@@ -10575,7 +10575,7 @@ static struct sched_group *find_busiest_group(struct lb_env *env)
 	 * task.
 	 */
 	if (env->idle != CPU_NOT_IDLE && group_has_capacity(env, local) &&
-	    (busiest->group_no_capacity || env->prefer_spread))
+	    (busiest->group_no_capacity))
 		goto force_balance;
 
 	/* Misfit tasks should be dealt with regardless of the avg load */
@@ -10626,7 +10626,7 @@ force_balance:
 	 * If we couldn't find any imbalance, then boost the imbalance
 	 * based on the group util.
 	 */
-	if (!env->imbalance && env->prefer_spread)
+	if (!env->imbalance)
 		env->imbalance = (busiest->group_util >> 1);
 
 	trace_sched_load_balance_stats(sds.busiest->cpumask[0],
