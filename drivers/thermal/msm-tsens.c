@@ -262,7 +262,7 @@ static int tsens_tm_remove(struct platform_device *pdev)
 {
 	platform_set_drvdata(pdev, NULL);
 
-#if defined(CONFIG_SEC_PM)
+#ifdef CONFIG_SEC_PM_DEBUG
 	cancel_delayed_work_sync(&ts_print_work);
 #endif
 

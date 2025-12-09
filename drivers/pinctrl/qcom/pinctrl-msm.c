@@ -40,12 +40,10 @@
 #include "pinctrl-msm.h"
 #include "../pinctrl-utils.h"
 
-#ifdef CONFIG_SEC_PM_DEBUG
 #include <linux/sec-pinmux.h>
 #ifdef CONFIG_SEC_GPIO_DVS
 #include <linux/secgpio_dvs.h>
 #endif /* CONFIG_SEC_GPIO_DVS */
-#endif /* CONFIG_SEC_PM_DEBUG */
 
 #define MAX_NR_GPIO 300
 #define PS_HOLD_OFFSET 0x820

@@ -1707,12 +1707,12 @@ static int lpm_suspend_prepare(void)
 
 #if IS_ENABLED(CONFIG_SEC_PM)
 	regulator_showall_enabled();
+#ifdef CONFIG_SEC_PM_DEBUG
 	sec_clock_debug_print_enabled();
-
 	debug_masterstats_show("entry");
 	debug_rpmstats_show("entry");
+#endif
 #endif /* CONFIG_SEC_PM */
-
 	lpm_stats_suspend_enter();
 
 	return 0;
@@ -1724,8 +1724,10 @@ static void lpm_suspend_wake(void)
 	lpm_stats_suspend_exit();
 
 #if IS_ENABLED(CONFIG_SEC_PM)
+#ifdef CONFIG_SEC_PM_DEBUG
 	debug_rpmstats_show("exit");
 	debug_masterstats_show("exit");
+#endif
 #endif
 }
 
