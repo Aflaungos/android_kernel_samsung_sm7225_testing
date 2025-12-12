@@ -206,7 +206,7 @@ static bool get_dload_mode(void)
 	return dload_mode_enabled;
 }
 
-#ifndef CONFIG_SEC_DEBUG
+#if 0
 static void enable_emergency_dload_mode(void)
 {
 	int ret;
