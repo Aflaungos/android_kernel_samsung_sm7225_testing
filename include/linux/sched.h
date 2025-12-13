@@ -430,7 +430,7 @@ struct load_weight {
 struct util_est {
 	unsigned int			enqueued;
 	unsigned int			ewma;
-#define UTIL_EST_WEIGHT_SHIFT		5
+#define UTIL_EST_WEIGHT_SHIFT		2
 } __attribute__((__aligned__(sizeof(u64))));
 
 /*
