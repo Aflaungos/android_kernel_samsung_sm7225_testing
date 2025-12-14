@@ -14,7 +14,6 @@
 #include "adreno_pm4types.h"
 #include "adreno_snapshot.h"
 #include "adreno_trace.h"
-#include "kgsl_trace.h"
 
 /*
  * Define registers for a3xx that contain addresses used by the
