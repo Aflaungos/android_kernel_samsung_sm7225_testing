@@ -9403,7 +9403,7 @@ static bool __update_blocked_fair(struct rq *rq, bool *done)
 	for_each_leaf_cfs_rq_safe(rq, cfs_rq, pos) {
 		struct sched_entity *se;
 
-		if (update_cfs_rq_load_avg(cfs_rq_clock_pelt(cfs_rq), cfs_rq))
+		if (update_cfs_rq_load_avg(cfs_rq_clock_pelt(cfs_rq), cfs_rq)) {
 			update_tg_load_avg(cfs_rq);
 
 			if (cfs_rq == &rq->cfs)
@@ -9432,7 +9432,6 @@ static bool __update_blocked_fair(struct rq *rq, bool *done)
 	if (done)
 		rq->has_blocked_load = 0;
 #endif
-	rq_unlock_irqrestore(rq, &rf);
 
 	return decayed;
 }
