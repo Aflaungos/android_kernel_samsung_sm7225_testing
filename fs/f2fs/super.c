@@ -1940,8 +1940,7 @@ static void f2fs_enable_checkpoint(struct f2fs_sb_info *sbi)
 	f2fs_sync_fs(sbi->sb, 1);
 }
 
-static int f2fs_remount(struct vfsmount *mnt, struct super_block *sb,
-		int *flags, char *data)
+static int f2fs_remount(struct super_block *sb, int *flags, char *data)
 {
 	struct f2fs_sb_info *sbi = F2FS_SB(sb);
 	struct f2fs_mount_info org_mount_opt;
@@ -2014,11 +2013,9 @@ static int f2fs_remount(struct vfsmount *mnt, struct super_block *sb,
 
 #ifdef CONFIG_QUOTA
 	if (!f2fs_readonly(sb) && (*flags & SB_RDONLY)) {
-		if (!IS_ERR(mnt)) {
-			err = dquot_suspend(sb, -1);
-			if (err < 0)
-				goto restore_opts;
-		}
+	err = dquot_suspend(sb, -1);
+	if (err < 0)
+		goto restore_opts;
 	} else if (f2fs_readonly(sb) && !(*flags & SB_RDONLY)) {
 		/* dquot_resume needs RW */
 		sb->s_flags &= ~SB_RDONLY;
@@ -2653,7 +2650,7 @@ static const struct super_operations f2fs_sops = {
 	.freeze_fs	= f2fs_freeze,
 	.unfreeze_fs	= f2fs_unfreeze,
 	.statfs		= f2fs_statfs,
-	.remount_fs2	= f2fs_remount,
+	.remount_fs	= f2fs_remount,
 };
 
 #ifdef CONFIG_FS_ENCRYPTION
