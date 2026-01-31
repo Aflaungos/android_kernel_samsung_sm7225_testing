@@ -115,6 +115,15 @@ static bool sugov_should_update_freq(struct sugov_policy *sg_policy, u64 time)
 	return !sugov_should_rate_limit(sg_policy, time);
 }
 
+static inline bool use_pelt(void)
+{
+#ifdef CONFIG_SCHED_WALT
+	return false;
+#else
+	return true;
+#endif
+}
+
 static bool sugov_update_next_freq(struct sugov_policy *sg_policy, u64 time,
 				   unsigned int next_freq)
 {
@@ -155,15 +164,6 @@ static void sugov_fast_switch(struct sugov_policy *sg_policy, u64 time,
 		return;
 
 	policy->cur = next_freq;
-}
-
-static inline bool use_pelt(void)
-{
-#ifdef CONFIG_SCHED_WALT
-	return false;
-#else
-	return true;
-#endif
 }
 
 static void sugov_deferred_update(struct sugov_policy *sg_policy, u64 time,
