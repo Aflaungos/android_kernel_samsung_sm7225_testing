@@ -8130,7 +8130,7 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
 		return new_cpu;
 	}
 
-	if (wake_flags & WF_TTWU) {
+	if (sd_flag & SD_BALANCE_WAKE) {
 		record_wakee(p);
 
 		if (static_branch_unlikely(&sched_energy_present)) {
@@ -8177,8 +8177,9 @@ sd_loop:
 	if (unlikely(sd)) {
 		/* Slow path */
 		new_cpu = find_idlest_cpu(sd, p, cpu, prev_cpu, sd_flag);
-	} else if (wake_flags & WF_TTWU) { /* XXX always ? */
+	} else if (sd_flag & SD_BALANCE_WAKE) { /* XXX always ? */
 		/* Fast path */
+
 		new_cpu = select_idle_sibling(p, prev_cpu, new_cpu);
 
 		if (want_affine)
