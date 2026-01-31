@@ -5213,16 +5213,6 @@ static void sync_throttle(struct task_group *tg, int cpu)
 
 	cfs_rq->throttle_count = pcfs_rq->throttle_count;
 	cfs_rq->throttled_clock_pelt = rq_clock_pelt(cpu_rq(cpu));
-
-	/*
-	 * It is not enough to sync the "pelt_clock_throttled" indicator
-	 * with the parent cfs_rq when the hierarchy is not queued.
-	 * Always join a throttled hierarchy with PELT clock throttled
-	 * and leaf it to the first enqueue, or distribution to
-	 * unthrottle the PELT clock.
-	 */
-	if (cfs_rq->throttle_count)
-		cfs_rq->pelt_clock_throttled = 1;
 }
 
 /* conditionally throttle active cfs_rq's from put_prev_entity() */
@@ -12450,8 +12440,6 @@ static void propagate_entity_cfs_rq(struct sched_entity *se)
 		if (list_add_leaf_cfs_rq(cfs_rq))
 			break;
 	}
-
-	assert_list_leaf_cfs_rq(rq_of(cfs_rq));
 }
 #else
 static void propagate_entity_cfs_rq(struct sched_entity *se) { }
