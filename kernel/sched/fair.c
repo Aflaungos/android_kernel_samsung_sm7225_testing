@@ -3237,29 +3237,6 @@ static inline int per_task_boost(struct task_struct *p)
 }
 
 #ifdef CONFIG_SMP
-static inline bool load_avg_is_decayed(struct sched_avg *sa)
-{
-	if (sa->load_sum)
-		return false;
-
-	if (sa->util_sum)
-		return false;
-
-	if (sa->runnable_sum)
-		return false;
-
-	/*
-	 * _avg must be null when _sum are null because _avg = _sum / divider
-	 * Make sure that rounding and/or propagation of PELT values never
-	 * break this.
-	 */
-	SCHED_WARN_ON(sa->load_avg ||
-		      sa->util_avg ||
-		      sa->runnable_avg);
-
-	return true;
-}
-
 #ifdef CONFIG_FAIR_GROUP_SCHED
 /**
  * update_tg_load_avg - update the tg's load avg
