@@ -8177,7 +8177,15 @@ sd_loop:
 	} else if (sd_flag & SD_BALANCE_WAKE) { /* XXX always ? */
 		/* Fast path */
 
-		new_cpu = select_idle_sibling(p, prev_cpu, new_cpu);
+		/*
+		 * Avoid wakeup on an overutilized CPU.
+		 * If the previous CPU is not overloaded, retain the same for cache locality.
+		 * Otherwise, search for an idle sibling.
+		 */
+		if (!cpu_overutilized(prev_cpu))
+			new_cpu = prev_cpu;
+		else
+			new_cpu = select_idle_sibling(p, prev_cpu, new_cpu);
 
 		if (want_affine)
 			current->recent_used_cpu = cpu;
