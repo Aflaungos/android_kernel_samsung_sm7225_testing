@@ -138,7 +138,7 @@
 
 							resource@1 {
 								resource,label = "CPU";
-								resource,value = <0x130b00 0xfd200>;
+								resource,value = <0x0 0x0>;
 							};
 
 							resource@2 {
@@ -169,7 +169,7 @@
 
 							resource@1 {
 								resource,label = "CPU";
-								resource,value = <0x1d0100 0x130b00>;
+								resource,value = <0x0 0x0>;
 							};
 
 							resource@2 {
