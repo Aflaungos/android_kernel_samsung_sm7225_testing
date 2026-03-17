@@ -2405,10 +2405,24 @@ void nvt_ts_proximity_report(uint8_t *data)
 	if (ts->power_status == LP_MODE_STATUS || !ts->touch_count) {
 		status = (status == 5 || !status);
 		input_info(true, &ts->client->dev,"proximity->status = %d\n", status);
+		input_info(true, &ts->client->dev, "%s hover : %d\n", __func__, status);
 		ts->hover_event = status;
 		input_report_abs(ts->input_dev_proximity, ABS_MT_CUSTOM, status);
 		input_sync(ts->input_dev_proximity);
-		input_info(true, &ts->client->dev, "%s hover : %d\n", __func__, status);
+	}
+
+	if (ts->power_status == LP_MODE_STATUS) {
+		if (status == 0) {
+			if (ts->ear_detect_mode) {
+				set_prox_lp_scan_detect(ts, 1, true);
+				input_info(true, &ts->client->dev, "%s: enabled proximity scan (screen off, proximity near)\n", __func__);
+			}
+		} else {
+			if (ts->ear_detect_mode) {
+				set_prox_lp_scan_detect(ts, 0, true);
+				input_info(true, &ts->client->dev, "%s: disabled proximity scan (screen off, proximity far)\n", __func__);
+			}
+		}
 	}
 
 #if 0
