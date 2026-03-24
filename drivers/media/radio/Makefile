@@ -38,4 +38,4 @@ obj-$(CONFIG_I2C_RTC6226_QCA) += rtc6226/
 
 shark2-objs := radio-shark2.o radio-tea5777.o
 
-ccflags-y += -Isound
+ccflags-y += -I $(srctree)/sound
