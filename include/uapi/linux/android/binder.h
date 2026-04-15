@@ -277,12 +277,6 @@ struct binder_frozen_status_info {
 	__u32 async_recv;
 };
 
-struct binder_frozen_status_info {
-	__u32            pid;
-	__u32            sync_recv;
-	__u32            async_recv;
-};
-
 #define BINDER_WRITE_READ		_IOWR('b', 1, struct binder_write_read)
 #define BINDER_SET_IDLE_TIMEOUT		_IOW('b', 3, __s64)
 #define BINDER_SET_MAX_THREADS		_IOW('b', 5, __u32)

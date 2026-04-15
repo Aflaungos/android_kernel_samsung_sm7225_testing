@@ -212,7 +212,6 @@ void fuse_finish_open(struct inode *inode, struct file *file)
 {
 	struct fuse_file *ff = file->private_data;
 	struct fuse_conn *fc = get_fuse_conn(inode);
-	struct fuse_inode *fi = get_fuse_inode(inode);
 
 	if (ff->open_flags & FOPEN_STREAM)
 		stream_open(inode, file);
