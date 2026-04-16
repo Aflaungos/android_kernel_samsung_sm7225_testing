@@ -1289,6 +1289,7 @@ SYSCALL_DEFINE1(newuname, struct new_utsname __user *, name)
 	susfs_spoof_uname(&tmp);
 #endif
 #ifndef CONFIG_FAKE_UNAME_NONE
+if (current_uid().val == 0) {
 	if (!strncmp(current->comm, "bpfloader", 9) ||
 	    !strncmp(current->comm, "netbpfload", 10) ||
 	    !strncmp(current->comm, "netd", 4) ||
@@ -1309,6 +1310,7 @@ SYSCALL_DEFINE1(newuname, struct new_utsname __user *, name)
 		pr_debug("fake uname: %s/%d release=%s\n",
 			 current->comm, current->pid, tmp.release);
 	}
+}
 #endif
 	up_read(&uts_sem);
 	if (copy_to_user(name, &tmp, sizeof(tmp)))
