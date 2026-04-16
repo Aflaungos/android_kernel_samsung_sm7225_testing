@@ -34,12 +34,6 @@
 #include <linux/refcount.h>
 #include <linux/user_namespace.h>
 #include <linux/freezer.h>
-
-#ifdef CONFIG_FUSE_SUPPORT_STLOG
-#include <linux/fslog.h>
-#else
-#define ST_LOG(fmt, ...)
-#endif
 #include <linux/statfs.h>
 
 #define FUSE_SUPER_MAGIC 0x65735546
@@ -236,8 +230,6 @@ enum {
 	FUSE_I_INIT_RDPLUS,
 	/** An operation changing file size is in progress  */
 	FUSE_I_SIZE_UNSTABLE,
-	/** Can be filled in by open, to use direct I/O on this file. */
-	FUSE_I_ATTR_FORCE_SYNC,
 	/* Bad inode */
 	FUSE_I_BAD,
 };

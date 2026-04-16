@@ -1243,13 +1243,6 @@ static ssize_t fuse_dev_do_read(struct fuse_dev *fud, struct file *file,
 	unsigned reqsize;
 	unsigned int hash;
 
-	/* @fs.sec -- 6101dd42ae34a95fe90de8d0463135d3d84a2558 -- */
-	if ((current->flags & PF_NOFREEZE) == 0) {
-		current->flags |= PF_NOFREEZE;
-		printk_ratelimited(KERN_WARNING "%s(%d): This thread should not be frozen\n",
-				current->comm, task_pid_nr(current));
-	}
-
 	/*
 	 * Require sane minimum read buffer - that has capacity for fixed part
 	 * of any request header + negotiated max_write room for data.
@@ -2179,10 +2172,6 @@ static void end_polls(struct fuse_conn *fc)
 void fuse_abort_conn(struct fuse_conn *fc)
 {
 	struct fuse_iqueue *fiq = &fc->iq;
-
-	/* @fs.sec -- d7bd5cc97a05d48e04defc719fbaffefdd4e6f22 -- */
-	ST_LOG("<%s> dev = %u:%u  fuse abort all requests",
-			__func__, MAJOR(fc->dev), MINOR(fc->dev));
 
 	spin_lock(&fc->lock);
 	if (fc->connected) {
