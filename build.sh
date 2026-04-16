@@ -3,7 +3,7 @@
 #
 # Custom build script by Chatur27, Gabriel2392 and roynatech2544 @Github - 2022
 #
-# Modified by Mrsiri
+# Modified by Mrsiri - 2026
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,12 +28,6 @@ DTBO_DIR=./arch/arm64/boot/dts/samsung/m23/m23xq
 
 # Set default kernel variables
 PROJECT_NAME="m23xq"
-CORES=8
-
-# Export commands
-export KBUILD_BUILD_USER=Mrsiri
-export KBUILD_BUILD_HOST=Mrsiri
-export ARCH=arm64
 
 # Get date and time
 DATE=$(date +"%m-%d-%y")
@@ -42,7 +36,6 @@ BUILD_START=$(date +"%s")
 ######################### Colours ############################
 
 ON_BLUE=$(echo -e "\033[44m")
-RED=$(echo -e "\033[1;31m")
 BLUE=$(echo -e "\033[1;34m")
 GREEN=$(echo -e "\033[1;32m")
 STD=$(echo -e "\033[0m")
@@ -53,8 +46,6 @@ STD=$(echo -e "\033[0m")
 SM_M236B() {
 	DEVICE_NAME="Samsung Galaxy M23/F23 5G"
 	CODENAME=SM-M236B
-	DEFCONFIG=vendor/m23xq_eur_open_defconfig
-	DEFCONFIG_LINEAGE=vendor/lineage-m23xq_defconfig
 }
 
 ################### Executable functions #######################
@@ -65,8 +56,8 @@ PRINT_BANNER() {
     echo " \______   \ ____   ____  _______/  |_|    |/ _|___________  ____   ____ |  |    "
     echo "  |    |  _//  _ \ /  _ \/  ___/\   __\      <_/ __ \_  __ \/    \_/ __ \|  |    "
     echo "  |    |   (  <_> |  <_> )___ \  |  | |    |  \  ___/|  | \/   |  \  ___/|  |__  "
-    echo "  |______  /\____/ \____/____  > |__| |____|__ \___  >__|  |___|  /\___  >____/  "
-    echo "         \/                  \/               \/   \/           \/     \/        "
+    echo "  |________/\____/ \____/______> |__| |____|___\_____>__|  |___|__/\_____>____/  "
+    echo "                                                                                 "
     echo " "
 }
 
@@ -78,8 +69,8 @@ CLANG_BUILD() {
 	CLANG="${HOME}/linux-x86-main/clang-r487747c/bin"
 	export CLANG_TRIPLE=aarch64-linux-gnu-
 	export PATH="$CLANG:$PATH"
-	make -j$CORES O=out ARCH=arm64 SUBARCH=arm64 CC=clang LLVM_IAS=1 LLVM=1 $SELECTED_DEFCONFIG > /dev/null
-	make -j$CORES O=out ARCH=arm64 SUBARCH=arm64 CC=clang LLVM_IAS=1 LLVM=1 \
+	make -j8 O=out ARCH=arm64 SUBARCH=arm64 CC=clang LLVM_IAS=1 LLVM=1 vendor/m23xq_eur_open_defconfig > /dev/null
+	make -j8 O=out ARCH=arm64 SUBARCH=arm64 CC=clang LLVM_IAS=1 LLVM=1 \
 	ARCH=arm64 \
 	SUBARCH=arm64 \
 	CC=clang \
@@ -93,11 +84,10 @@ DISPLAY_ELAPSED_TIME() {
 
 	BUILD_SUCCESS=$?
 	if [ $BUILD_SUCCESS != 0 ]; then
-		echo " ${RED}Error: Build failed in $(($DIFF / 60)) minute(s) and $(($DIFF % 60)) seconds $reset ${STD}"
 		exit
 	fi
 
-	echo -e " ${GREEN}Build completed in $(($DIFF / 60)) minute(s) and $(($DIFF % 60)) seconds $reset ${STD}"
+	echo -e "                ${GREEN}Build completed in $(($DIFF / 60)) minute(s) and $(($DIFF % 60)) seconds $reset ${STD}"
 	sleep 1
 }
 
@@ -110,28 +100,9 @@ BUILD_KERNEL() {
 	echo " "
 	echo " "
 	echo " "
-	while true; do
-    		echo "Select ROM type:"
-    		echo "  1) LineageOS"
-    		echo "  2) Stock ROM"
-    		read -p "Enter choice [1 or 2]: " choice
-    		case $choice in
-        		1 ) 
-            		    SELECTED_DEFCONFIG=$DEFCONFIG_LINEAGE
-            		    echo -e "${GREEN}You selected: LineageOS ($SELECTED_DEFCONFIG)${STD}"
-            		    break 
-            		    ;;
-        		2 ) 
-            		    SELECTED_DEFCONFIG=$DEFCONFIG
-            		    echo -e "${GREEN}You selected: Stock ROM ($SELECTED_DEFCONFIG)${STD}"
-            		    break 
-            		    ;;
-        		* ) echo "Please choose 1 or 2." ;;
-	    	esac
-	done
 	if [[ -e "out" ]]; then
  		while true; do
-     			read -p "${BLUE}Do you wish to continue last build (Dirty build)? (y/n)? ${STD}" yn
+     			read -p "${BLUE}Do you wish to continue last build (Dirty build)? ${STD}" yn
      			case $yn in
          			[Yy]* ) DIRTY_BUILD=true; break ;;
          			[Nn]* ) DIRTY_BUILD=false; break ;;
@@ -148,7 +119,7 @@ BUILD_KERNEL() {
 	DTBO_BUILD
 	echo " "
 	PRINT_BANNER
-	echo "${GREEN}                        Build Complete.                                 "
+	echo "${GREEN}                             Build Complete.                                 "
 	echo " "
 	DISPLAY_ELAPSED_TIME
 }
