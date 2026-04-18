@@ -1,8 +1,6 @@
-name: Build BoostKernel A14 with KernelSU
+name: Build BoostKernel with KernelSU
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "0 10 * * *"
 jobs:
   build:
     strategy:
@@ -27,7 +25,7 @@ jobs:
           sudo apt clean
           
       - name: Setup kernel source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: lineage-22.2-BoostKernel+KSU
           path: kernel-source
@@ -38,7 +36,7 @@ jobs:
         
       - name: Cache Build Tools
         id: cache-aosp-clang
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: aosp-clang
           key: aosp-clang  
@@ -50,7 +48,7 @@ jobs:
           git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 -b android-14.0.0_r0.47 --depth=1 --single-branch --no-tags aosp-clang/aarch64-linux-android-4.9
           
       - name: Checkout Anykernel
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: true
           repository: Aflaungos/AnyKernel3
@@ -58,7 +56,7 @@ jobs:
           path: anykernel
 
       - name: Setup Ccache
-        uses: hendrikmuhs/ccache-action@v1.2
+        uses: hendrikmuhs/ccache-action@v1.2.22
         with:
           key: Build-BoostKernel-${{ matrix.device }}
           save: ${{ github.event_name != 'pull_request' }}
@@ -82,7 +80,7 @@ jobs:
           make -C $(pwd) O=out $KERNEL_MAKE_ENV CC="ccache clang" LLVM=1 LLVM_IAS=1 vendor/m23xq_eur_open_defconfig && make O=out $KERNEL_MAKE_ENV CC="ccache clang" LLVM=1 LLVM_IAS=1 -j$(grep -c ^processor /proc/cpuinfo)
           
       - name: Upload BoostKernel-${{ matrix.device }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: BoostKernel-${{ matrix.device }}
           path: kernel-source/out/arch/arm64/boot/*
@@ -97,23 +95,22 @@ jobs:
           mv "$ZIP_NAME.zip" $GITHUB_WORKSPACE
           
       - name: Upload Anykernel
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.ZIP_NAME }}
           path: anykernel/*
       
       - name: Release
         if: success()
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         with:
           name: "BoostKernel For ${{ matrix.device }}"
-          body_path: "INFO.txt"
           files: |
             ${{ env.ZIP_NAME }}.zip
           tag_name: ${{ github.run_number }}-${{ github.ref }}-${{ matrix.device }}
           
       - name: Delete workflow runs
-        uses: Mattraks/delete-workflow-runs@v2
+        uses: Mattraks/delete-workflow-runs@v2.1.0
         with:
           retain_days: 0
           keep_minimum_runs: 2
