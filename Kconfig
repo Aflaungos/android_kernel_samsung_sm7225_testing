@@ -33,6 +33,7 @@ source "lib/Kconfig.debug"
 
 source "techpack/display/msm/dp/Kconfig"
 source "techpack/display/msm/samsung/S6E8FC1_AMS660XR01/Kconfig" # ADDED BY LEGO AUTOMATICALLY: DO NOT SUBMIT
+source "techpack/display/msm/samsung/S6E3FC3_AMS646YD01/Kconfig" # ADDED BY LEGO AUTOMATICALLY: DO NOT SUBMIT
 source "techpack/display/msm/samsung/NT36672C_PM6585JB3_M23/Kconfig" # ADDED BY LEGO AUTOMATICALLY: DO NOT SUBMIT
 source "techpack/display/msm/samsung/NT36672C_TL066FVMC02/Kconfig" # ADDED BY LEGO AUTOMATICALLY: DO NOT SUBMIT
 source "techpack/display/msm/samsung/Kconfig" # ADDED BY LEGO AUTOMATICALLY: DO NOT SUBMIT
