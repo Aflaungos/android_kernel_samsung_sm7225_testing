@@ -22,6 +22,24 @@ config MACH_A52XQ_EUR_OPEN
 	help
 	  Support for Samsung A52XQ EUR OPEN device.
 
+config SEC_GTS7XLLITE_PROJECT
+        default n
+        bool "Samsung GTS7XLLITE Project"
+        help
+          Support for Samsung GTS7XLLITE Project
+
+config MACH_GTS7XLLITE_EUR_OPEN
+        default n
+        bool "Samsung GTS7XLLITE EUR OPEN"
+        help
+          Support for Samsung GTS7XLLITE EUR OPEN device.
+
+config MACH_GTS7XLLITEWIFI_EUR_OPEN
+        default n
+        bool "Samsung GTS7XLLITEWIFI EUR OPEN"
+        help
+          Support for Samsung GTS7XLLITEWIFI EUR OPEN device.
+
 config SEC_M23XQ_PROJECT
 	default n
 	bool "Samsung M23XQ Project"

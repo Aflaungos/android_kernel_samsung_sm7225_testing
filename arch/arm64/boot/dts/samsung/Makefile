@@ -5,7 +5,9 @@ else ifeq ($(CONFIG_SEC_A52XQ_PROJECT),y)
 dts-dirs += a52/a52xq
 else ifeq ($(CONFIG_SEC_M62XQ_PROJECT),y)
 else ifeq ($(CONFIG_SEC_GTS7XLLITE_PROJECT),y)
+dts-dirs += gts7/gts7xllite
 else ifeq ($(CONFIG_SEC_GTS7XLLITEWIFI_PROJECT),y)
+dts-dirs += gts7/gts7xllitewifi
 else ifeq ($(CONFIG_SEC_M42XQ_PROJECT),y)
 else ifeq ($(CONFIG_SEC_M52XQ_PROJECT),y)
 else ifeq ($(CONFIG_SEC_M23XQ_PROJECT),y)
