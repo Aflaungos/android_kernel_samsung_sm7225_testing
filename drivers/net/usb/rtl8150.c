@@ -705,6 +705,7 @@ static netdev_tx_t rtl8150_start_xmit(struct sk_buff *skb,
 	rtl8150_t *dev = netdev_priv(netdev);
 	int res;
 	unsigned int count;
+	unsigned int skb_len;
 
 	/* pad the frame and ensure terminating USB packet, datasheet 9.2.3 */
 	count = max_t(unsigned int, skb->len, ETH_ZLEN);
@@ -714,6 +715,8 @@ static netdev_tx_t rtl8150_start_xmit(struct sk_buff *skb,
 		netdev->stats.tx_dropped++;
 		return NETDEV_TX_OK;
 	}
+
+	skb_len = skb->len;
 
 	netif_stop_queue(netdev);
 	dev->tx_skb = skb;
@@ -730,7 +733,7 @@ static netdev_tx_t rtl8150_start_xmit(struct sk_buff *skb,
 		}
 	} else {
 		netdev->stats.tx_packets++;
-		netdev->stats.tx_bytes += skb->len;
+		netdev->stats.tx_bytes += skb_len;
 		netif_trans_update(netdev);
 	}
 
