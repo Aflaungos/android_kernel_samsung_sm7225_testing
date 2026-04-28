@@ -860,7 +860,7 @@ void post_init_entity_util_avg(struct task_struct *p)
 	struct sched_entity *se = &p->se;
 	struct cfs_rq *cfs_rq = cfs_rq_of(se);
 	struct sched_avg *sa = &se->avg;
-	long cpu_scale = arch_scale_cpu_capacity(cpu_of(rq_of(cfs_rq)));
+	long cpu_scale = arch_scale_cpu_capacity(NULL, cpu_of(rq_of(cfs_rq)));
 	long cap = (long)(cpu_scale - cfs_rq->avg.util_avg) / 2;
 
 	if (cap > 0) {
@@ -5874,6 +5874,7 @@ static void dequeue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 	struct sched_entity *se = &p->se;
 	int task_sleep = flags & DEQUEUE_SLEEP;
 	int idle_h_nr_running = idle_policy(p->policy);
+	bool was_sched_idle = sched_idle_rq(rq);
 #ifdef CONFIG_SEC_PERF_MANAGER
 	unsigned long next_fps_boosted_util = 0;
 	int cur_group_id = -1, next_group_id = -1;
@@ -7923,9 +7924,10 @@ compute_energy(struct task_struct *p, int dst_cpu, struct perf_domain *pd)
 {
 	struct cpumask *pd_mask = perf_domain_span(pd);
 #ifndef CONFIG_SCHED_WALT
-	unsigned long cpu_cap = arch_scale_cpu_capacity(cpumask_first(pd_mask));
+	unsigned long cpu_cap = arch_scale_cpu_capacity(NULL, cpumask_first(pd_mask));
 #endif
 	unsigned long max_util = 0, sum_util = 0;
+	unsigned long min, max;
 	int cpu;
 	unsigned long cpu_util;
 
@@ -7944,6 +7946,7 @@ compute_energy(struct task_struct *p, int dst_cpu, struct perf_domain *pd)
 		sum_util += cpu_util;
 #else
 		unsigned long util_cfs = cpu_util_next(cpu, p, dst_cpu);
+		struct task_struct *tsk = cpu == dst_cpu ? p : NULL;
 
 		/*
 		 * Busy time computation: utilization clamping is not
@@ -7951,7 +7954,8 @@ compute_energy(struct task_struct *p, int dst_cpu, struct perf_domain *pd)
 		 * is already enough to scale the EM reported power
 		 * consumption at the (eventually clamped) cpu_capacity.
 		 */
-		sum_util += schedutil_cpu_util(cpu, util_cfs, NULL, NULL);
+		sum_util += schedutil_cpu_util(cpu, util_cfs, cpu_cap,
+					       ENERGY_UTIL, NULL);
 
 		/*
 		 * Performance domain frequency: utilization clamping
@@ -7960,15 +7964,8 @@ compute_energy(struct task_struct *p, int dst_cpu, struct perf_domain *pd)
 		 * NOTE: in case RT tasks are running, by default the
 		 * FREQUENCY_UTIL's utilization can be max OPP.
 		 */
-		cpu_util = schedutil_cpu_util(cpu, util_cfs, &min, &max);
-			/* Task's uclamp can modify min and max value */
-			if (uclamp_is_used()) {
-				min = max(min, uclamp_eff_value(p, UCLAMP_MIN));
-
-				max = max(max, uclamp_eff_value(p, UCLAMP_MAX));
-			}
-
-			cpu_util = sugov_effective_cpu_perf(cpu, cpu_util, min, max);
+		cpu_util = schedutil_cpu_util(cpu, util_cfs, cpu_cap,
+					      FREQUENCY_UTIL, tsk);
 #endif
 		max_util = max(max_util, cpu_util);
 	}
@@ -9864,7 +9861,7 @@ void init_max_cpu_capacity(struct max_cpu_capacity *mcc) {
 
 static void update_cpu_capacity(struct sched_domain *sd, int cpu)
 {
-	unsigned long capacity = arch_scale_cpu_capacity(cpu);
+	unsigned long capacity = arch_scale_cpu_capacity(sd, cpu);
 	struct sched_group *sdg = sd->groups;
 
 	capacity *= arch_scale_max_freq_capacity(sd, cpu);
