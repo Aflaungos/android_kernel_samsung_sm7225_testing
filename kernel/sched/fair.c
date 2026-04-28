@@ -5874,7 +5874,6 @@ static void dequeue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 	struct sched_entity *se = &p->se;
 	int task_sleep = flags & DEQUEUE_SLEEP;
 	int idle_h_nr_running = idle_policy(p->policy);
-	bool was_sched_idle = sched_idle_rq(rq);
 #ifdef CONFIG_SEC_PERF_MANAGER
 	unsigned long next_fps_boosted_util = 0;
 	int cur_group_id = -1, next_group_id = -1;
@@ -7927,7 +7926,6 @@ compute_energy(struct task_struct *p, int dst_cpu, struct perf_domain *pd)
 	unsigned long cpu_cap = arch_scale_cpu_capacity(cpumask_first(pd_mask));
 #endif
 	unsigned long max_util = 0, sum_util = 0;
-	unsigned long min, max;
 	int cpu;
 	unsigned long cpu_util;
 
