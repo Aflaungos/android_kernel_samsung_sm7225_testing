@@ -23,7 +23,7 @@
  * tunables
  */
 /* max queue in one round of service */
-static const int cfq_quantum = 16;
+static const int cfq_quantum = 64;
 static const u64 cfq_fifo_expire[2] = { NSEC_PER_SEC / 4, NSEC_PER_SEC / 8 };
 /* maximum backwards seek, in KiB */
 static const int cfq_back_max = 16 * 1024;
@@ -33,7 +33,7 @@ static const u64 cfq_slice_sync = NSEC_PER_SEC / 10;
 static u64 cfq_slice_async = NSEC_PER_SEC / 25;
 static const int cfq_slice_async_rq = 2;
 static u64 cfq_slice_idle = 0;
-static u64 cfq_group_idle = 0;
+static u64 cfq_group_idle = 1;
 /* IOPP-cfq_rt_idle_only-v1.0.k4.19 */
 static int cfq_rt_idle_only = 1;
 static const u64 cfq_target_latency = (u64)NSEC_PER_SEC * 3/10; /* 300 ms */
