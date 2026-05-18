@@ -3119,7 +3119,6 @@ try_to_wake_up(struct task_struct *p, unsigned int state, int wake_flags,
 #endif
 	}
 
->>>>>>> 5a3c7b562ace (sched/core: Skip superfluous acquire barrier in ttwu)
 #ifdef CONFIG_SMP
 #if SCHED_FEAT_TTWU_QUEUE
 	/*
