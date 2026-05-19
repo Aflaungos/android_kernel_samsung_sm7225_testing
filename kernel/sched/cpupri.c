@@ -103,6 +103,8 @@ static inline int __cpupri_find(struct cpupri *cp, struct task_struct *p,
  * @cp: The cpupri context
  * @p: The task
  * @lowest_mask: A mask to fill in with selected CPUs (or NULL)
+ * @fitness_fn: A pointer to a function to do custom checks whether the CPU
+ *              fits a specific criteria so that we only return those CPUs.
  *
  * Note: This function returns the recommended CPUs as calculated during the
  * current invocation.  By the time the call returns, the CPUs may have in
@@ -114,7 +116,8 @@ static inline int __cpupri_find(struct cpupri *cp, struct task_struct *p,
  * Return: (int)bool - CPUs were found
  */
 int cpupri_find(struct cpupri *cp, struct task_struct *p,
-		struct cpumask *lowest_mask)
+		struct cpumask *lowest_mask,
+		bool (*fitness_fn)(struct task_struct *p, int cpu))
 {
 	int task_pri = convert_prio(p->prio);
 	int best_unfit_idx = -1;
