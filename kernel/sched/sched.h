@@ -998,6 +998,8 @@ struct rq {
 	unsigned int		nr_preferred_running;
 	unsigned int		numa_migrate_on;
 #endif
+	#define CPU_LOAD_IDX_MAX 5
+	unsigned long		cpu_load[CPU_LOAD_IDX_MAX];
 #ifdef CONFIG_NO_HZ_COMMON
 #ifdef CONFIG_SMP
 	unsigned long		last_load_update_tick;
@@ -1008,6 +1010,8 @@ struct rq {
 	atomic_t nohz_flags;
 #endif /* CONFIG_NO_HZ_COMMON */
 
+	/* capture load from *all* tasks on this cpu: */
+	struct load_weight	load;
 	unsigned long		nr_load_updates;
 	u64			nr_switches;
 

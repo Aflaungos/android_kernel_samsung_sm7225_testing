@@ -9889,7 +9889,7 @@ static inline void update_sg_lb_stats(struct lb_env *env,
 		sgs->group_util += cpu_util(i);
 
 		nr_running = rq->nr_running;
-		sgs->sum_nr_running += nr_running;
+		sgs->sum_h_nr_running += nr_running;
 
 		if (nr_running > 1)
 			*sg_status |= SG_OVERLOAD;
@@ -10130,14 +10130,6 @@ next_group:
 		sds->total_load += sgs->group_load;
 		sds->total_capacity += sgs->group_capacity;
 		sds->total_util += sgs->group_util;
-
-		trace_sched_load_balance_sg_stats(sg->cpumask[0],
-				sgs->group_type, sgs->idle_cpus,
-				sgs->sum_nr_running, sgs->group_load,
-				sgs->group_capacity, sgs->group_util,
-				sgs->group_no_capacity,	sgs->load_per_task,
-				sgs->group_misfit_task_load,
-				sds->busiest ? sds->busiest->cpumask[0] : 0);
 
 		sg = sg->next;
 	} while (sg != env->sd->groups);
@@ -10432,12 +10424,6 @@ force_balance:
 	if (!env->imbalance)
 		env->imbalance = (busiest->group_util >> 1);
 
-	trace_sched_load_balance_stats(sds.busiest->cpumask[0],
-				busiest->group_type, busiest->avg_load,
-				busiest->load_per_task,	sds.local->cpumask[0],
-				local->group_type, local->avg_load,
-				local->load_per_task,
-				sds.avg_load, env->imbalance);
 	return env->imbalance ? sds.busiest : NULL;
 
 out_balanced:
