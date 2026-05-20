@@ -354,7 +354,7 @@ unsigned long apply_dvfs_headroom(int cpu, unsigned long util, unsigned long max
 {
 	unsigned long headroom;
 
-	if (!util || util >= max_cap || cpumask_test_cpu(cpu, cpu_prime_mask))
+	if (!util || util >= max_cap || cpumask_test_cpu(cpu, cpu_perf_mask))
 		return util;
 
 	if (cpumask_test_cpu(cpu, cpu_lp_mask)) {
@@ -576,7 +576,6 @@ static unsigned int sugov_next_freq_shared(struct sugov_cpu *sg_cpu, u64 time)
 {
 	struct sugov_policy *sg_policy = sg_cpu->sg_policy;
 	struct cpufreq_policy *policy = sg_policy->policy;
-	u64 last_freq_update_time = sg_policy->last_freq_update_time;
 	unsigned long util = 0, max_cap;
 	unsigned int j;
 
@@ -885,10 +884,6 @@ static void sugov_exit(struct cpufreq_policy *policy)
 	unsigned int count;
 
 	mutex_lock(&global_tunables_lock);
-
-	/* Save tunables before last owner release it in gov_attr_set_put() */
-	if (tunables->attr_set.usage_count == 1)
-		sugov_tunables_save(policy, tunables);
 
 	count = gov_attr_set_put(&tunables->attr_set, &sg_policy->tunables_hook);
 	policy->governor_data = NULL;
