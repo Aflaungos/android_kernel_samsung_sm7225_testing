@@ -997,7 +997,6 @@ gen_headers_out_arm = [
 	"sound/wcd-dsp-glink.h",
 	"linux/wcd-spi-ac-params.h",
 	"linux/msm_audio_g711_dec.h",
-	"linux/netfilter/xt_domainfilter.h",
 	"sound/msmcal-hwdep.h",
 	"linux/msm_audio_sbc.h",
 	"linux/avtimer.h",
