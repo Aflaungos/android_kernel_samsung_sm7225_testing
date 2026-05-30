@@ -531,9 +531,6 @@ static void __init summary_init_task_info(void)
 	secdbg_apss->task.ti.struct_size = sizeof(struct thread_info);
 	SET_MEMBER_TYPE_INFO(&secdbg_apss->task.ti.flags, struct thread_info, flags);
 	SET_MEMBER_TYPE_INFO(&secdbg_apss->task.ts.cpu, struct task_struct, cpu);
-#if defined (CONFIG_CFP_ROPP) || defined(CONFIG_RKP_CFP_ROPP)
-	SET_MEMBER_TYPE_INFO(&secdbg_apss->task.ti.rrk, struct thread_info, rrk);
-#endif
 
 	secdbg_apss->task.ts.struct_size = sizeof(struct task_struct);
 	SET_MEMBER_TYPE_INFO(&secdbg_apss->task.ts.state, struct task_struct, state);
@@ -571,11 +568,7 @@ static void __init summary_init_task_info(void)
 #endif
 
 	secdbg_apss->task.init_task = (uint64_t)&init_task;
-#if defined (CONFIG_CFP_ROPP) || defined(CONFIG_RKP_CFP_ROPP)
-	secdbg_apss->task.ropp.magic = 0x50504F52;
-#else
 	secdbg_apss->task.ropp.magic = 0x0;
-#endif
 }
 
 static void __init summary_init_kernel_constant(void)

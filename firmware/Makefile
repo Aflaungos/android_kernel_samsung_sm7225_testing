@@ -21,7 +21,7 @@ else ifdef CONFIG_SEC_A42XUQ_PROJECT
 fw-external-$(CONFIG_SENSORS_A96T3X6) += abov/a96t356_a42xuq.bin
 fw-external-$(CONFIG_SENSORS_A96T3X6_SUB) += abov/a96t356_a42xuq_sub.bin
 else ifdef CONFIG_SEC_GTS7XLLITE_PROJECT
-fw-external-$(CONFIG_SENSORS_A96T3X6) += abov/a96t356_gts7l_5g_main1_usa.bin	abov/a96t356_gts7l_5g_main1.bin 	abov/a96t356_gts7l_lte_main1.bin
+fw-external-$(CONFIG_SENSORS_A96T3X6) += abov/a96t356_gts7l_5g_main1_usa.bin	abov/a96t356_gts7l_5g_main1.bin 	abov/a96t356_gts7l_lte_main1.bin 
 fw-external-$(CONFIG_SENSORS_A96T3X6_WIFI) += abov/a96t356_gts7l_5g_wifi1_usa.bin	abov/a96t356_gts7l_5g_wifi1.bin 	abov/a96t356_gts7l_lte_wifi1.bin
 else ifdef CONFIG_SEC_GTS7XLLITEWIFI_PROJECT
 fw-external-$(CONFIG_SENSORS_A96T3X6) += 	abov/a96t356_gts7l_wifi_main1.bin
@@ -56,11 +56,6 @@ fw-external-$(CONFIG_TOUCHSCREEN_NOVATEK_NT36523_SPI) += tsp_novatek/nt36672_m23
 endif
 
 fw-external-$(CONFIG_EPEN_WACOM_WEZ01) += epen/wez01_gts7xllite_00.bin epen/wez01_gts7xllite.bin epen/w9021_gts7xllite.bin
-
-# FIVE
-ifeq ($(CONFIG_FIVE_TEE_DRIVER),y)
-include $(srctree)/firmware/five/Makefile
-endif
 
 quiet_cmd_fwbin = MK_FW   $@
       cmd_fwbin = FWNAME="$(patsubst firmware/%.gen.S,%,$@)";		     \

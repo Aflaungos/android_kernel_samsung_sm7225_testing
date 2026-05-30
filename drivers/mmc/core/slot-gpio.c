@@ -221,9 +221,6 @@ void mmc_gpiod_update_status(struct mmc_host *host, int present)
 	ctx_status = !!present;
 	if (ctx && (ctx->status ^ ctx_status)) {
 		ctx->status = ctx_status;
-#if defined(CONFIG_HDM)
-		host->trigger_card_event = true;
-#endif
 	}
 }
 EXPORT_SYMBOL(mmc_gpiod_update_status);
