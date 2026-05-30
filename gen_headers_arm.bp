@@ -28,6 +28,8 @@ gen_headers_out_arm = [
     "asm/bitsperlong.h",
     "asm/bpf_perf_event.h",
     "asm/errno.h",
+    "asm/ioctl.h",
+    "asm/ipcbuf.h",
     "asm/msgbuf.h",
     "asm/param.h",
     "asm/poll.h",
@@ -989,7 +991,7 @@ gen_headers_out_arm = [
     "media/cam_sync.h",
     "media/cam_tfe.h",
 
-	// For Samsug Build
+	// For Samsung Build
 	"linux/msm_audio_amrwb.h",
 	"linux/msm_audio_qcp.h",
 	"sound/wcd-dsp-glink.h",
@@ -1006,7 +1008,6 @@ gen_headers_out_arm = [
 	"linux/msm_audio_wma.h",
 	"linux/msm_audio_mvs.h",
 	"linux/msm_audio_calibration.h",
-	"asm/ipcbuf.h",
 	"sound/lsm_params.h",
 	"sound/voice_params.h",
 	"sound/audio_slimslave.h",
@@ -1014,14 +1015,12 @@ gen_headers_out_arm = [
 	"linux/msm_audio_ac3.h",
 	"linux/msm_audio_amrnb.h",
 	"linux/msm_audio_amrwbplus.h",
-	"asm/ioctl.h",
 	"linux/msm_audio_aac.h",
 	"linux/msm_audio_voicememo.h",
 	"sound/audio_effects.h",
 	"linux/msm_audio_ape.h",
 	"sound/devdep_params.h",
 	"linux/msm_audio_g711.h",
-
 ]
 
 genrule {
