@@ -1595,6 +1595,10 @@ static struct timespec64 timekeeping_suspend_time;
 static void __timekeeping_inject_sleeptime(struct timekeeper *tk,
 					   const struct timespec64 *delta)
 {
+#if IS_ENABLED(CONFIG_SEC_PM)
+	struct timespec64 sleep_duration;
+#endif
+
 	if (!timespec64_valid_strict(delta)) {
 		printk_deferred(KERN_WARNING
 				"__timekeeping_inject_sleeptime: Invalid "
@@ -1604,7 +1608,13 @@ static void __timekeeping_inject_sleeptime(struct timekeeper *tk,
 	tk_xtime_add(tk, delta);
 	tk_set_wall_to_mono(tk, timespec64_sub(tk->wall_to_monotonic, *delta));
 	tk_update_sleep_time(tk, timespec64_to_ktime(*delta));
+#if IS_ENABLED(CONFIG_SEC_PM)
+	sleep_duration = *delta;
+	printk_deferred("PM: Timekeeping suspended for %lld.%03lu seconds\n",
+			   (s64)sleep_duration.tv_sec, sleep_duration.tv_nsec / NSEC_PER_MSEC);
+#else
 	tk_debug_account_sleep_time(delta);
+#endif
 }
 
 #if defined(CONFIG_PM_SLEEP) && defined(CONFIG_RTC_HCTOSYS_DEVICE)

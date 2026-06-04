@@ -193,8 +193,7 @@ static uint8_t *read_calibration_data(int calib_data_len)
 			return NULL;
 		}
 		read_len = sensor->calib_data_pkt[2];
-
-		if (read_len <= 0) {
+		if(read_len <=0) {
 			pr_err("%s:Viewer returned non positve length\n", __func__);
 			kfree(hid_buf);
 			kfree(complete_data);

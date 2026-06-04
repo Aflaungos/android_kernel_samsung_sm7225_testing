@@ -54,7 +54,7 @@ struct bp_hardening_data {
 	 * template_start is only used by the BHB mitigation to identify the
 	 * hyp_vectors_slot sequence.
 	 */
-	const char *template_start;
+	const char *template_start;	
 };
 
 #if (defined(CONFIG_HARDEN_BRANCH_PREDICTOR) ||	\

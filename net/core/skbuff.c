@@ -557,6 +557,8 @@ static void skb_free_head(struct sk_buff *skb)
 		kfree(head);
 }
 
+extern int ipa3_add_pool_page(struct page *page);
+
 static void skb_release_data(struct sk_buff *skb)
 {
 	struct skb_shared_info *shinfo = skb_shinfo(skb);
@@ -567,8 +569,10 @@ static void skb_release_data(struct sk_buff *skb)
 			      &shinfo->dataref))
 		return;
 
-	for (i = 0; i < shinfo->nr_frags; i++)
-		__skb_frag_unref(&shinfo->frags[i]);
+	for (i = 0; i < shinfo->nr_frags; i++) {
+		if (ipa3_add_pool_page(shinfo->frags[i].page.p) < 0)
+			__skb_frag_unref(&shinfo->frags[i]);
+	}
 
 	if (shinfo->frag_list)
 		kfree_skb_list(shinfo->frag_list);

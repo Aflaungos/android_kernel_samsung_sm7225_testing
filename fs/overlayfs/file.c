@@ -48,8 +48,8 @@ static struct file *ovl_open_realfile(const struct file *file,
 		if (!inode_owner_or_capable(realinode))
 			flags &= ~O_NOATIME;
 
-	realfile = open_with_fake_path(&file->f_path, flags, realinode,
-				       current_cred());
+		realfile = open_with_fake_path(&file->f_path, flags, realinode,
+					       current_cred());
 	}
 	ovl_revert_creds(old_cred);
 

@@ -621,7 +621,7 @@ int input_open_device(struct input_handle *handle)
 	if (retval) {
 		dev->users_private--;
 		if (!dev->disabled)
-		dev->users--;
+			dev->users--;
 		if (!--handle->open) {
 			/*
 			 * Make sure we are not delivering any more events
@@ -1457,6 +1457,7 @@ static ssize_t input_dev_show_enabled(struct device *dev,
 					 char *buf)
 {
 	struct input_dev *input_dev = to_input_dev(dev);
+
 	return scnprintf(buf, PAGE_SIZE, "%d\n", !input_dev->disabled);
 }
 
@@ -1484,7 +1485,6 @@ static ssize_t input_dev_store_enabled(struct device *dev,
 
 static DEVICE_ATTR(enabled, S_IRUGO | S_IWUSR,
 		   input_dev_show_enabled, input_dev_store_enabled);
-
 static struct attribute *input_dev_attrs[] = {
 	&dev_attr_name.attr,
 	&dev_attr_phys.attr,

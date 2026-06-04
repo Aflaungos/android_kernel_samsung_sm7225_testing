@@ -13,7 +13,7 @@
 #include <uapi/linux/input.h>
 /* Implementation details, userspace should not care about these */
 #define ABS_MT_FIRST		ABS_MT_TOUCH_MAJOR
-#define ABS_MT_LAST		ABS_MT_TOOL_Y
+#define ABS_MT_LAST		ABS_MT_GRIP
 
 /*
  * In-kernel definitions.
@@ -192,6 +192,10 @@ struct input_dev {
 
 	struct list_head	h_list;
 	struct list_head	node;
+
+	unsigned int prev_num_vals;
+	unsigned int touch_slot_cnt;
+	int device_type;
 
 	unsigned int num_vals;
 	unsigned int max_vals;
