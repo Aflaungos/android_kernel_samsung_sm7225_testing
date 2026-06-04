@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
@@ -1163,6 +1164,7 @@ struct wlan_mlme_chainmask {
  * @stop_all_host_scan_support: Target capability that indicates if the target
  * supports stop all host scan request type.
  * @sae_connect_retries: sae connect retry bitmask
+ * @tx_retry_multiplier: TX xretry extension parameter
  */
 struct wlan_mlme_generic {
 	uint32_t band_capability;
@@ -1200,6 +1202,7 @@ struct wlan_mlme_generic {
 	bool enable_peer_unmap_conf_support;
 	bool stop_all_host_scan_support;
 	uint32_t sae_connect_retries;
+	uint32_t tx_retry_multiplier;
 };
 
 /*

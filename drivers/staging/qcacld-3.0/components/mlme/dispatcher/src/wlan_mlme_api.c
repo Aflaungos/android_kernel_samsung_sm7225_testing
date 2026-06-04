@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
@@ -4045,5 +4046,23 @@ uint32_t wlan_mlme_get_roaming_triggers(struct wlan_objmgr_psoc *psoc)
 		return cfg_default(CFG_ROAM_TRIGGER_BITMAP);
 
 	return mlme_obj->cfg.lfr.roam_trigger_bitmap;
+}
+
+QDF_STATUS
+wlan_mlme_get_tx_retry_multiplier(struct wlan_objmgr_psoc *psoc,
+				  uint32_t *tx_retry_multiplier)
+{
+	struct wlan_mlme_psoc_ext_obj *mlme_obj;
+
+	mlme_obj = mlme_get_psoc_ext_obj(psoc);
+
+	if (!mlme_obj) {
+		*tx_retry_multiplier =
+			cfg_default(CFG_TX_RETRY_MULTIPLIER);
+		return QDF_STATUS_E_FAILURE;
+	}
+
+	*tx_retry_multiplier = mlme_obj->cfg.gen.tx_retry_multiplier;
+	return QDF_STATUS_SUCCESS;
 }
 #endif

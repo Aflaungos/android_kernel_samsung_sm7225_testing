@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
@@ -2577,5 +2578,18 @@ uint32_t wlan_mlme_get_roaming_triggers(struct wlan_objmgr_psoc *psoc)
 	return 0xFFFF;
 }
 #endif
+
+/**
+ * wlan_mlme_get_tx_retry_multiplier() - Get the tx retry multiplier percentage
+ *
+ * @psoc: pointer to psoc object
+ * @tx_retry_multiplier: pointer to hold user config value of
+ * tx_retry_multiplier
+ *
+ * Return: QDF Status
+ */
+QDF_STATUS
+wlan_mlme_get_tx_retry_multiplier(struct wlan_objmgr_psoc *psoc,
+				  uint32_t *tx_retry_multiplier);
 
 #endif /* _WLAN_MLME_API_H_ */

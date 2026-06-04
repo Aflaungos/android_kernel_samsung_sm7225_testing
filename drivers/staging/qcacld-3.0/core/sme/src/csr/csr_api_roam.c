@@ -14722,8 +14722,8 @@ csr_roam_get_bss_start_parms(struct mac_context *mac,
 		}
 		pParam->operation_chan_freq = opr_ch_freq;
 	}
-
-	if (pProfile->require_h2e) {
+	
+		if (pProfile->require_h2e) {
 		h2e = WLAN_BASIC_RATE_MASK |
 			WLAN_BSS_MEMBERSHIP_SELECTOR_SAE_H2E;
 		if (ext_rates->numRates < SIR_MAC_MAX_NUMBER_OF_RATES) {
@@ -14738,6 +14738,7 @@ csr_roam_get_bss_start_parms(struct mac_context *mac,
 			sme_err("rates full, can not add H2E bss membership");
 		}
 	}
+
 
 	pParam->sirNwType = nw_type;
 	pParam->ch_params.ch_width = pProfile->ch_params.ch_width;
