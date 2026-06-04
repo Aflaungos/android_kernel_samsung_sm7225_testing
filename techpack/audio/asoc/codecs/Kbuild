@@ -235,6 +235,16 @@ ifeq ($(KERNEL_BUILD), 1)
 	obj-y	+= wsa883x/
 	obj-y	+= sdm660_cdc/
 endif
+ifdef CONFIG_SND_SOC_TAS256x
+	obj-y	 += tas256x/
+endif
+ifdef CONFIG_SND_SOC_TAS2562
+	obj-y	 += tas2562/
+endif
+ifdef CONFIG_SND_SOC_TFA9878
+	obj-y += tfa9878/
+endif
+
 # Module information used by KBuild framework
 obj-$(CONFIG_WCD9XXX_CODEC_CORE) += wcd_core_dlkm.o
 obj-$(CONFIG_WCD9XXX_CODEC_CORE_V2) += wcd_core_dlkm.o

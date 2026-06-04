@@ -275,6 +275,8 @@ static int wcd938x_init_reg(struct snd_soc_component *component)
 				WCD938X_DIGITAL_EFUSE_REG_30) & 0x07) << 1));
 	snd_soc_component_update_bits(component,
 				WCD938X_HPH_SURGE_HPHLR_SURGE_EN, 0xC0, 0xC0);
+	snd_soc_component_update_bits(component,
+				WCD938X_MICB2_TEST_CTL_3, 0xFF, 0xA4);
 
 	return 0;
 }
@@ -1944,7 +1946,7 @@ int wcd938x_micbias_control(struct snd_soc_component *component,
 						pre_off_event,
 						&wcd938x->mbhc->wcd_mbhc);
 			snd_soc_component_update_bits(component, micb_reg,
-							0xC0, 0x00);
+							0xC0, 0xC0);
 			if (post_off_event && wcd938x->mbhc)
 				blocking_notifier_call_chain(
 						&wcd938x->mbhc->notifier,
@@ -2048,6 +2050,8 @@ static int wcd938x_event_notify(struct notifier_block *block,
 	case BOLERO_WCD_EVT_SSR_DOWN:
 		wcd938x->dev_up = false;
 		wcd938x->mbhc->wcd_mbhc.deinit_in_progress = true;
+		wcd938x->mbhc->wcd_mbhc.plug_before_ssr =
+					wcd938x->mbhc->wcd_mbhc.current_plug;
 		mbhc = &wcd938x->mbhc->wcd_mbhc;
 		wcd938x->usbc_hs_status = get_usbc_hs_status(component,
 						mbhc->mbhc_cfg);
@@ -2276,6 +2280,34 @@ static int wcd938x_tx_mode_put(struct snd_kcontrol *kcontrol,
 
 	wcd938x->tx_mode[path] = mode_val;
 
+	return 0;
+}
+
+static int wcd938x_micb2_cfilt_get(struct snd_kcontrol *kcontrol,
+				struct snd_ctl_elem_value *ucontrol)
+{
+	struct snd_soc_component *component = snd_soc_kcontrol_component(kcontrol);
+	struct wcd938x_priv *wcd938x = snd_soc_component_get_drvdata(component);
+
+	ucontrol->value.integer.value[0] = wcd938x->cfilt_val;
+	return 0;
+}
+
+static int wcd938x_micb2_cfilt_put(struct snd_kcontrol *kcontrol,
+				struct snd_ctl_elem_value *ucontrol)
+{
+	struct snd_soc_component *component = snd_soc_kcontrol_component(kcontrol);
+	struct wcd938x_priv *wcd938x = snd_soc_component_get_drvdata(component);
+	u32 cfilt_val;
+
+	cfilt_val = ucontrol->value.enumerated.item[0];
+
+	if (cfilt_val)
+		snd_soc_component_update_bits(component, WCD938X_MICB2_TEST_CTL_3, 0xFF, 0x24);
+	else
+		snd_soc_component_update_bits(component, WCD938X_MICB2_TEST_CTL_3, 0xFF, 0xA4);
+
+	wcd938x->cfilt_val = cfilt_val;
 	return 0;
 }
 
@@ -2530,6 +2562,10 @@ static const char * const rx_hph_mode_mux_text_wcd9380[] = {
 	"CLS_AB_LOHIFI",
 };
 
+static const char * const micb2_cfilt_en_mux_text_wcd9380[] = {
+	"Enable", "Disable",
+};
+
 static const char * const wcd938x_ear_pa_gain_text[] = {
 	"G_6_DB", "G_4P5_DB", "G_3_DB", "G_1P5_DB", "G_0_DB",
 	"G_M1P5_DB", "G_M3_DB", "G_M4P5_DB",
@@ -2537,6 +2573,10 @@ static const char * const wcd938x_ear_pa_gain_text[] = {
 	"G_M10P5_DB", "G_M12_DB", "G_M13P5_DB",
 	"G_M15_DB", "G_M16P5_DB", "G_M18_DB",
 };
+
+static const struct soc_enum micb2_cfilt_en_mux_enum_wcd9380 =
+	SOC_ENUM_SINGLE_EXT(ARRAY_SIZE(micb2_cfilt_en_mux_text_wcd9380),
+			micb2_cfilt_en_mux_text_wcd9380);
 
 static const struct soc_enum rx_hph_mode_mux_enum_wcd9380 =
 	SOC_ENUM_SINGLE_EXT(ARRAY_SIZE(rx_hph_mode_mux_text_wcd9380),
@@ -2560,6 +2600,9 @@ static const struct snd_kcontrol_new wcd9380_snd_controls[] = {
 
 	SOC_ENUM_EXT("RX HPH Mode", rx_hph_mode_mux_enum_wcd9380,
 		wcd938x_rx_hph_mode_get, wcd938x_rx_hph_mode_put),
+
+	SOC_ENUM_EXT("MICB2 CFILT EN", micb2_cfilt_en_mux_enum_wcd9380,
+		wcd938x_micb2_cfilt_get, wcd938x_micb2_cfilt_put),
 
 	SOC_ENUM_EXT("TX0 MODE", tx_mode_mux_enum_wcd9380,
 			wcd938x_tx_mode_get, wcd938x_tx_mode_put),
@@ -3591,6 +3634,21 @@ static int wcd938x_reset_low(struct device *dev)
 struct wcd938x_pdata *wcd938x_populate_dt_data(struct device *dev)
 {
 	struct wcd938x_pdata *pdata = NULL;
+#ifdef CONFIG_SND_SOC_IMPED_SENSING
+	int rc = 0;
+	int i;
+	struct of_phandle_args imp_list;
+	struct wcd938x_gain_table default_table[MAX_IMPEDANCE_TABLE] = {
+		{	 0, 	  0, 6},
+		{	 1, 	 13, 0},
+		{	14, 	 25, 3},
+		{	26, 	 42, 4},
+		{	43, 	100, 5},
+		{  101, 	200, 7},
+		{  201,    1000, 8},
+		{ 1001, INT_MAX, 6},
+};
+#endif
 
 	pdata = devm_kzalloc(dev, sizeof(struct wcd938x_pdata),
 				GFP_KERNEL);
@@ -3620,6 +3678,26 @@ struct wcd938x_pdata *wcd938x_populate_dt_data(struct device *dev)
 	pdata->tx_slave = of_parse_phandle(dev->of_node, "qcom,tx-slave", 0);
 
 	wcd938x_dt_parse_micbias_info(dev, &pdata->micbias);
+
+#ifdef CONFIG_SND_SOC_IMPED_SENSING
+	for (i = 0; i < ARRAY_SIZE(pdata->imp_table); i++) {
+		rc = of_parse_phandle_with_args(dev->of_node,
+			"imp-table", "#list-imp-cells", i, &imp_list);
+		if (rc < 0) {
+			pdata->imp_table[i].min = default_table[i].min;
+			pdata->imp_table[i].max = default_table[i].max;
+			pdata->imp_table[i].gain = default_table[i].gain;
+		} else {
+			pdata->imp_table[i].min = imp_list.args[0];
+			pdata->imp_table[i].max = imp_list.args[1];
+			pdata->imp_table[i].gain = imp_list.args[2];
+		}
+		dev_info(dev, "impedance gain table %d, %d, %d\n",
+			pdata->imp_table[i].min,
+			pdata->imp_table[i].max,
+			pdata->imp_table[i].gain);
+	}
+#endif
 
 	return pdata;
 }
