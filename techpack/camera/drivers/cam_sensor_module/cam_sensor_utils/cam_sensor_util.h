@@ -21,6 +21,26 @@
 
 #define INVALID_VREG 100
 
+#if defined(CONFIG_CAMERA_ADAPTIVE_MIPI)
+#define INVALID_MIPI_INDEX -1
+#endif
+
+//Define All Sensor IDs here
+#define SENSOR_ID_S5KGW1P 0xf971
+#define SENSOR_ID_IMX682  0x0682
+#define SENSOR_ID_GC5035  0x3540
+#define SENSOR_ID_IMX616  0x0616
+#define SENSOR_ID_S5K3L6  0x30c6
+#define SENSOR_ID_S5KGD2  0x0842
+
+static struct cam_sensor_i2c_reg_array gw1p_seamless_off[] = {
+	{0x6028, 0x2000, 0x00, 0x00},
+	{0x602A, 0x133C, 0x00, 0x00},
+	{0x6F12, 0x0000, 0x00, 0x00},
+	{0x6F12, 0x0000, 0x00, 0x00},
+	{0x0B30, 0x01FF, 0x00, 0x00},
+};
+
 int cam_get_dt_power_setting_data(struct device_node *of_node,
 	struct cam_hw_soc_info *soc_info,
 	struct cam_sensor_power_ctrl_t *power_info);

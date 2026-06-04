@@ -61,7 +61,8 @@ struct cam_tasklet_info {
 	struct list_head                   free_cmd_list;
 	struct list_head                   used_cmd_list;
 	struct cam_tasklet_queue_cmd       cmd_queue[CAM_TASKLETQ_SIZE];
-
+	uint32_t                           magic_num;
+	int32_t                            cmd_cnt;
 	void                              *ctx_priv;
 };
 
@@ -96,8 +97,8 @@ int cam_tasklet_get_cmd(
 
 	spin_lock_irqsave(&tasklet->tasklet_lock, flags);
 	if (list_empty(&tasklet->free_cmd_list)) {
-		CAM_ERR_RATE_LIMIT(CAM_ISP, "No more free tasklet cmd idx:%d",
-			tasklet->index);
+		CAM_ERR(CAM_ISP, "No more free tasklet cmd idx:%d num %u %p current_cmd %d",
+			tasklet->index, tasklet->magic_num, &tasklet->tasklet, tasklet->cmd_cnt);
 		rc = -ENODEV;
 		goto spin_unlock;
 	} else {
@@ -105,6 +106,7 @@ int cam_tasklet_get_cmd(
 			struct cam_tasklet_queue_cmd, list);
 		list_del_init(&(tasklet_cmd)->list);
 		*bh_cmd = tasklet_cmd;
+		tasklet->cmd_cnt++;
 	}
 
 spin_unlock:
@@ -134,6 +136,7 @@ void cam_tasklet_put_cmd(
 	list_del_init(&tasklet_cmd->list);
 	list_add_tail(&tasklet_cmd->list, &tasklet->free_cmd_list);
 	*bh_cmd = NULL;
+	tasklet->cmd_cnt--;
 	spin_unlock_irqrestore(&tasklet->tasklet_lock, flags);
 }
 
@@ -213,6 +216,10 @@ void cam_tasklet_enqueue_cmd(
 	list_add_tail(&tasklet_cmd->list,
 		&tasklet->used_cmd_list);
 	spin_unlock_irqrestore(&tasklet->tasklet_lock, flags);
+
+	if ((tasklet->cmd_cnt % 100) == 0)
+		CAM_WARN(CAM_ISP, "Anomaly detected Tasklet %u magic_num %u %p enqueued cmds %d",
+			tasklet->index, tasklet->magic_num, &tasklet->tasklet, tasklet->cmd_cnt);
 	tasklet_hi_schedule(&tasklet->tasklet);
 }
 
@@ -234,6 +241,8 @@ int cam_tasklet_init(
 
 	tasklet->ctx_priv = hw_mgr_ctx;
 	tasklet->index = idx;
+	tasklet->magic_num = (idx * 59) + 13;
+	tasklet->cmd_cnt = 0;
 	spin_lock_init(&tasklet->tasklet_lock);
 	memset(tasklet->cmd_queue, 0, sizeof(tasklet->cmd_queue));
 	INIT_LIST_HEAD(&tasklet->free_cmd_list);
@@ -248,6 +257,9 @@ int cam_tasklet_init(
 	tasklet_disable(&tasklet->tasklet);
 
 	*tasklet_info = tasklet;
+
+	CAM_INFO(CAM_ISP, "idx %u magic_num %u %p",
+		tasklet->index, tasklet->magic_num, &tasklet->tasklet);
 
 	return 0;
 }
@@ -267,7 +279,14 @@ void cam_tasklet_deinit(void    **tasklet_info)
 
 static inline void cam_tasklet_flush(struct cam_tasklet_info *tasklet_info)
 {
+	CAM_INFO(CAM_ISP, "Enter idx %u num %u %p cmd_cnt %d",
+		tasklet_info->index, tasklet_info->magic_num,
+		&tasklet_info->tasklet, tasklet_info->cmd_cnt);
+
 	cam_tasklet_action((unsigned long) tasklet_info);
+
+	CAM_INFO(CAM_ISP, "Exit idx %u",
+		tasklet_info->index);
 }
 
 int cam_tasklet_start(void  *tasklet_info)
@@ -288,6 +307,9 @@ int cam_tasklet_start(void  *tasklet_info)
 			&tasklet->free_cmd_list);
 	}
 
+	CAM_INFO(CAM_ISP, "idx %u magic_num %u %p",
+		tasklet->index, tasklet->magic_num, &tasklet->tasklet);
+
 	atomic_set(&tasklet->tasklet_active, 1);
 
 	tasklet_enable(&tasklet->tasklet);
@@ -302,10 +324,15 @@ void cam_tasklet_stop(void  *tasklet_info)
 	if (!atomic_read(&tasklet->tasklet_active))
 		return;
 
+	CAM_INFO(CAM_ISP, "Enter idx %u magic_num %u %p",
+		tasklet->index, tasklet->magic_num, &tasklet->tasklet);
 	atomic_set(&tasklet->tasklet_active, 0);
 	tasklet_kill(&tasklet->tasklet);
+	CAM_INFO(CAM_ISP, "Kill done idx %u", tasklet->index);
 	tasklet_disable(&tasklet->tasklet);
 	cam_tasklet_flush(tasklet);
+	CAM_INFO(CAM_ISP, "Exit idx %u magic_num %u %p",
+		tasklet->index, tasklet->magic_num, &tasklet->tasklet);
 }
 
 /*

@@ -60,7 +60,7 @@ static int cam_icp_context_dump_active_request(void *data, unsigned long iova,
 			CAM_ERR(CAM_ICP, "Found page fault in req %lld %d",
 				req->request_id, rc);
 	}
-
+	cam_context_dump_icp_monitor_array(ctx);
 end:
 	return rc;
 }

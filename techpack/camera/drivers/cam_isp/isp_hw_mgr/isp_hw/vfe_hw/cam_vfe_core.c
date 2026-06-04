@@ -355,7 +355,7 @@ int cam_vfe_reset(void *hw_priv, void *reset_core_args, uint32_t arg_size)
 
 	reinit_completion(&vfe_hw->hw_complete);
 
-	CAM_DBG(CAM_ISP, "calling RESET on VFE:%d", soc_info->index);
+	CAM_INFO(CAM_ISP, "calling RESET on VFE:%d", soc_info->index);
 
 	core_info->vfe_top->hw_ops.reset(core_info->vfe_top->top_priv,
 		reset_core_args, arg_size);
@@ -366,7 +366,7 @@ int cam_vfe_reset(void *hw_priv, void *reset_core_args, uint32_t arg_size)
 	if (!rc)
 		CAM_ERR(CAM_ISP, "Reset Timeout");
 	else
-		CAM_DBG(CAM_ISP, "reset complete done (%d)", rc);
+		CAM_INFO(CAM_ISP, "reset complete done (%d)", rc);
 
 	rc = cam_irq_controller_unsubscribe_irq(
 		core_info->vfe_irq_controller, core_info->reset_irq_handle);

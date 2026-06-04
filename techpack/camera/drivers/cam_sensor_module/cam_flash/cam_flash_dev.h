@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 /*
- * Copyright (c) 2017-2020, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2017-2019, The Linux Foundation. All rights reserved.
  */
 
 #ifndef _CAM_FLASH_DEV_H_
@@ -115,7 +115,7 @@ struct cam_flash_frame_setting {
 	uint16_t                     num_iterations;
 	uint16_t                     led_on_delay_ms;
 	uint16_t                     led_off_delay_ms;
-	uint8_t                      opcode;
+	int8_t                       opcode;
 	uint32_t                     led_current_ma[CAM_FLASH_MAX_LED_TRIGGERS];
 };
 
@@ -142,6 +142,7 @@ struct cam_flash_private_soc {
 	uint32_t     torch_op_current[CAM_FLASH_MAX_LED_TRIGGERS];
 	uint32_t     torch_max_current[CAM_FLASH_MAX_LED_TRIGGERS];
 	bool         is_wled_flash;
+	uint32_t     record_op_current[CAM_FLASH_MAX_LED_TRIGGERS];
 };
 
 struct cam_flash_func_tbl {
@@ -210,20 +211,19 @@ struct cam_flash_ctrl {
 	uint32_t                            open_cnt;
 };
 
-int cam_flash_pmic_gpio_pkt_parser(
-	struct cam_flash_ctrl *fctrl, void *arg);
+int cam_flash_pmic_pkt_parser(struct cam_flash_ctrl *fctrl, void *arg);
 int cam_flash_i2c_pkt_parser(struct cam_flash_ctrl *fctrl, void *arg);
-int cam_flash_pmic_gpio_apply_setting(
-	struct cam_flash_ctrl *fctrl, uint64_t req_id);
+int cam_flash_pmic_apply_setting(struct cam_flash_ctrl *fctrl, uint64_t req_id);
 int cam_flash_i2c_apply_setting(struct cam_flash_ctrl *fctrl, uint64_t req_id);
 int cam_flash_off(struct cam_flash_ctrl *fctrl);
-int cam_flash_pmic_gpio_power_ops(struct cam_flash_ctrl *fctrl,
+int cam_torch_off(struct cam_flash_ctrl *flash_ctrl);
+int cam_flash_pmic_power_ops(struct cam_flash_ctrl *fctrl,
 	bool regulator_enable);
 int cam_flash_i2c_power_ops(struct cam_flash_ctrl *fctrl,
 	bool regulator_enable);
 int cam_flash_i2c_flush_request(struct cam_flash_ctrl *fctrl,
 	enum cam_flash_flush_type type, uint64_t req_id);
-int cam_flash_pmic_gpio_flush_request(struct cam_flash_ctrl *fctrl,
+int cam_flash_pmic_flush_request(struct cam_flash_ctrl *fctrl,
 	enum cam_flash_flush_type, uint64_t req_id);
 void cam_flash_shutdown(struct cam_flash_ctrl *fctrl);
 int cam_flash_release_dev(struct cam_flash_ctrl *fctrl);

@@ -108,16 +108,12 @@ struct cam_soc_pinctrl_info {
  *                             gpios node in DTSI
  * @cam_gpio_req_tbl            It is list of al the requesetd gpios
  * @cam_gpio_req_tbl_size:      It is size of requested gpios
- * @gpio_delay_tbl:            It is list of al requested gpios delay
- * @gpio_delay_tbl_size:       It is size of requested gpios delay
  **/
 struct cam_soc_gpio_data {
 	struct gpio *cam_gpio_common_tbl;
 	uint8_t cam_gpio_common_tbl_size;
 	struct gpio *cam_gpio_req_tbl;
 	uint8_t cam_gpio_req_tbl_size;
-	uint32_t *gpio_delay_tbl;
-	uint8_t gpio_delay_tbl_size;
 };
 
 /**
@@ -221,6 +217,7 @@ struct cam_hw_soc_info {
 	int32_t                         cam_cx_ipeak_bit;
 
 	void                           *soc_private;
+	int32_t                         sub_type;
 };
 
 /**

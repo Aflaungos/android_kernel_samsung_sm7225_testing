@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
- * Copyright (c) 2017-2020, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2017-2019, The Linux Foundation. All rights reserved.
  */
 
 #include <linux/module.h>
@@ -8,6 +8,8 @@
 #include "cam_flash_soc.h"
 #include "cam_flash_core.h"
 #include "cam_common_util.h"
+
+struct cam_flash_ctrl *g_flash_ctrl;
 
 static int32_t cam_flash_driver_cmd(struct cam_flash_ctrl *fctrl,
 		void *arg, struct cam_flash_private_soc *soc_private)
@@ -504,26 +506,11 @@ static int32_t cam_flash_platform_probe(struct platform_device *pdev)
 		fctrl->func_tbl.power_ops = cam_flash_i2c_power_ops;
 		fctrl->func_tbl.flush_req = cam_flash_i2c_flush_request;
 	} else {
-		if (fctrl->soc_info.gpio_data) {
-			rc = cam_sensor_util_request_gpio_table(
-				&fctrl->soc_info,
-				true);
-			if (rc) {
-				CAM_ERR(CAM_FLASH,
-					"GPIO table request failed: rc: %d",
-					rc);
-				goto free_gpio_resource;
-			}
-		}
-		/* PMIC GPIO Flash */
-		fctrl->func_tbl.parser =
-			cam_flash_pmic_gpio_pkt_parser;
-		fctrl->func_tbl.apply_setting =
-			cam_flash_pmic_gpio_apply_setting;
-		fctrl->func_tbl.power_ops =
-			cam_flash_pmic_gpio_power_ops;
-		fctrl->func_tbl.flush_req =
-			cam_flash_pmic_gpio_flush_request;
+		/* PMIC Flash */
+		fctrl->func_tbl.parser = cam_flash_pmic_pkt_parser;
+		fctrl->func_tbl.apply_setting = cam_flash_pmic_apply_setting;
+		fctrl->func_tbl.power_ops = cam_flash_pmic_power_ops;
+		fctrl->func_tbl.flush_req = cam_flash_pmic_flush_request;
 	}
 
 	rc = cam_flash_init_subdev(fctrl);
@@ -546,16 +533,13 @@ static int32_t cam_flash_platform_probe(struct platform_device *pdev)
 
 	fctrl->flash_state = CAM_FLASH_STATE_INIT;
 	fctrl->open_cnt = 0;
+	g_flash_ctrl = fctrl;
 	CAM_DBG(CAM_FLASH, "Probe success");
 	return rc;
 
 free_cci_resource:
 	kfree(fctrl->io_master_info.cci_client);
 	fctrl->io_master_info.cci_client = NULL;
-free_gpio_resource:
-	cam_sensor_util_request_gpio_table(&fctrl->soc_info, false);
-	kfree(fctrl->soc_info.gpio_data);
-	fctrl->soc_info.gpio_data = NULL;
 free_resource:
 	kfree(fctrl->i2c_data.per_frame);
 	kfree(fctrl->soc_info.soc_private);
@@ -636,6 +620,7 @@ static int32_t cam_flash_i2c_driver_probe(struct i2c_client *client,
 	mutex_init(&(fctrl->flash_mutex));
 	fctrl->flash_state = CAM_FLASH_STATE_INIT;
 	fctrl->open_cnt = 0;
+	g_flash_ctrl = fctrl;
 
 	return rc;
 

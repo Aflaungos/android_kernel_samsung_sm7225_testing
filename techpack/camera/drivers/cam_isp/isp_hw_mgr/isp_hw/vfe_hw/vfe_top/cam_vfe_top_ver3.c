@@ -116,9 +116,7 @@ static int cam_vfe_top_ver3_set_hw_clk_rate(
 			rc = 0;
 			goto end;
 		}
-
 		soc_private->ife_clk_src = max_clk_rate;
-
 		ahb_vote.type = CAM_VOTE_ABSOLUTE;
 		ahb_vote.vote.level = clk_lvl;
 		cam_cpas_update_ahb_vote(soc_private->cpas_handle, &ahb_vote);

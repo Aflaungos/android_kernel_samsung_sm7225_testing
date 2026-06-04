@@ -20,6 +20,11 @@
 #include "cam_soc_util.h"
 #include "cam_req_mgr_timer.h"
 
+#define CAM_ICP_DBG_MONITOR_MAX_ENTRIES   20
+#define CAM_ICP_DBG_INC_MONITOR_HEAD(head, ret) \
+	div_u64_rem(atomic64_add_return(1, head),\
+	CAM_ICP_DBG_MONITOR_MAX_ENTRIES, (ret))
+
 #define CAM_ICP_ROLE_PARENT     1
 #define CAM_ICP_ROLE_CHILD      2
 
@@ -72,6 +77,20 @@
  * to be with ICP hw
  */
 #define CAM_ICP_CTX_RESPONSE_TIME_THRESHOLD   300000
+
+struct cam_icp_monitor {
+	ktime_t                             timestamp;
+	char                                identifier_string[128];
+	uint32_t                            req_id;
+	uint32_t                            val1;
+	uint32_t                            val2;
+	uint32_t                            val3;
+};
+
+struct cam_dbg_icp_hw_mgr_monitor {
+	atomic64_t  monitor_head;
+	struct cam_icp_monitor monitor_entries[CAM_ICP_DBG_MONITOR_MAX_ENTRIES];
+};
 
 /**
  * struct icp_hfi_mem_info

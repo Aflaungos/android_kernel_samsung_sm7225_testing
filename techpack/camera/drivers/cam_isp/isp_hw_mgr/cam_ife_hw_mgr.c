@@ -953,7 +953,7 @@ static int cam_ife_hw_mgr_release_hw_for_ctx(
 	if (ife_ctx->res_list_ife_in.res_type != CAM_IFE_HW_MGR_RES_UNINIT)
 		cam_ife_hw_mgr_free_hw_res(&ife_ctx->res_list_ife_in);
 
-	CAM_DBG(CAM_ISP, "release context completed ctx id:%d",
+	CAM_INFO(CAM_ISP, "release context completed ctx id:%d",
 		ife_ctx->ctx_index);
 
 	return 0;
@@ -1335,10 +1335,6 @@ static int cam_convert_hw_idx_to_ife_hw_num(int hw_idx)
 				return CAM_ISP_IFE1_LITE_HW;
 			else if (hw_idx == 4)
 				return CAM_ISP_IFE2_LITE_HW;
-			else if (hw_idx == 5)
-				return CAM_ISP_IFE3_LITE_HW;
-			else if (hw_idx == 6)
-				return CAM_ISP_IFE4_LITE_HW;
 			break;
 		case CAM_CPAS_TITAN_170_V200:
 			if (hw_idx == 0)
@@ -3978,7 +3974,7 @@ static int cam_ife_mgr_stop_hw(void *hw_mgr_priv, void *stop_hw_args)
 		return -EINVAL;
 	}
 
-	CAM_DBG(CAM_ISP, "Halting CSIDs");
+	CAM_INFO(CAM_ISP, "Halting CSIDs");
 
 	/* get master base index first */
 	for (i = 0; i < ctx->num_base; i++) {
@@ -4040,13 +4036,13 @@ static int cam_ife_mgr_stop_hw(void *hw_mgr_priv, void *stop_hw_args)
 			ctx->base[i].idx, csid_halt_type);
 	}
 
-	CAM_DBG(CAM_ISP, "Going to stop IFE Out");
+	CAM_INFO(CAM_ISP, "Going to stop IFE Out");
 
 	/* IFE out resources */
 	for (i = 0; i < CAM_IFE_HW_OUT_RES_MAX; i++)
 		cam_ife_hw_mgr_stop_hw_res(&ctx->res_list_ife_out[i]);
 
-	CAM_DBG(CAM_ISP, "Going to stop IFE Mux");
+	CAM_INFO(CAM_ISP, "Going to stop IFE Mux");
 
 	/* IFE mux in resources */
 	list_for_each_entry(hw_mgr_res, &ctx->res_list_ife_src, list) {
@@ -4059,7 +4055,7 @@ static int cam_ife_mgr_stop_hw(void *hw_mgr_priv, void *stop_hw_args)
 	}
 
 	cam_tasklet_stop(ctx->common.tasklet_info);
-
+	CAM_INFO(CAM_ISP, "Tasklet stop for ctx %u", ctx->ctx_index);
 	cam_ife_mgr_pause_hw(ctx);
 
 	rem_jiffies = wait_for_completion_timeout(&ctx->config_done_complete,
@@ -4078,7 +4074,7 @@ static int cam_ife_mgr_stop_hw(void *hw_mgr_priv, void *stop_hw_args)
 		CAM_ERR(CAM_ISP, "CDM stream off failed %d", ctx->cdm_handle);
 
 	cam_ife_hw_mgr_deinit_hw(ctx);
-	CAM_DBG(CAM_ISP,
+	CAM_INFO(CAM_ISP,
 		"Stop success for ctx id:%d rc :%d", ctx->ctx_index, rc);
 
 	mutex_lock(&g_ife_hw_mgr.ctx_mutex);
@@ -4503,7 +4499,7 @@ static int cam_ife_mgr_release_hw(void *hw_mgr_priv,
 		return -EPERM;
 	}
 
-	CAM_DBG(CAM_ISP, "Enter...ctx id:%d",
+	CAM_INFO(CAM_ISP, "Enter...ctx id:%d",
 		ctx->ctx_index);
 
 	if (ctx->init_done)
@@ -6821,7 +6817,7 @@ static int cam_ife_mgr_process_recovery_cb(void *priv, void *data)
 	default:
 		CAM_ERR(CAM_ISP, "Invalid Error");
 	}
-	CAM_DBG(CAM_ISP, "Exit: ErrorType = %d", error_type);
+	CAM_INFO(CAM_ISP, "Exit: ErrorType = %d", error_type);
 
 	kfree(recovery_data);
 	return rc;
@@ -7095,6 +7091,7 @@ static int cam_ife_hw_mgr_handle_hw_err(
 	struct cam_hw_event_recovery_data    recovery_data = {0};
 	int                                  rc = -EINVAL;
 
+	CAM_INFO(CAM_ISP, "Enter");
 	if (event_info->err_type == CAM_VFE_IRQ_STATUS_VIOLATION)
 		error_event_data.error_type = CAM_ISP_HW_ERROR_VIOLATION;
 	else if (event_info->res_type == CAM_ISP_RESOURCE_VFE_IN)
@@ -7140,6 +7137,7 @@ static int cam_ife_hw_mgr_handle_hw_err(
 		recovery_data.error_type = CAM_ISP_HW_ERROR_OVERFLOW;
 
 	cam_ife_hw_mgr_do_error_recovery(&recovery_data);
+	CAM_INFO(CAM_ISP, "Exit");
 end:
 	spin_unlock(&g_ife_hw_mgr.ctx_lock);
 	return rc;

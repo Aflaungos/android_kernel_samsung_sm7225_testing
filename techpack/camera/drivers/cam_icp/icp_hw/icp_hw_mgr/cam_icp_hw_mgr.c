@@ -56,8 +56,81 @@
 #define ICP_DEVICE_IDLE_TIMEOUT 400
 
 static struct cam_icp_hw_mgr icp_hw_mgr;
+static struct cam_dbg_icp_hw_mgr_monitor cam_dbg_icp_monitor;
 
 static void cam_icp_mgr_process_dbg_buf(unsigned int debug_lvl);
+
+static int cam_dbg_icp_update_monitor_array(const char *identifier_string,
+	uint32_t req_id, uint32_t val1,uint32_t val2, uint32_t val3)
+{
+	struct cam_icp_monitor *entry;
+	int iterator;
+
+	CAM_ICP_DBG_INC_MONITOR_HEAD(&cam_dbg_icp_monitor.monitor_head, &iterator);
+	entry = &cam_dbg_icp_monitor.monitor_entries[iterator];
+
+	entry->timestamp = ktime_get();
+	strlcpy(entry->identifier_string, identifier_string,
+		sizeof(entry->identifier_string));
+
+	entry->req_id = req_id;
+	entry->val1 = val1;
+	entry->val2 = val2;
+	entry->val3 = val3;
+	return 0;
+}
+
+static int cam_dbg_icp_dump_monitor_array(int val)
+{
+	int i = 0;
+	int64_t state_head = 0;
+	uint32_t index, num_entries, oldest_entry;
+	struct cam_icp_monitor *entry;
+	struct timespec64                cur_ts;
+	struct timespec64                req_ts;
+	ktime_t                          cur_time;
+
+	if (val != 1)
+		return -1;
+
+	state_head = atomic64_read(&cam_dbg_icp_monitor.monitor_head);
+
+	if (state_head == -1) {
+		CAM_WARN(CAM_ICP, "No valid entries in icp monitor array");
+		return -1;
+	} else if (state_head < CAM_ICP_DBG_MONITOR_MAX_ENTRIES) {
+		num_entries = state_head;
+		oldest_entry = 0;
+	} else {
+		num_entries = CAM_ICP_DBG_MONITOR_MAX_ENTRIES;
+		div_u64_rem(state_head + 1,
+			CAM_ICP_DBG_MONITOR_MAX_ENTRIES, &oldest_entry);
+	}
+
+	cur_time = ktime_get();
+	cur_ts = ktime_to_timespec64(cur_time);
+
+	CAM_INFO(CAM_ICP, "======== Dumping monitor information ===========");
+	CAM_INFO(CAM_ICP, "Current time: %ld:%06ld",
+		cur_ts.tv_sec, cur_ts.tv_nsec/NSEC_PER_USEC);
+
+
+	index = oldest_entry;
+
+	for (i = 0; i < num_entries; i++) {
+		entry = &cam_dbg_icp_monitor.monitor_entries[index];
+		req_ts = ktime_to_timespec64(entry->timestamp);
+
+		CAM_INFO(CAM_ICP,
+			"*** %ld:%06ld : Index[%d] Identifier[%s] req_id:%d val1: %d val2: %d val3: %d",
+			req_ts.tv_sec, req_ts.tv_nsec/NSEC_PER_USEC,
+			index, entry->identifier_string,
+			entry->req_id, entry->val1, entry->val2, entry->val3);
+		index = (index + 1) % CAM_ICP_DBG_MONITOR_MAX_ENTRIES;
+	}
+	return 0;
+}
+
 
 static int cam_icp_dump_io_cfg(struct cam_icp_hw_ctx_data *ctx_data,
 	int32_t buf_handle)
@@ -2166,6 +2239,8 @@ static int cam_icp_mgr_handle_frame_process(uint32_t *msg_ptr, int flag)
 	}
 	clear_bit(idx, ctx_data->hfi_frame_process.bitmap);
 	hfi_frame_process->fw_process_flag[idx] = false;
+	cam_dbg_icp_update_monitor_array("FW done", request_id,
+		ctx_data->ctx_id, flag, 0);
 	mutex_unlock(&ctx_data->ctx_mutex);
 
 	return 0;
@@ -3568,6 +3643,8 @@ static int cam_icp_mgr_device_init(struct cam_icp_hw_mgr *hw_mgr)
 		return -EINVAL;
 	}
 
+	atomic64_set(&cam_dbg_icp_monitor.monitor_head, -1);
+
 	rc = a5_dev_intf->hw_ops.init(a5_dev_intf->hw_priv, NULL, 0);
 	if (rc)
 		goto a5_dev_init_failed;
@@ -4077,6 +4154,9 @@ static int cam_icp_mgr_config_hw(void *hw_mgr_priv, void *config_hw_args)
 	cam_icp_mgr_ipe_bps_clk_update(hw_mgr, ctx_data, idx);
 	ctx_data->hfi_frame_process.fw_process_flag[idx] = true;
 	ctx_data->hfi_frame_process.submit_timestamp[idx] = ktime_get();
+
+	cam_dbg_icp_update_monitor_array("Submit to FW", req_id,
+		ctx_data->ctx_id, ctx_data->last_flush_req, 0);
 
 	CAM_DBG(CAM_ICP, "req_id %llu, io config %llu", req_id,
 		frame_info->io_config);
@@ -6089,6 +6169,9 @@ static int cam_icp_mgr_cmd(void *hw_mgr_priv, void *cmd_args)
 			hw_cmd_args->u.pf_args.buf_info,
 			hw_cmd_args->u.pf_args.mem_found);
 
+		break;
+	case CAM_HW_MGR_CMD_DUMP_ICP_MONITOR_ARRAY:
+		cam_dbg_icp_dump_monitor_array(1);
 		break;
 	default:
 		CAM_ERR(CAM_ICP, "Invalid cmd");

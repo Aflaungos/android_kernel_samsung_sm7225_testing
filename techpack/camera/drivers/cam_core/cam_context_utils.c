@@ -462,9 +462,6 @@ int32_t cam_context_prepare_dev_to_hw(struct cam_context *ctx,
 			rc = cam_sync_check_valid(
 				req->in_map_entries[j].sync_id);
 			if (rc) {
-				spin_lock(&ctx->lock);
-				list_del_init(&req->list);
-				spin_unlock(&ctx->lock);
 				CAM_ERR(CAM_CTXT,
 					"invalid in map sync object %d",
 					req->in_map_entries[j].sync_id);
@@ -999,6 +996,33 @@ int32_t cam_context_stop_dev_to_hw(struct cam_context *ctx)
 			&stop);
 	}
 
+end:
+	return rc;
+}
+
+int32_t cam_context_dump_icp_monitor_array(struct cam_context *ctx)
+{
+	int rc = 0;
+	struct cam_hw_cmd_args cmd_args;
+	if (!ctx) {
+		CAM_ERR(CAM_CTXT, "Invalid input params %pK ", ctx);
+		rc = -EINVAL;
+		goto end;
+	}
+
+	if (!ctx->hw_mgr_intf) {
+		CAM_ERR(CAM_CTXT, "[%s][%d] HW interface is not ready",
+			ctx->dev_name, ctx->ctx_id);
+		rc = -EFAULT;
+		goto end;
+	}
+
+	if (ctx->hw_mgr_intf->hw_cmd) {
+		cmd_args.ctxt_to_hw_map = ctx->ctxt_to_hw_map;
+		cmd_args.cmd_type = CAM_HW_MGR_CMD_DUMP_ICP_MONITOR_ARRAY;
+		ctx->hw_mgr_intf->hw_cmd(ctx->hw_mgr_intf->hw_mgr_priv,
+			&cmd_args);
+	}
 end:
 	return rc;
 }

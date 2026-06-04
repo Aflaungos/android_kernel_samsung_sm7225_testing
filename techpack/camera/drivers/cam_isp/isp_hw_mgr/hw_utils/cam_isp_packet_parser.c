@@ -639,7 +639,21 @@ int cam_isp_add_io_buffers(
 					rc = -ENOMEM;
 					return rc;
 				}
-
+				if (!io_addr[plane_id]) {
+					CAM_ERR(CAM_ISP,
+						"no io addr for plane%d Bufhdl:%d, Size =%d",
+						plane_id,
+						io_cfg[i].mem_handle[plane_id],
+						(int)size);
+					CAM_ERR(CAM_ISP,
+						"Port i %d  res_type:%d fence:%d dir %d",
+						i,
+						io_cfg[i].resource_type,
+						io_cfg[i].fence,
+						io_cfg[i].direction);
+					rc = -ENOMEM;
+					return rc;
+				}
 				/* need to update with offset */
 				io_addr[plane_id] +=
 						io_cfg[i].offsets[plane_id];

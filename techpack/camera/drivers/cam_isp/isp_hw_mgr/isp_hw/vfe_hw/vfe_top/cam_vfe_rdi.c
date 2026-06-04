@@ -14,6 +14,7 @@
 #include "cam_cdm_util.h"
 #include "cam_irq_controller.h"
 #include "cam_tasklet_util.h"
+#include "cam_cpas_api.h"
 
 struct cam_vfe_mux_rdi_data {
 	void __iomem                                *mem_base;
@@ -401,6 +402,39 @@ static int cam_vfe_rdi_process_cmd(struct cam_isp_resource_node *rsrc_node,
 	return rc;
 }
 
+static void cam_vfe_rdi_fifo_fill_level_dump(
+	struct cam_vfe_soc_private *soc_private)
+{
+	uint32_t val;
+
+	if (soc_private->cpas_version == CAM_CPAS_TITAN_175_V120 ||
+		soc_private->cpas_version == CAM_CPAS_TITAN_175_V130) {
+		cam_cpas_reg_read(soc_private->cpas_handle,
+			CAM_CPAS_REG_CAMNOC, 0x3A20, true, &val);
+		CAM_INFO(CAM_ISP, "IFE0_nRDI_MAXWR_LOW offset 0x3A20 val 0x%x",
+			val);
+
+		cam_cpas_reg_read(soc_private->cpas_handle,
+			CAM_CPAS_REG_CAMNOC, 0x5420, true, &val);
+		CAM_INFO(CAM_ISP, "IFE1_nRDI_MAXWR_LOW offset 0x5420 val 0x%x",
+			val);
+
+		cam_cpas_reg_read(soc_private->cpas_handle,
+			CAM_CPAS_REG_CAMNOC, 0x3620, true, &val);
+		CAM_INFO(CAM_ISP,
+			"IFE0123_RDI_WR_MAXWR_LOW offset 0x3620 val 0x%x", val);
+
+	} else if (soc_private->cpas_version < CAM_CPAS_TITAN_175_V120) {
+		cam_cpas_reg_read(soc_private->cpas_handle,
+			CAM_CPAS_REG_CAMNOC, 0x420, true, &val);
+		CAM_INFO(CAM_ISP, "IFE02_MAXWR_LOW offset 0x420 val 0x%x", val);
+
+		cam_cpas_reg_read(soc_private->cpas_handle,
+			CAM_CPAS_REG_CAMNOC, 0x820, true, &val);
+		CAM_INFO(CAM_ISP, "IFE13_MAXWR_LOW offset 0x820 val 0x%x", val);
+	}
+}
+
 static int cam_vfe_rdi_handle_irq_top_half(uint32_t evt_id,
 	struct cam_irq_th_payload *th_payload)
 {
@@ -539,6 +573,10 @@ static int cam_vfe_rdi_handle_irq_bottom_half(void *handler_priv,
 			rdi_priv->event_cb(rdi_priv->priv,
 			CAM_ISP_HW_EVENT_ERROR,
 			(void *)&evt_info);
+		cam_vfe_rdi_fifo_fill_level_dump(soc_private);
+		cam_cpas_get_camnoc_fifo_fill_level_info(
+			soc_private->cpas_version,
+			soc_private->cpas_handle);
 		cam_cpas_log_votes();
 	}
 end:

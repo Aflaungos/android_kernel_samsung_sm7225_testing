@@ -138,13 +138,23 @@ static int cam_cpas_util_vote_bus_client_bw(
 			ib = CAM_CPAS_AXI_MIN_MNOC_IB_BW;
 	}
 
+#if defined(CONFIG_SEC_A52XQ_PROJECT)
+	CAM_INFO(CAM_CPAS, "before Bus client=[%d][%s] :ab[%llu] ib[%llu], index[%d] camnoc_bw:%d",
+		bus_client->client_id, bus_client->name, ab, ib, idx, camnoc_bw);
+
+	if (ab > 0)
+		ab = 12000000000UL;
+	if (ib > 0)
+		ib = 12000000000UL;
+#endif
+
 	pdata = bus_client->pdata;
 	path = &(pdata->usecase[idx]);
 	path->vectors[0].ab = ab;
 	path->vectors[0].ib = ib;
 
-	CAM_DBG(CAM_CPAS, "Bus client=[%d][%s] :ab[%llu] ib[%llu], index[%d]",
-		bus_client->client_id, bus_client->name, ab, ib, idx);
+	CAM_INFO(CAM_CPAS, "after Bus client=[%d][%s] :ab[%llu] ib[%llu], index[%d] camnoc_bw:%d",
+		bus_client->client_id, bus_client->name, ab, ib, idx, camnoc_bw);
 	msm_bus_scale_client_update_request(bus_client->client_id, idx);
 	if (applied_ab)
 		*applied_ab = ab;
@@ -725,7 +735,7 @@ static int cam_cpas_camnoc_set_vote_axi_clk_rate(
 		else
 			continue;
 
-		CAM_DBG(CAM_PERF, "Port[%s] : camnoc_bw=%lld",
+		CAM_INFO(CAM_PERF, "Port[%s] : camnoc_bw=%lld",
 			camnoc_axi_port->axi_port_name,
 			camnoc_axi_port->camnoc_bw);
 
@@ -742,7 +752,7 @@ static int cam_cpas_camnoc_set_vote_axi_clk_rate(
 			&camnoc_axi_port->bus_client,
 			0, camnoc_bw, true, &applied_ab, &applied_ib);
 
-		CAM_DBG(CAM_CPAS,
+		CAM_INFO(CAM_CPAS,
 			"camnoc vote camnoc_bw[%llu] rc=%d %s",
 			camnoc_bw, rc, camnoc_axi_port->axi_port_name);
 		if (rc) {
@@ -929,7 +939,7 @@ vote_start_clients:
 		else
 			continue;
 
-		CAM_DBG(CAM_PERF,
+		CAM_INFO(CAM_PERF,
 			"Port[%s] : ab=%lld ib=%lld additional=%lld, streamon_clients=%d",
 			mnoc_axi_port->axi_port_name, mnoc_axi_port->ab_bw,
 			mnoc_axi_port->ib_bw, mnoc_axi_port->additional_bw,
@@ -1035,6 +1045,7 @@ unlock_tree:
 	mutex_unlock(&cpas_core->tree_lock);
 	return rc;
 }
+
 
 static int cam_cpas_hw_update_axi_vote(struct cam_hw_info *cpas_hw,
 	uint32_t client_handle, struct cam_axi_vote *client_axi_vote)
@@ -1599,11 +1610,13 @@ static int cam_cpas_hw_stop(void *hw_priv, void *stop_args,
 
 	rc = cam_cpas_util_apply_client_axi_vote(cpas_hw,
 		cpas_client, &axi_vote);
+
 	if (rc)
 		goto done;
 
 	if (cpas_core->streamon_clients == 0)
 		rc = cam_cpas_util_apply_default_axi_vote(cpas_hw, false);
+
 done:
 	mutex_unlock(&cpas_core->client_mutex[client_indx]);
 	mutex_unlock(&cpas_hw->hw_mutex);

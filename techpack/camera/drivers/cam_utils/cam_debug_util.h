@@ -39,6 +39,9 @@
 /* CAM_PERF: Used for performance (clock, BW etc) logs */
 #define CAM_PERF       (1 << 25)
 #define CAM_CUSTOM     (1 << 26)
+#if defined(CONFIG_USE_CAMERA_HW_BIG_DATA)
+#define CAM_HWB        (1 << 27)
+#endif
 
 #define STR_BUFFER_MAX_LENGTH  1024
 

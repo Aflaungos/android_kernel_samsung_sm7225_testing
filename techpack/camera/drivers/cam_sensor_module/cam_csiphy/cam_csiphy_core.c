@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
- * Copyright (c) 2017-2020, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2017-2019, The Linux Foundation. All rights reserved.
  */
 
 #include <linux/module.h>
@@ -15,6 +15,7 @@
 #include <soc/qcom/scm.h>
 #include <cam_mem_mgr.h>
 #include <cam_cpas_api.h>
+#include "qseecom_kernel.h"
 
 #define SCM_SVC_CAMERASS 0x18
 #define SECURE_SYSCALL_ID 0x6
@@ -24,10 +25,231 @@
 #define LANE_MASK_3PH 0x7
 
 #define SKEW_CAL_MASK 0x2
+#define SECCAM_TA_NAME "sec_fr"
+#define SECCAM_QSEECOM_SBUFF_SIZE (64 * 1024)
+
+#define SEC_LANE_CP_REG_LEN 32
+#define MAX_PHY_MSK_PER_REG 4
 
 static int csiphy_dump;
 module_param(csiphy_dump, int, 0644);
 
+#define DISABLE_SCM_CALL_RECOVERY
+#if defined(DISABLE_SCM_CALL_RECOVERY)
+uint32_t protect_mask[MAX_CSIPHY];
+#endif
+
+#if 1
+int load_ref_cnt;
+
+static DEFINE_SPINLOCK(secure_mode_lock);
+
+static int cam_refcnt_status(int rw, bool protect)
+{
+	int ret = 0;
+
+	spin_lock(&secure_mode_lock);
+	switch (rw) {
+	case 0: // read
+		ret = load_ref_cnt;
+		break;
+	case 1: //write
+		{
+			if (protect) load_ref_cnt++;
+			else load_ref_cnt--;
+			ret = load_ref_cnt;
+		}
+		break;
+	}
+	spin_unlock(&secure_mode_lock);
+
+	return ret;
+}
+
+#if defined(DISABLE_SCM_CALL_RECOVERY)
+uint32_t protect_mask[MAX_CSIPHY];
+static int cam_csiphy_init_secure_mode(struct csiphy_device *csiphy_dev,
+	bool protect, int32_t offset)
+{
+	struct scm_desc desc = {0};
+	static struct qseecom_handle   *ta_qseecom_handle;
+	int32_t rc;
+	int ret = 0;
+	uint32_t retry = 0;
+
+	desc.arginfo = SCM_ARGS(2, SCM_VAL, SCM_VAL);
+	desc.args[0] = protect;
+	desc.args[1] = csiphy_dev->csiphy_cpas_cp_reg_mask[offset];
+
+	CAM_INFO(CAM_CSIPHY, "++ @@ phy : %d, protect : %d", offset, protect);
+
+	do {
+		rc = qseecom_start_app(
+			&ta_qseecom_handle,
+			SECCAM_TA_NAME,
+			SECCAM_QSEECOM_SBUFF_SIZE);
+		if (rc == -ENOMEM) {
+			CAM_ERR(CAM_CSIPHY, "[SCM_DBG] retry Loading TA");
+			msleep(10);
+		}
+	} while ((rc == -ENOMEM) && (++retry < 30));
+	if (rc < 0)
+	{
+		CAM_ERR(CAM_CSIPHY, "[SCM_DBG] TA load fail");
+		return rc;
+	}
+
+	CAM_INFO(CAM_CSIPHY, "[SCM_DBG] TA load done");
+	msleep(10);
+
+
+	if (scm_call2(SCM_SIP_FNID(SCM_SVC_CAMERASS, SECURE_SYSCALL_ID_2),
+		&desc)) {
+		CAM_ERR(CAM_CSIPHY, "[SCM_DBG] scm call to hypervisor failed, recovery failed");
+		ret = -EINVAL;
+	} else {
+		CAM_ERR(CAM_CSIPHY, "[SCM_DBG] scm call to hypervisor success, recovery success");
+		ret = 0;
+        protect_mask[csiphy_dev->soc_info.index] = 0;
+	}
+
+	//Unload the TA when the last camera is switched back to non-secure mode
+	CAM_INFO(CAM_CSIPHY, "UnLoading TA.....\n");
+	rc = qseecom_shutdown_app(&ta_qseecom_handle);
+	if (rc) {
+		CAM_ERR(CAM_CSIPHY, "TA UnLoad failed\n");
+		ret = -EINVAL;
+	}
+	CAM_INFO(CAM_CSIPHY, "-- @@ phy : %d, protect : %d ret %d", offset, protect, ret);
+
+	return ret;
+}
+#endif
+
+static int cam_csiphy_notify_secure_mode(struct csiphy_device *csiphy_dev,
+	bool protect, int32_t offset)
+{
+	struct scm_desc desc = {0};
+	static struct qseecom_handle   *ta_qseecom_handle;
+	int32_t rc;
+	int ret = 0;
+	uint32_t retry = 0;
+
+	desc.arginfo = SCM_ARGS(2, SCM_VAL, SCM_VAL);
+	desc.args[0] = protect;
+	desc.args[1] = csiphy_dev->csiphy_cpas_cp_reg_mask[offset];
+
+	CAM_INFO(CAM_CSIPHY, "++ @@ phy : %d, protect : %d, load_ref_cnt %d", offset, protect, cam_refcnt_status(0,0));
+
+	if (protect) {
+		if (cam_refcnt_status(0,0) == 0)
+		{
+			CAM_INFO(CAM_CSIPHY, "Loading TA.....\n");
+#if 1 // recovery
+			do {
+				rc = qseecom_start_app(
+					&ta_qseecom_handle,
+					SECCAM_TA_NAME,
+					SECCAM_QSEECOM_SBUFF_SIZE);
+				if (rc == -ENOMEM) {
+					CAM_ERR(CAM_CSIPHY, "retry Loading TA");
+					msleep(10);
+				}
+			} while ((rc == -ENOMEM) && (++retry < 30));
+#else
+			rc = qseecom_start_app(
+				&ta_qseecom_handle,
+				SECCAM_TA_NAME,
+				SECCAM_QSEECOM_SBUFF_SIZE);
+#endif
+			if (rc) {
+				CAM_ERR(CAM_CSIPHY, "TA Load failed\n");
+				//ret = -EINVAL;
+				return -EINVAL;
+			}
+		}
+
+		CAM_INFO(CAM_CSIPHY, "SCM CALL for protection\n");
+		if (scm_call2(SCM_SIP_FNID(SCM_SVC_CAMERASS, SECURE_SYSCALL_ID_2),
+			&desc)) {
+			CAM_ERR(CAM_CSIPHY, "scm call to hypervisor failed");
+		//Unload the TA when scm call failed
+	             CAM_INFO(CAM_CSIPHY, "UnLoading TA.....\n");
+	             rc = qseecom_shutdown_app(&ta_qseecom_handle);
+	             if (rc) {
+		           CAM_ERR(CAM_CSIPHY, "TA UnLoad failed\n");
+	             }
+			ret = -EINVAL;
+		}
+		else {
+#if defined(DISABLE_SCM_CALL_RECOVERY)
+			protect_mask[csiphy_dev->soc_info.index] = 1;
+#endif
+			cam_refcnt_status(1, protect);
+		}
+	}
+	else {
+		CAM_INFO(CAM_CSIPHY, "SCM CALL for un-protection\n");
+		if (scm_call2(SCM_SIP_FNID(SCM_SVC_CAMERASS, SECURE_SYSCALL_ID_2),
+			&desc)) {
+			CAM_ERR(CAM_CSIPHY, "scm call to hypervisor failed");
+#if !defined(DISABLE_SCM_CALL_RECOVERY) // recovery
+			CAM_INFO(CAM_CSIPHY, "[SCM_DBG] Try to recovery");
+			rc = qseecom_shutdown_app(&ta_qseecom_handle);
+			if (rc) {
+				CAM_ERR(CAM_CSIPHY, "TA UnLoad failed\n");
+				ret = -EINVAL;
+			}
+			CAM_INFO(CAM_CSIPHY, "[SCM_DBG] 1. TA Unload done");
+			msleep(10);
+
+			do {
+				rc = qseecom_start_app(
+					&ta_qseecom_handle,
+					SECCAM_TA_NAME,
+					SECCAM_QSEECOM_SBUFF_SIZE);
+				if (rc == -ENOMEM) {
+					CAM_ERR(CAM_CSIPHY, "[SCM_DBG] retry Loading TA");
+					msleep(10);
+				}
+			} while ((rc == -ENOMEM) && (++retry < 30));
+			CAM_INFO(CAM_CSIPHY, "[SCM_DBG] 2. TA load done");
+			msleep(10);
+
+			if (scm_call2(SCM_SIP_FNID(SCM_SVC_CAMERASS, SECURE_SYSCALL_ID_2),
+				&desc)) {
+				CAM_ERR(CAM_CSIPHY, "[SCM_DBG] scm call to hypervisor failed, recovery failed");
+				ret = -EINVAL;
+			} else {
+				CAM_ERR(CAM_CSIPHY, "[SCM_DBG] scm call to hypervisor success, recovery success");
+				ret = 0;
+			}
+			CAM_INFO(CAM_CSIPHY, "[SCM_DBG] 3. Recovery routine done %d", ret);
+#endif
+		}
+#if defined(DISABLE_SCM_CALL_RECOVERY)
+		else {
+			protect_mask[csiphy_dev->soc_info.index] = 0;
+		}
+#endif
+		cam_refcnt_status(1, protect);
+
+		if (cam_refcnt_status(0,0) == 0)
+		{
+			//Unload the TA when the last camera is switched back to non-secure mode
+			CAM_INFO(CAM_CSIPHY, "UnLoading TA.....\n");
+			rc = qseecom_shutdown_app(&ta_qseecom_handle);
+			if (rc) {
+				CAM_ERR(CAM_CSIPHY, "TA UnLoad failed\n");
+				ret = -EINVAL;
+			}
+		}
+	}
+	CAM_INFO(CAM_CSIPHY, "-- @@ phy : %d, protect : %d, load_ref_cnt %d, ret %d", offset, protect, cam_refcnt_status(0,0), ret);
+
+    return ret;
+}
+#else
 static int cam_csiphy_notify_secure_mode(struct csiphy_device *csiphy_dev,
 	bool protect, int32_t offset)
 {
@@ -50,6 +272,7 @@ static int cam_csiphy_notify_secure_mode(struct csiphy_device *csiphy_dev,
 
 	return 0;
 }
+#endif
 
 int32_t cam_csiphy_get_instance_offset(
 	struct csiphy_device *csiphy_dev,
@@ -109,6 +332,58 @@ void cam_csiphy_reset(struct csiphy_device *csiphy_dev)
 }
 
 int32_t cam_csiphy_update_secure_info(
+	struct csiphy_device *csiphy_dev,
+	struct cam_csiphy_info  *cam_cmd_csiphy_info,
+	struct cam_config_dev_cmd *cfg_dev)
+{
+	uint32_t clock_lane, adj_lane_mask, temp;
+	int32_t offset;
+
+	if (csiphy_dev->acquire_count >=
+		CSIPHY_MAX_INSTANCES_PER_PHY) {
+		CAM_ERR(CAM_CSIPHY, "Invalid acquire count");
+		return -EINVAL;
+	}
+
+	offset = cam_csiphy_get_instance_offset(csiphy_dev,
+		cfg_dev->dev_handle);
+	if (offset < 0 || offset >= CSIPHY_MAX_INSTANCES_PER_PHY) {
+		CAM_ERR(CAM_CSIPHY, "Invalid offset");
+		return -EINVAL;
+	}
+
+	if (cam_cmd_csiphy_info->combo_mode)
+		clock_lane =
+			csiphy_dev->ctrl_reg->csiphy_reg.csiphy_2ph_combo_ck_ln;
+	else
+		clock_lane =
+			csiphy_dev->ctrl_reg->csiphy_reg.csiphy_2ph_clock_lane;
+
+	adj_lane_mask = cam_cmd_csiphy_info->lane_mask & LANE_MASK_2PH &
+		~clock_lane;
+	temp = adj_lane_mask & (clock_lane - 1);
+	adj_lane_mask =
+		((adj_lane_mask & (~(clock_lane - 1))) >> 1) | temp;
+
+	if (cam_cmd_csiphy_info->csiphy_3phase)
+		adj_lane_mask = cam_cmd_csiphy_info->lane_mask & LANE_MASK_3PH;
+
+#if defined(DISABLE_SCM_CALL_RECOVERY)
+	if (cam_cmd_csiphy_info->secure_mode == 1)
+#endif
+	csiphy_dev->csiphy_info[offset].secure_mode = 1;
+
+	csiphy_dev->csiphy_cpas_cp_reg_mask[offset] =
+		adj_lane_mask << (csiphy_dev->soc_info.index *
+		(CAM_CSIPHY_MAX_DPHY_LANES + CAM_CSIPHY_MAX_CPHY_LANES) +
+		(!cam_cmd_csiphy_info->csiphy_3phase) *
+		(CAM_CSIPHY_MAX_CPHY_LANES));
+
+	return 0;
+}
+
+#if 0
+int32_t cam_csiphy_update_secure_info(
 	struct csiphy_device *csiphy_dev, int32_t index)
 {
 	uint32_t adj_lane_mask = 0;
@@ -140,6 +415,7 @@ int32_t cam_csiphy_update_secure_info(
 
 	return 0;
 }
+#endif
 
 static int cam_csiphy_get_lane_enable(
 	struct csiphy_device *csiphy, int index, uint32_t *lane_enable)
@@ -227,6 +503,10 @@ int32_t cam_cmd_buf_parser(struct csiphy_device *csiphy_dev,
 	size_t                  remain_len;
 	int                     index;
 	uint32_t                lane_enable = 0;
+        int32_t                 offset;
+#if defined(DISABLE_SCM_CALL_RECOVERY)
+	uint64_t org_mask;
+#endif
 
 	if (!cfg_dev || !csiphy_dev) {
 		CAM_ERR(CAM_CSIPHY, "Invalid Args");
@@ -322,9 +602,38 @@ int32_t cam_cmd_buf_parser(struct csiphy_device *csiphy_dev,
 
 	csiphy_dev->csiphy_info[index].lane_enable = lane_enable;
 
+	offset = cam_csiphy_get_instance_offset(csiphy_dev,
+		cfg_dev->dev_handle);
+	if (offset < 0 || offset >= CSIPHY_MAX_INSTANCES_PER_PHY) {
+		CAM_ERR(CAM_CSIPHY, "Invalid offset");
+		return -EINVAL;
+	}
+
+#if defined(DISABLE_SCM_CALL_RECOVERY)
+	if (protect_mask[csiphy_dev->soc_info.index] > 0) {
+		CAM_INFO(CAM_CSIPHY,
+			"[SCM_DBG] Still protect, even if normal camera. force un-protect");
+
+		org_mask = csiphy_dev->csiphy_cpas_cp_reg_mask[offset];
+		cam_csiphy_update_secure_info(csiphy_dev,
+			cam_cmd_csiphy_info, cfg_dev);
+
+		cam_csiphy_init_secure_mode(
+			csiphy_dev,
+			CAM_SECURE_MODE_NON_SECURE, offset);
+
+		csiphy_dev->csiphy_cpas_cp_reg_mask[offset] = org_mask;
+	}
+#endif
+
+	csiphy_dev->csiphy_info[offset].secure_mode =
+		CAM_SECURE_MODE_NON_SECURE;
+
+	CAM_INFO(CAM_CSIPHY, "security mode = %d", cam_cmd_csiphy_info->secure_mode);
+
 	if (cam_cmd_csiphy_info->secure_mode == 1)
 		cam_csiphy_update_secure_info(csiphy_dev,
-			index);
+			cam_cmd_csiphy_info, cfg_dev);
 
 	csiphy_dev->config_count++;
 
