@@ -818,7 +818,8 @@ int msm_comm_get_inst_load(struct msm_vidc_inst *inst,
 	 * ----------------|----------------------------|
 	 */
 
-	if (is_thumbnail_session(inst) ||
+	if (!is_supported_session(inst) ||
+		is_thumbnail_session(inst) ||
 		(!is_realtime_session(inst) &&
 		 quirks == LOAD_ADMISSION_CONTROL)) {
 		load = 0;
@@ -3548,6 +3549,7 @@ static int msm_vidc_load_resources(int flipped_state,
 			"H/W is overloaded. needed: %d max: %d\n",
 			video_load, max_video_load);
 		msm_vidc_print_running_insts(inst->core);
+		inst->supported = false;
 		return -EBUSY;
 	}
 
@@ -3556,6 +3558,7 @@ static int msm_vidc_load_resources(int flipped_state,
 			"H/W is overloaded. needed: [video + image][%d + %d], max: [video + image][%d + %d]\n",
 			video_load, image_load, max_video_load, max_image_load);
 		msm_vidc_print_running_insts(inst->core);
+        inst->supported = false;
 		return -EBUSY;
 	}
 
@@ -4827,6 +4830,7 @@ int msm_comm_qbufs_batch(struct msm_vidc_inst *inst,
 	int rc = 0;
 	struct msm_vidc_buffer *buf;
 	int do_bw_calc = 0;
+	int num_buffers_queued = 0;
 
 	do_bw_calc = mbuf ? mbuf->vvb.vb2_buf.type == INPUT_MPLANE : 0;
 	rc = msm_comm_scale_clocks_and_bus(inst, do_bw_calc);
@@ -4852,10 +4856,13 @@ int msm_comm_qbufs_batch(struct msm_vidc_inst *inst,
 				__func__, rc);
 			break;
 		}
+		num_buffers_queued++;
 loop_end:
-		/* Queue pending buffers till the current buffer only */
-		if (buf == mbuf)
+		/* Queue pending buffers till batch size */
+		if (num_buffers_queued == inst->batch.size) {
+			s_vpr_e(inst->sid, "%s: Queue buffers till batch size\n");
 			break;
+		}
 	}
 	mutex_unlock(&inst->registeredbufs.lock);
 
@@ -5959,6 +5966,7 @@ static int msm_vidc_check_mbps_supported(struct msm_vidc_inst *inst)
 				"H/W is overloaded. needed: %d max: %d\n",
 				video_load, max_video_load);
 			msm_vidc_print_running_insts(inst->core);
+     	    inst->supported = false;
 			return -EBUSY;
 		}
 
@@ -5968,6 +5976,7 @@ static int msm_vidc_check_mbps_supported(struct msm_vidc_inst *inst)
 				video_load, image_load,
 				max_video_load, max_image_load);
 			msm_vidc_print_running_insts(inst->core);
+            inst->supported = false;
 			return -EBUSY;
 		}
 	}
