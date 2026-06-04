@@ -3,6 +3,15 @@ ccflags-y := -I$(srctree)/include/drm -I$(srctree)/techpack/display/msm -I$(srct
 ccflags-y += -I$(srctree)/techpack/display/msm/sde
 ccflags-y += -I$(srctree)/techpack/display/rotator
 
+ifeq ($(CONFIG_DISPLAY_SAMSUNG),y)
+ccflags-y += -I$(srctree)/include/drm
+ccflags-y += -I$(srctree)/techpack/display/msm
+ccflags-y += -I$(srctree)/techpack/display/msm/dsi
+ccflags-y += -I$(srctree)/techpack/display/msm/sde
+ccflags-y += -I$(srctree)/drivers/clk/qcom/
+ccflags-y += -I$(srctree)/techpack/display/msm/samsung
+endif
+
 msm_drm-$(CONFIG_DRM_MSM_DP) += dp/dp_usbpd.o \
 	dp/dp_parser.o \
 	dp/dp_power.o \
@@ -22,6 +31,13 @@ msm_drm-$(CONFIG_DRM_MSM_DP) += dp/dp_usbpd.o \
 	dp/dp_drm.o \
 	dp/dp_hdcp2p2.o \
 	dp/dp_mst_drm.o \
+
+# sec displayport
+msm_drm-$(CONFIG_SEC_DISPLAYPORT) += dp/secdp_sysfs.o \
+	dp/secdp_logger.o \
+	dp/secdp_unit_test.o \
+
+msm_drm-$(CONFIG_SEC_DISPLAYPORT_BIGDATA) += dp/displayport_bigdata.o \
 
 msm_drm-$(CONFIG_DRM_MSM_SDE) += sde/sde_crtc.o \
 	sde/sde_encoder.o \
@@ -68,8 +84,7 @@ msm_drm-$(CONFIG_DRM_MSM_SDE) += sde/sde_crtc.o \
 	sde/sde_hw_ds.o \
 	sde/sde_fence.o \
 	sde/sde_hw_qdss.o \
-
-msm_drm-$(CONFIG_DEBUG_FS) += sde_dbg.o \
+	sde_dbg.o \
 	sde_dbg_evtlog.o \
 
 msm_drm-$(CONFIG_DRM_SDE_WB) += sde/sde_wb.o \
@@ -118,3 +133,90 @@ msm_drm-$(CONFIG_DRM_MSM) += \
 obj-$(CONFIG_DRM_MSM)	+= msm_drm.o
 
 obj-$(CONFIG_DRM_FBDEV_EMULATION) += msm_fbdev.o
+
+
+msm_drm-$(CONFIG_DISPLAY_SAMSUNG) += samsung/PBA_BOOTING/ss_dsi_panel_PBA_BOOTING_fhd.o
+msm_drm-$(CONFIG_PANEL_NT36672C_PM6585JB3_M23_FHD) += samsung/NT36672C_PM6585JB3_M23/ss_dsi_panel_NT36672C_PM6585JB3_M23.o
+
+msm_drm-$(CONFIG_PANEL_HX83102_TV104WUM_WUXGA) += samsung/BLIC/ss_blic_lp8558_i2c.o
+
+msm_drm-$(CONFIG_PANEL_HX83121_PPC357DB11_WQXGA) += samsung/BLIC/ss_blic_lp8558_i2c.o
+
+msm_drm-$(CONFIG_PANEL_NT36672C_TL066FVMC02_FHD) += samsung/BLIC/ss_blic_ktz8864b_i2c.o
+
+msm_drm-$(CONFIG_PANEL_XCP2_NT36672C_PM6585JB2_FHD) += samsung/BLIC/ss_blic_ktz8864b_i2c.o
+
+msm_drm-$(CONFIG_PANEL_NT36672C_PM6585JB3_FHD) += samsung/BLIC/ss_blic_s2dps01a01_i2c.o
+
+msm_drm-$(CONFIG_PANEL_M44X_ILI7807S_BS066FBM_FHD) += samsung/BLIC/ss_blic_s2dps01a01_i2c.o
+
+
+msm_drm-$(CONFIG_PANEL_HX83121_PPC357DB11_WQXGA) += samsung/PMIC/ss_boost_max77816_i2c.o
+msm_drm-$(CONFIG_PANEL_HX83121_PPC357DB11_WQXGA) += samsung/PMIC/ss_buck_isl98609_i2c.o
+msm_drm-$(CONFIG_PANEL_TAP2_HX8279_TV101WUM_WUXGA) += samsung/PMIC/ss_buck_isl98609_i2c.o
+msm_drm-$(CONFIG_PANEL_GTACT4PRO_HX8279_TV101WUM_WUXGA) += samsung/PMIC/ss_buck_isl98609_i2c.o
+
+msm_drm-$(CONFIG_PANEL_NT36672C_TL066FVMC02_FHD) += samsung/NT36672C_TL066FVMC02/ss_dsi_panel_NT36672C_TL066FVMC02.o
+
+
+msm_drm-$(CONFIG_DISPLAY_SAMSUNG) += samsung/ss_dsi_panel_sysfs.o \
+	samsung/ss_dsi_panel_debug.o \
+	samsung/ss_dsi_panel_common.o \
+	samsung/ss_dsi_mdnie_lite_common.o \
+	samsung/ss_dsi_smart_dimming_common.o \
+	samsung/ss_interpolation_common.o \
+	samsung/ss_flash_table_data_common.o \
+	samsung/ss_dpui_common.o \
+	samsung/ss_ddi_poc_common.o \
+	samsung/ss_ddi_spi_common.o \
+	samsung/ss_copr_common.o \
+	samsung/ss_wrapper_common.o
+
+ifeq ($(CONFIG_SEC_KUNIT), y)
+ifeq ($(CONFIG_UML), y)
+
+# To report to Sherlock server, add GCOV_PROFILE_($target_file_name)
+GCOV_PROFILE_ss_dsi_panel_common.o := $(CONFIG_SEC_KUNIT)
+GCOV_PROFILE_ss_dsi_panel_debug.o := $(CONFIG_SEC_KUNIT)
+endif
+endif
+
+
+# LEGO
+subdir-ccflags-$(CONFIG_SEC_KUNIT) += \
+	-Wno-unused-variable \
+	-Wno-unused-function \
+	-Wno-format
+
+
+msm_drm-$(CONFIG_DISPLAY_SAMSUNG) += samsung/SELF_DISPLAY/self_display_6W3.o \
+	samsung/SELF_DISPLAY/self_display_FA7.o \
+	samsung/SELF_DISPLAY/self_display_FA9.o \
+	samsung/SELF_DISPLAY/self_display_FAB.o \
+	samsung/SELF_DISPLAY/self_display_HA8.o \
+	samsung/SELF_DISPLAY/self_display_HA9.o \
+	samsung/SELF_DISPLAY/self_display_HAB.o \
+	samsung/SELF_DISPLAY/self_display_HAC.o \
+	samsung/SELF_DISPLAY/self_display_HAD.o \
+	samsung/SELF_DISPLAY/self_display_UM1.o \
+	samsung/SELF_DISPLAY/self_display_XA0.o \
+	samsung/SELF_DISPLAY/self_display_XA1.o \
+	samsung/SELF_DISPLAY/self_display_XA2.o \
+	samsung/SELF_DISPLAY/self_display_FC1.o \
+	samsung/SELF_DISPLAY/self_display_SW83109.o \
+	samsung/SELF_DISPLAY/self_display_SW83109_A73.o \
+	samsung/SELF_DISPLAY/self_display_SW83109_WM6676Z21.o \
+	samsung/SELF_DISPLAY/self_display_HAB_AMB667AN01.o \
+	samsung/SELF_DISPLAY/self_display_HAB_AMB667AN01_A73.o \
+	samsung/SELF_DISPLAY/self_display_A73_S6E3FC3_AMB667BV01.o \
+	samsung/SELF_DISPLAY/self_display_FC3.o \
+	samsung/SELF_DISPLAY/self_display_FAC_AMF670BS01.o
+
+
+msm_drm-$(CONFIG_DISPLAY_SAMSUNG) += samsung/MAFPC/ss_dsi_mafpc_FAB.o \
+	samsung/MAFPC/ss_dsi_mafpc_HAB.o \
+	samsung/MAFPC/ss_dsi_mafpc_HAC.o \
+	samsung/MAFPC/ss_dsi_mafpc_HAD.o \
+	samsung/MAFPC/ss_dsi_mafpc_XA1.o \
+	samsung/MAFPC/ss_dsi_mafpc_XA2.o \
+	samsung/MAFPC/ss_dsi_mafpc_FAC_AMF670BS01.o

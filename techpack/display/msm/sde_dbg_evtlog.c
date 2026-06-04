@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
+ * Copyright (c) 2021-2022 Qualcomm Innovation Center, Inc. All rights reserved.
  * Copyright (c) 2016-2019, The Linux Foundation. All rights reserved.
  */
 
@@ -16,6 +17,10 @@
 
 #include "sde_dbg.h"
 #include "sde_trace.h"
+
+#if defined(CONFIG_DISPLAY_SAMSUNG)
+#include <linux/sched/clock.h>
+#endif
 
 #define SDE_EVTLOG_FILTER_STRSIZE	64
 
@@ -105,7 +110,11 @@ exit:
 static bool _sde_evtlog_dump_calc_range(struct sde_dbg_evtlog *evtlog,
 		bool update_last_entry, bool full_dump)
 {
+#if defined(CONFIG_DISPLAY_SAMSUNG)
+	int max_entries = full_dump ? SDE_EVTLOG_ENTRY : (SDE_EVTLOG_PRINT_ENTRY * 2);
+#else
 	int max_entries = full_dump ? SDE_EVTLOG_ENTRY : SDE_EVTLOG_PRINT_ENTRY;
+#endif
 
 	if (!evtlog)
 		return false;
@@ -199,7 +208,7 @@ struct sde_dbg_evtlog *sde_evtlog_init(void)
 {
 	struct sde_dbg_evtlog *evtlog;
 
-	evtlog = kzalloc(sizeof(*evtlog), GFP_KERNEL);
+	evtlog = vzalloc(sizeof(*evtlog));
 	if (!evtlog)
 		return ERR_PTR(-ENOMEM);
 
@@ -310,5 +319,5 @@ void sde_evtlog_destroy(struct sde_dbg_evtlog *evtlog)
 		list_del(&filter_node->list);
 		kfree(filter_node);
 	}
-	kfree(evtlog);
+	vfree(evtlog);
 }

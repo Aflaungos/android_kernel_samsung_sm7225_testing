@@ -23,6 +23,11 @@
 
 #include "sde_dbg.h"
 
+#if defined(CONFIG_DISPLAY_SAMSUNG)
+#include "ss_dsi_panel_common.h"
+#include "sde_trace.h"
+#endif
+
 #define DSI_CTRL_DEFAULT_LABEL "MDSS DSI CTRL"
 
 #define DSI_CTRL_TX_TO_MS     200
@@ -263,6 +268,12 @@ static int dsi_ctrl_debugfs_deinit(struct dsi_ctrl *dsi_ctrl)
 static int dsi_ctrl_debugfs_init(struct dsi_ctrl *dsi_ctrl,
 				 struct dentry *parent)
 {
+	char dbg_name[DSI_DEBUG_NAME_LEN];
+
+	snprintf(dbg_name, DSI_DEBUG_NAME_LEN, "dsi%d_ctrl",
+			dsi_ctrl->cell_index);
+	sde_dbg_reg_register_base(dbg_name, dsi_ctrl->hw.base,
+			msm_iomap_size(dsi_ctrl->pdev, "dsi_ctrl"));
 	return 0;
 }
 static int dsi_ctrl_debugfs_deinit(struct dsi_ctrl *dsi_ctrl)
@@ -330,6 +341,22 @@ static void dsi_ctrl_dma_cmd_wait_for_done(struct work_struct *work)
 			DSI_CTRL_WARN(dsi_ctrl,
 					"dma_tx done but irq not triggered\n");
 		} else {
+#if defined(CONFIG_DISPLAY_SAMSUNG)
+			struct samsung_display_driver_data *vdd = ss_get_vdd(dsi_ctrl->cell_index);
+
+			/* check physical display connection */
+			if (gpio_is_valid(vdd->ub_con_det.gpio)) {
+				pr_err("[SDE] ub_con_det.gpio(%d) level=%d\n",
+						vdd->ub_con_det.gpio,
+						gpio_get_value(vdd->ub_con_det.gpio));
+			}
+
+#if 1 // case 03745287
+			if (!dsi_ctrl->esd_check_underway && !vdd->panel_dead) {
+				SDE_DBG_DUMP("all", "dbg_bus", "vbif_dbg_bus", "panic");
+			}
+#endif
+#endif
 			DSI_CTRL_ERR(dsi_ctrl,
 					"Command transfer failed\n");
 		}
@@ -1248,6 +1275,9 @@ static void dsi_kickoff_msg_tx(struct dsi_ctrl *dsi_ctrl,
 	u32 line_no = 0x1;
 	struct dsi_ctrl_hw_ops dsi_hw_ops = dsi_ctrl->hw.ops;
 
+#if defined(CONFIG_DISPLAY_SAMSUNG)
+	u8 *tx_buf = (u8 *)msg->tx_buf;
+#endif
 	SDE_EVT32(dsi_ctrl->cell_index, SDE_EVTLOG_FUNC_ENTRY, flags,
 		msg->flags);
 
@@ -1276,10 +1306,19 @@ static void dsi_kickoff_msg_tx(struct dsi_ctrl *dsi_ctrl,
 							cmd_mem,
 							hw_flags);
 			} else {
+#if defined(CONFIG_DISPLAY_SAMSUNG)
+				if (tx_buf[0] == 0x2a || tx_buf[0] == 0x2b)
+					SDE_ATRACE_BEGIN("dsi_message_tx_flush");
+#endif
 				dsi_hw_ops.kickoff_command(
 						&dsi_ctrl->hw,
 						cmd_mem,
 						hw_flags);
+#if defined(CONFIG_DISPLAY_SAMSUNG)
+				if (tx_buf[0] == 0x2a || tx_buf[0] == 0x2b)
+					SDE_ATRACE_END("dsi_message_tx_flush");
+#endif
+
 			}
 		} else if (flags & DSI_CTRL_CMD_FIFO_STORE) {
 			dsi_hw_ops.kickoff_fifo_command(&dsi_ctrl->hw,
@@ -1363,6 +1402,38 @@ static void dsi_ctrl_validate_msg_flags(struct dsi_ctrl *dsi_ctrl,
 		*flags &= ~DSI_CTRL_CMD_ASYNC_WAIT;
 }
 
+#if defined(CONFIG_DISPLAY_SAMSUNG)
+static void print_cmd_desc(const struct mipi_dsi_msg *msg, struct samsung_display_driver_data *vdd)
+{
+	char buf[1024];
+	int len = 0;
+	size_t i;
+	u8 *tx_buf = (u8 *)msg->tx_buf;
+
+	/* Packet Info */
+	len += snprintf(buf, sizeof(buf) - len,  "%02x ", msg->type);
+	len += snprintf(buf + len, sizeof(buf) - len, "%02x ",
+		(msg->flags & MIPI_DSI_MSG_LASTCOMMAND) ? 1 : 0); /* Last bit */
+	len += snprintf(buf + len, sizeof(buf) - len, "%02x ", msg->channel);
+	len += snprintf(buf + len, sizeof(buf) - len, "%02x ",
+						(unsigned int)msg->flags);
+	len += snprintf(buf + len, sizeof(buf) - len, "%02x ", 0); /* Delay */
+	len += snprintf(buf + len, sizeof(buf) - len, "%02x ",
+						(unsigned int)msg->tx_len);
+
+	/* Packet Payload */
+	for (i = 0 ; i < msg->tx_len ; i++) {
+		len += snprintf(buf + len, sizeof(buf) - len,
+						"%02x ", tx_buf[i]);
+		/* Break to prevent show too long command */
+		if (i > 250)
+			break;
+	}
+
+	LCD_INFO(vdd, "(%02d) %s\n", (unsigned int)msg->tx_len, buf);
+}
+#endif
+
 static int dsi_message_tx(struct dsi_ctrl *dsi_ctrl,
 			  const struct mipi_dsi_msg *msg,
 			  u32 *flags)
@@ -1375,6 +1446,12 @@ static int dsi_message_tx(struct dsi_ctrl *dsi_ctrl,
 	u8 *buffer = NULL;
 	u32 cnt = 0;
 	u8 *cmdbuf;
+
+#if defined(CONFIG_DISPLAY_SAMSUNG)
+	struct samsung_display_driver_data *vdd = ss_get_vdd(dsi_ctrl->cell_index);
+	if (vdd->debug_data && vdd->debug_data->print_cmds)
+		print_cmd_desc(msg, vdd);
+#endif
 
 	/* Select the tx mode to transfer the command */
 	dsi_message_setup_tx_mode(dsi_ctrl, msg->tx_len, flags);
@@ -1673,6 +1750,15 @@ static int dsi_message_rx(struct dsi_ctrl *dsi_ctrl,
 	case MIPI_DSI_RX_DCS_LONG_READ_RESPONSE:
 		rc = dsi_parse_long_read_resp(msg, buff);
 		break;
+#if defined(CONFIG_DISPLAY_SAMSUNG)
+	/* For Himax HX83102E factory swap test
+	 * Himax short read response is 0x0A before writing mipi init cmds
+	 */
+	case 0x0a:
+		DSI_CTRL_WARN(dsi_ctrl, "Not official response: 0x%x\n", cmd);
+		rc = dsi_parse_short_read1_resp(msg, buff);
+		break;
+#endif
 	default:
 		DSI_CTRL_WARN(dsi_ctrl, "Invalid response: 0x%x\n", cmd);
 		rc = 0;
@@ -2085,6 +2171,10 @@ void dsi_ctrl_debug_dump(u32 *entries, u32 size)
 	mutex_unlock(&dsi_ctrl_list_lock);
 }
 
+#else
+void dsi_ctrl_debug_dump(u32 *entries, u32 size)
+{
+}
 #endif
 /**
  * dsi_ctrl_get() - get a dsi_ctrl handle from an of_node
@@ -2562,6 +2652,14 @@ static void dsi_ctrl_handle_error_status(struct dsi_ctrl *dsi_ctrl,
 	if (error & 0xF0000) {
 		u32 mask = 0;
 
+#if defined(CONFIG_DISPLAY_SAMSUNG) && defined(CONFIG_SEC_DEBUG)
+		if (sec_debug_is_enabled()) {
+			pr_err("dsi FIFO UNDERFLOW error: 0x%lx\n", error);
+			SDE_DBG_DUMP_WQ("sde", "dsi0_ctrl", "dsi0_phy", "dsi1_ctrl", "dsi1_phy",
+				"vbif", "dbg_bus", "dsi_dbg_bus", "vbif_dbg_bus", "panic");
+		}
+#endif
+
 		if (dsi_ctrl->hw.ops.get_error_mask)
 			mask = dsi_ctrl->hw.ops.get_error_mask(&dsi_ctrl->hw);
 		/* no need to report FIFO overflow if already masked */
@@ -2578,6 +2676,14 @@ static void dsi_ctrl_handle_error_status(struct dsi_ctrl *dsi_ctrl,
 
 	/* DSI FIFO UNDERFLOW error */
 	if (error & 0xF00000) {
+
+#if defined(CONFIG_DISPLAY_SAMSUNG) && defined(CONFIG_SEC_DEBUG)
+		if (sec_debug_is_enabled()) {
+			pr_err("dsi FIFO UNDERFLOW error: 0x%lx\n", error);
+			SDE_DBG_DUMP_WQ("sde", "dsi0_ctrl", "dsi0_phy", "dsi1_ctrl", "dsi1_phy",
+				"vbif", "dbg_bus", "dsi_dbg_bus", "vbif_dbg_bus", "panic");
+		}
+#endif
 		if (cb_info.event_cb) {
 			cb_info.event_idx = DSI_FIFO_UNDERFLOW;
 			(void)cb_info.event_cb(cb_info.event_usr_ptr,
@@ -2613,6 +2719,12 @@ static void dsi_ctrl_handle_error_status(struct dsi_ctrl *dsi_ctrl,
 	/* enable back DSI interrupts */
 	if (dsi_ctrl->hw.ops.error_intr_ctrl)
 		dsi_ctrl->hw.ops.error_intr_ctrl(&dsi_ctrl->hw, true);
+
+#if defined(CONFIG_DISPLAY_SAMSUNG)
+	inc_dpui_u32_field_nolock(DPUI_KEY_QCT_DSIE, 1);
+	ss_get_vdd(dsi_ctrl->cell_index)->dsi_errors = error;
+#endif
+
 }
 
 /**

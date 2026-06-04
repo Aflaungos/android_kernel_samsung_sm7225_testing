@@ -297,6 +297,11 @@ static int _sde_power_data_bus_set_quota(
 		return -EINVAL;
 	}
 
+#if defined(CONFIG_DISPLAY_SAMSUNG)
+	pdbus->in_ab_quota = in_ab_quota;
+	pdbus->in_ib_quota = in_ib_quota;
+#endif
+
 	if (!in_ab_quota && !in_ib_quota)  {
 		new_uc_idx = 0;
 	} else {

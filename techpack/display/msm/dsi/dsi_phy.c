@@ -873,6 +873,8 @@ int dsi_phy_enable(struct msm_dsi_phy *phy,
 		return -EINVAL;
 	}
 
+	DSI_PHY_INFO(phy, "timing_check: enable dphy\n");
+
 	mutex_lock(&phy->phy_lock);
 
 	if (!skip_validation)
@@ -961,6 +963,8 @@ int dsi_phy_disable(struct msm_dsi_phy *phy)
 		DSI_PHY_ERR(phy, "Invalid params\n");
 		return -EINVAL;
 	}
+
+	DSI_PHY_INFO(phy, "timing_check: disable dphy\n");
 
 	mutex_lock(&phy->phy_lock);
 	dsi_phy_disable_hw(phy);
@@ -1269,6 +1273,19 @@ void dsi_phy_set_continuous_clk(struct msm_dsi_phy *phy, bool enable)
 	mutex_unlock(&phy->phy_lock);
 
 }
+
+#if defined(CONFIG_DISPLAY_SAMSUNG)
+void dsi_phy_store_str(struct msm_dsi_phy *phy, u32 *val)
+{
+	if (phy->hw.ops.store_str)
+		phy->hw.ops.store_str(&phy->hw, val);
+}
+void dsi_phy_store_emphasis(struct msm_dsi_phy *phy, u32 *val)
+{
+	if (phy->hw.ops.store_emphasis)
+		phy->hw.ops.store_emphasis(&phy->hw, val);
+}
+#endif
 
 void dsi_phy_drv_register(void)
 {
