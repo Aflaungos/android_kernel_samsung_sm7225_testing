@@ -70,11 +70,7 @@ CLANG_BUILD() {
 	export CLANG_TRIPLE=aarch64-linux-gnu-
 	export PATH="$CLANG:$PATH"
 	make -j8 O=out ARCH=arm64 SUBARCH=arm64 CC=clang LLVM_IAS=1 LLVM=1 vendor/m23xq_eur_open_defconfig > /dev/null
-	make -j8 O=out ARCH=arm64 SUBARCH=arm64 CC=clang LLVM_IAS=1 LLVM=1 \
-	ARCH=arm64 \
-	SUBARCH=arm64 \
-	CC=clang \
-	LLVM_IAS=1 LLVM=1
+	make -j8 O=out ARCH=arm64 SUBARCH=arm64 CC=clang LLVM_IAS=1 LLVM=1
 }
 
 DISPLAY_ELAPSED_TIME() {
