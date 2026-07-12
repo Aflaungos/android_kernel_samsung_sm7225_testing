@@ -1820,7 +1820,7 @@ static int reclaim_pte_range(pmd_t *pmd, unsigned long addr,
 	if (pmd_trans_unstable(pmd) || !rp->nr_to_reclaim)
 		return 0;
 cont:
-	if (rwsem_is_contended(&walk->mm->mmap_sem))
+	if (rwsem_is_contended(&walk->mm->mmap_lock))
 		return -1;
 	if (is_pm_freezing())
 		return -1;
@@ -1898,7 +1898,7 @@ static int writeback_pte_range(pmd_t *pmd, unsigned long addr,
 
 	if (pmd_trans_unstable(pmd))
 		return 0;
-	if (rwsem_is_contended(&mm->mmap_sem))
+	if (rwsem_is_contended(&mm->mmap_lock))
 		return -1;
 	if (is_pm_freezing())
 		return -1;
