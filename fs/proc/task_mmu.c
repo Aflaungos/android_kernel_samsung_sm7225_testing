@@ -2671,7 +2671,7 @@ static void file_check(struct seq_file *m, struct vm_area_struct *vma)
 			index = indices[i];
 			if (index >= end)
 				break;
-			if (radix_tree_exceptional_entry(page))
+			if (xa_is_value(page))
 				continue;
 			if (!trylock_page(page))
 				continue;
