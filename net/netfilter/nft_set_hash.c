@@ -30,12 +30,10 @@ extern unsigned int nf_tables_net_id;
 struct nft_rhash {
 	struct rhashtable		ht;
 	struct delayed_work		gc_work;
-	u32				wq_gc_seq;
 };
 
 struct nft_rhash_elem {
 	struct rhash_head		node;
-	u32				wq_gc_seq;
 	struct nft_set_ext		ext;
 };
 
@@ -319,10 +317,6 @@ static void nft_rhash_gc(struct work_struct *work)
 	if (!gc)
 		goto done;
 
-	/* Elements never collected use a zero gc worker sequence number. */
-	if (unlikely(++priv->wq_gc_seq == 0))
-		priv->wq_gc_seq++;
-
 	err = rhashtable_walk_init(&priv->ht, &hti, GFP_KERNEL);
 	if (err) {
 		nft_trans_gc_destroy(gc);
@@ -345,14 +339,6 @@ static void nft_rhash_gc(struct work_struct *work)
 			goto try_later;
 		}
 
-		/* rhashtable walk is unstable, already seen in this gc run?
-		 * Then, skip this element. In case of (unlikely) sequence
-		 * wraparound and stale element wq_gc_seq, next gc run will
-		 * just find this expired element.
-		 */
-		if (he->wq_gc_seq == priv->wq_gc_seq)
-			continue;
-
 		if (nft_set_elem_is_dead(&he->ext))
 			goto dead_elem;
 
@@ -372,8 +358,6 @@ dead_elem:
 		if (!gc)
 			goto try_later;
 
-		/* annotate gc sequence for this attempt. */
-		he->wq_gc_seq = priv->wq_gc_seq;
 		nft_trans_gc_elem_add(gc, he);
 	}
 try_later:
