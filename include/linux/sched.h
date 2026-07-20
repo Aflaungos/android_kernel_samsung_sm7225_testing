@@ -363,11 +363,9 @@ enum uclamp_id {
 	UCLAMP_CNT
 };
 
-#ifndef BIONIC
 struct sched_param {
 	int sched_priority;
 };
-#endif
 
 struct sched_info {
 #ifdef CONFIG_SCHED_INFO
