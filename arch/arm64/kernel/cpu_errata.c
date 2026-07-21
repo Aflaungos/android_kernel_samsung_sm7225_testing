@@ -517,22 +517,6 @@ has_cortex_a76_erratum_1463225(const struct arm64_cpu_capabilities *entry,
 }
 #endif
 
-#ifdef CONFIG_ARM64_ERRATUM_1463225
-DEFINE_PER_CPU(int, __in_cortex_a76_erratum_1463225_wa);
-
-static bool
-has_cortex_a76_erratum_1463225(const struct arm64_cpu_capabilities *entry,
-			       int scope)
-{
-	u32 midr = read_cpuid_id();
-	/* Cortex-A76 r0p0 - r3p1 */
-	struct midr_range range = MIDR_RANGE(MIDR_CORTEX_A76, 0, 0, 3, 1);
-
-	WARN_ON(scope != SCOPE_LOCAL_CPU || preemptible());
-	return is_midr_in_range(midr, &range) && is_kernel_in_hyp_mode();
-}
-#endif
-
 #define CAP_MIDR_RANGE(model, v_min, r_min, v_max, r_max)	\
 	.matches = is_affected_midr_range,			\
 	.midr_range = MIDR_RANGE(model, v_min, r_min, v_max, r_max)
@@ -1025,14 +1009,6 @@ const struct arm64_cpu_capabilities arm64_errata[] = {
 		.desc = "SSBS not fully self-synchronizing",
 		.capability = ARM64_WORKAROUND_SPECULATIVE_SSBS,
 		ERRATA_MIDR_RANGE_LIST(erratum_spec_ssbs_list),
-	},
-#endif
-#ifdef CONFIG_ARM64_ERRATUM_1463225
-	{
-		.desc = "ARM erratum 1463225",
-		.capability = ARM64_WORKAROUND_1463225,
-		.type = ARM64_CPUCAP_LOCAL_CPU_ERRATUM,
-		.matches = has_cortex_a76_erratum_1463225,
 	},
 #endif
 	{
