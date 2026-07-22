@@ -2037,49 +2037,4 @@ static inline int fuse_bpf_run(struct bpf_prog *prog, struct fuse_bpf_args *fba)
 	fer;								\
 })
 #endif /* CONFIG_FUSE_BPF */
-
-#ifdef CONFIG_FREEZER
-static inline void fuse_freezer_do_not_count(void)
-{
-	current->flags |= PF_FREEZER_SKIP;
-}
-
-static inline void fuse_freezer_count(void)
-{
-	current->flags &= ~PF_FREEZER_SKIP;
-}
-#else /* !CONFIG_FREEZER */
-static inline void fuse_freezer_do_not_count(void) {}
-static inline void fuse_freezer_count(void) {}
-#endif
-
-#define fuse_wait_event(wq, condition)						\
-({										\
-	fuse_freezer_do_not_count();						\
-	wait_event(wq, condition);						\
-	fuse_freezer_count();							\
-})
-
-#define fuse_wait_event_killable(wq, condition)					\
-({										\
-	int __ret = 0;								\
-										\
-	fuse_freezer_do_not_count();						\
-	__ret = wait_event_killable(wq, condition);				\
-	fuse_freezer_count();							\
-										\
-	__ret;									\
-})
-
-#define fuse_wait_event_killable_exclusive(wq, condition)			\
-({										\
-	int __ret = 0;								\
-										\
-	fuse_freezer_do_not_count();						\
-	__ret = wait_event_killable_exclusive(wq, condition);			\
-	fuse_freezer_count();							\
-										\
-	__ret;									\
-})
-
 #endif /* _FS_FUSE_I_H */
