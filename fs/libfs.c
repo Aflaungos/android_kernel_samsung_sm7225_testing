@@ -18,6 +18,7 @@
 #include <linux/buffer_head.h> /* sync_mapping_buffers */
 #include <linux/unicode.h>
 #include <linux/fscrypt.h>
+#include <linux/fs_context.h>
 #include <linux/pseudo_fs.h>
 
 #ifdef CONFIG_FSCRYPT_SDP
