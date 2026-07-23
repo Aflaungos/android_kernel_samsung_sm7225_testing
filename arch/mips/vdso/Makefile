@@ -19,6 +19,10 @@ ccflags-vdso := \
 	$(CLANG_FLAGS) \
 	-D__VDSO__
 
+#
+# The -fno-jump-tables flag only prevents the compiler from generating
+# jump tables but does not prevent the compiler from emitting absolute
+# offsets.
 cflags-vdso := $(ccflags-vdso) \
 	$(filter -W%,$(filter-out -Wa$(comma)%,$(KBUILD_CFLAGS))) \
 	-O3 -g -fPIC -fno-strict-aliasing -fno-common -fno-builtin -G 0 \
@@ -62,7 +66,9 @@ endif
 VDSO_LDFLAGS := \
 	-Wl,-Bsymbolic -Wl,--no-undefined -Wl,-soname=linux-vdso.so.1 \
 	$(addprefix -Wl$(comma),$(filter -E%,$(KBUILD_CFLAGS))) \
-	-nostdlib -shared -Wl$(comma)--hash-style=sysv -Wl$(comma)--build-id
+	-nostdlib -shared \
+	$(call cc-ldoption, -Wl$(comma)--hash-style=sysv) \
+	$(call cc-ldoption, -Wl$(comma)--build-id)
 
 CFLAGS_REMOVE_vdso.o = -pg
 
