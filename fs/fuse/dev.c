@@ -22,6 +22,7 @@
 #include <linux/swap.h>
 #include <linux/splice.h>
 #include <linux/sched.h>
+#include <linux/sched/mm.h>
 
 MODULE_ALIAS_MISCDEV(FUSE_MINOR);
 MODULE_ALIAS("devname:fuse");
@@ -1254,6 +1255,10 @@ static ssize_t fuse_dev_do_read(struct fuse_dev *fud, struct file *file,
 			   sizeof(struct fuse_write_in) +
 			   fc->max_write))
 		return -EINVAL;
+
+	/* @fs.sec -- 51ab84ba5e7a5c06d72ac60a9679ac69 -- */
+	if (!(current->flags & PF_MEMALLOC_NOFS))
+ 		memalloc_nofs_save();
 
  restart:
 	for (;;) {
