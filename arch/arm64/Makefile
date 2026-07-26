@@ -61,12 +61,6 @@ ifeq ($(CONFIG_SHADOW_CALL_STACK), y)
 KBUILD_CFLAGS	+= -ffixed-x18
 endif
 
-ifeq ($(cc-name),clang)
-KBUILD_CFLAGS	+= -DCONFIG_ARCH_SUPPORTS_INT128
-else
-KBUILD_CFLAGS	+= $(call cc-ifversion, -ge, 0500, -DCONFIG_ARCH_SUPPORTS_INT128)
-endif
-
 ifeq ($(CONFIG_CPU_BIG_ENDIAN), y)
 KBUILD_CPPFLAGS	+= -mbig-endian
 CHECKFLAGS	+= -D__AARCH64EB__
@@ -141,10 +135,6 @@ endif
 # Default target when executing plain make
 boot		:= arch/arm64/boot
 
-ifeq ($(CONFIG_BUILD_ARM64_DT_OVERLAY),y)
-KBUILD_TARGET   += dtbo.img
-endif
-
 ifeq ($(CONFIG_BUILD_ARM64_APPENDED_DTB_IMAGE),y)
 KBUILD_TARGET  := $(addsuffix -dtb,$(KBUILD_IMAGE))
 KBUILD_IMAGE	:= $(boot)/$(addsuffix -dtb,$(KBUILD_IMAGE))
@@ -169,11 +159,6 @@ Image.%: Image
 
 zinstall install:
 	$(Q)$(MAKE) $(build)=$(boot) $@
-
-ifeq ($(CONFIG_BUILD_ARM64_DT_OVERLAY),y)
-dtbo.img: dtbs
-	$(Q)$(MAKE) $(build)=$(boot) $(boot)/$@
-endif
 
 %.dtb: scripts
 	$(Q)$(MAKE) $(build)=$(boot)/dts $(boot)/dts/$@
