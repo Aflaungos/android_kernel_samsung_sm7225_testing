@@ -62,7 +62,7 @@ enum fixed_addresses {
 	FIX_ENTRY_TRAMP_TEXT3,
 	FIX_ENTRY_TRAMP_TEXT2,
 	FIX_ENTRY_TRAMP_TEXT1,
-	FIX_ENTRY_TRAMP_DATA,	
+	FIX_ENTRY_TRAMP_DATA,
 #define TRAMP_VALIAS		(__fix_to_virt(FIX_ENTRY_TRAMP_TEXT1))
 #endif /* CONFIG_UNMAP_KERNEL_AT_EL0 */
 	__end_of_permanent_fixed_addresses,
