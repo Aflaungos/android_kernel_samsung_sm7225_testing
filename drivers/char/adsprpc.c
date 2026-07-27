@@ -845,7 +845,7 @@ static int fastrpc_mmap_remove(struct fastrpc_file *fl, uintptr_t va,
 	hlist_for_each_entry_safe(map, n, &me->maps, hn) {
 		if (map->refs == 1 && map->raddr == va &&
 			map->raddr + map->len == va + len &&
-			/* Remove map if not used in process initialization*/
+			/* Remove map if not used in process initialization */
 			!map->is_filemap) {
 			match = map;
 			hlist_del_init(&map->hn);
@@ -1034,7 +1034,8 @@ static int fastrpc_mmap_create(struct fastrpc_file *fl, int fd,
 		map->va = (uintptr_t)region_vaddr;
 	} else if (mflags == FASTRPC_DMAHANDLE_NOMAP) {
 		if (map->attr & FASTRPC_ATTR_KEEP_MAP) {
-			pr_err("adsprpc: Invalid attribute 0x%x for fd %d\n", map->attr, fd);
+			pr_err("adsprpc: %s: Invalid attribute 0x%x for fd %d\n",
+			    __func__, map->attr, fd);
 			err = -EINVAL;
 			goto bail;
 		}
@@ -3496,15 +3497,19 @@ static int fastrpc_internal_munmap(struct fastrpc_file *fl,
 	mutex_unlock(&fl->map_mutex);
 	if (err)
 		goto bail;
-	if (map) {
-		VERIFY(err, !fastrpc_munmap_on_dsp(fl, map->raddr,
-					map->phys, map->size, map->flags));
-		if (err)
-			goto bail;
-		mutex_lock(&fl->map_mutex);
-		fastrpc_mmap_free(map, 0);
-		mutex_unlock(&fl->map_mutex);
-	}	
+	VERIFY(err, map != NULL);
+	if (err) {
+		err = -EINVAL;
+		goto bail;
+	}
+	VERIFY(err, !fastrpc_munmap_on_dsp(fl, map->raddr,
+			map->phys, map->size, map->flags));
+	if (err)
+		goto bail;
+	mutex_lock(&fl->map_mutex);
+	fastrpc_mmap_free(map, 0);
+	mutex_unlock(&fl->map_mutex);
+
 bail:
 	if (err && map) {
 		mutex_lock(&fl->map_mutex);
