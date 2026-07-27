@@ -477,16 +477,13 @@ struct binder_priority {
  * @is_dead:              process is dead and awaiting free
  *                        when outstanding transactions are cleaned up
  *                        (protected by @inner_lock)
- * @sync_recv:            process received sync transactions since last frozen
- *                        bit 0: received sync transaction after being frozen
- *                        bit 1: new pending sync transaction during freezing
- *                        (protected by @inner_lock)
- * @async_recv:           process received async transactions since last frozen
  * @is_frozen:            process is frozen and unable to service
  *                        binder transactions
  *                        (protected by @inner_lock)
  * @sync_recv:            process received sync transactions since last frozen
  *                        (protected by @inner_lock)
+ *                        bit 0: received sync transaction after being frozen
+ *                        bit 1: new pending sync transaction during freezing
  * @async_recv:           process received async transactions since last frozen
  *                        (protected by @inner_lock)
  * @freeze_wait:          waitqueue of processes waiting for all outstanding
@@ -2998,10 +2995,6 @@ static int binder_proc_transaction(struct binder_transaction *t,
 		proc->async_recv |= oneway;
 	}
 
-	if (proc->is_frozen) {
-		proc->sync_recv |= !oneway;
-		proc->async_recv |= oneway;
-	}
 	if ((proc->is_frozen && !oneway) || proc->is_dead ||
 			(thread && thread->is_dead)) {
 		binder_inner_proc_unlock(proc);
@@ -3670,9 +3663,8 @@ retry_lowmem:
 	if (reply) {
 		binder_enqueue_thread_work(thread, tcomplete);
 		binder_inner_proc_lock(target_proc);
-		if (target_thread->is_dead || target_proc->is_frozen) {
-			return_error = target_thread->is_dead ?
-				BR_DEAD_REPLY : BR_FROZEN_REPLY;
+		if (target_thread->is_dead) {
+			return_error = BR_DEAD_REPLY;
 			binder_inner_proc_unlock(target_proc);
 			goto err_dead_proc_or_thread;
 		}
@@ -5202,7 +5194,7 @@ static int binder_ioctl_freeze(struct binder_freeze_info *info,
 			(!target_proc->outstanding_txns),
 			msecs_to_jiffies(info->timeout_ms));
 
-    /* Check pending transactions that wait for reply */
+	/* Check pending transactions that wait for reply */
 	if (ret >= 0) {
 		binder_inner_proc_lock(target_proc);
 		if (binder_txns_pending_ilocked(target_proc))
@@ -5219,7 +5211,8 @@ static int binder_ioctl_freeze(struct binder_freeze_info *info,
 	return ret;
 }
 
-static int binder_ioctl_get_freezer_info(struct binder_frozen_status_info *info)
+static int binder_ioctl_get_freezer_info(
+			       struct binder_frozen_status_info *info)
 {
 	struct binder_proc *target_proc;
 	bool found = false;
@@ -5229,7 +5222,7 @@ static int binder_ioctl_get_freezer_info(struct binder_frozen_status_info *info)
 	info->async_recv = 0;
 
 	mutex_lock(&binder_procs_lock);
-	hlist_for_each_entry (target_proc, &binder_procs, proc_node) {
+	hlist_for_each_entry(target_proc, &binder_procs, proc_node) {
 		if (target_proc->pid == info->pid) {
 			found = true;
 			binder_inner_proc_lock(target_proc);
