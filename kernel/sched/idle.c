@@ -54,19 +54,18 @@ __setup("hlt", cpu_idle_nopoll_setup);
 
 static noinline int __cpuidle cpu_idle_poll(void)
 {
-	trace_cpu_idle(0, smp_processor_id());
-	stop_critical_timings();
 	rcu_idle_enter();
+	trace_cpu_idle_rcuidle(0, smp_processor_id());
 	local_irq_enable();
+	stop_critical_timings();
 
 	while (!tif_need_resched() &&
 		(cpu_idle_force_poll || tick_check_broadcast_expired() ||
 		is_reserved(smp_processor_id())))
 		cpu_relax();
-
-	rcu_idle_exit();
 	start_critical_timings();
-	trace_cpu_idle(PWR_EVENT_EXIT, smp_processor_id());
+	trace_cpu_idle_rcuidle(PWR_EVENT_EXIT, smp_processor_id());
+	rcu_idle_exit();
 
 	return 1;
 }
@@ -93,9 +92,7 @@ void __cpuidle default_idle_call(void)
 		local_irq_enable();
 	} else {
 		stop_critical_timings();
-		rcu_idle_enter();
 		arch_cpu_idle();
-		rcu_idle_exit();
 		start_critical_timings();
 	}
 }
@@ -153,6 +150,7 @@ static void cpuidle_idle_call(void)
 
 	if (cpuidle_not_available(drv, dev)) {
 		tick_nohz_idle_stop_tick();
+		rcu_idle_enter();
 
 		default_idle_call();
 		goto exit_idle;
@@ -170,19 +168,23 @@ static void cpuidle_idle_call(void)
 
 	if (idle_should_enter_s2idle() || dev->use_deepest_state) {
 		if (idle_should_enter_s2idle()) {
+			rcu_idle_enter();
 
 			entered_state = cpuidle_enter_s2idle(drv, dev);
 			if (entered_state > 0) {
 				local_irq_enable();
 				goto exit_idle;
 			}
+
+			rcu_idle_exit();
 		}
 
 		tick_nohz_idle_stop_tick();
+		rcu_idle_enter();
 
 		next_state = cpuidle_find_deepest_state(drv, dev);
 		call_cpuidle(drv, dev, next_state);
-	} else if (drv->state_count > 1) {
+	} else {
 		bool stop_tick = true;
 
 		/*
@@ -195,20 +197,13 @@ static void cpuidle_idle_call(void)
 		else
 			tick_nohz_idle_retain_tick();
 
+		rcu_idle_enter();
+
 		entered_state = call_cpuidle(drv, dev, next_state);
 		/*
 		 * Give the governor an opportunity to reflect on the outcome
 		 */
 		cpuidle_reflect(dev, entered_state);
-	} else {
-		tick_nohz_idle_retain_tick();
-
-		/*
-		 * If there is only a single idle state (or none), there is
-		 * nothing meaningful for the governor to choose.  Skip the
-		 * governor and always use state 0.
-		 */
-		call_cpuidle(drv, dev, 0);
 	}
 
 exit_idle:
@@ -219,6 +214,8 @@ exit_idle:
 	 */
 	if (WARN_ON_ONCE(irqs_disabled()))
 		local_irq_enable();
+
+	rcu_idle_exit();
 }
 
 /*
@@ -243,6 +240,8 @@ static void do_idle(void)
 
 	while (!need_resched()) {
 		check_pgt_cache();
+		rmb();
+
 		local_irq_disable();
 
 		if (cpu_is_offline(cpu)) {
@@ -287,11 +286,6 @@ static void do_idle(void)
 	 */
 	smp_mb__after_atomic();
 
-	/*
-	 * RCU relies on this call to be done outside of an RCU read-side
-	 * critical section.
-	 */
-	flush_smp_call_function_from_idle();
 	sched_ttwu_pending();
 	schedule_idle();
 
