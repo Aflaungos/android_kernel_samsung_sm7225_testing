@@ -26,7 +26,6 @@
 #include <linux/memfd.h>
 #include <linux/compat.h>
 #include <linux/task_integrity.h>
-#include <linux/proca.h>
 
 #include <linux/poll.h>
 #include <asm/siginfo.h>
