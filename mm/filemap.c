@@ -40,14 +40,6 @@
 #include <linux/psi.h>
 #include "internal.h"
 
-#ifdef CONFIG_SDP
-#include <sdp/cache_cleanup.h>
-#endif
-
-#ifdef CONFIG_FSCRYPT_SDP
-#include <linux/fscrypto_sdp_cache.h>
-#endif
-
 #ifdef CONFIG_PAGE_BOOST_RECORDING
 #include <linux/io_record.h>
 #endif
@@ -243,11 +235,6 @@ static void unaccount_page_cache_page(struct address_space *mapping,
 void __delete_from_page_cache(struct page *page, void *shadow)
 {
 	struct address_space *mapping = page->mapping;
-
-#ifdef CONFIG_SDP
-	if (mapping_sensitive(mapping))
-		sdp_page_cleanup(page);
-#endif
 
 	trace_mm_filemap_delete_from_page_cache(page);
 
@@ -2460,18 +2447,7 @@ generic_file_read_iter(struct kiocb *iocb, struct iov_iter *iter)
 			goto out;
 	}
 
-#ifdef CONFIG_FSCRYPT_SDP
-	//Check after writeback is completed.
-	if (fscrypt_sdp_file_not_readable(iocb->ki_filp)) {
-		retval = -EIO;
-		goto out;
-	}
-#endif
-
 	retval = generic_file_buffered_read(iocb, iter, retval);
-#ifdef CONFIG_FSCRYPT_SDP
-	fscrypt_sdp_unset_file_io_ongoing(iocb->ki_filp);
-#endif
 out:
 	return retval;
 }
@@ -2479,11 +2455,6 @@ EXPORT_SYMBOL(generic_file_read_iter);
 
 #ifdef CONFIG_MMU
 #define MMAP_LOTSAMISS  (100)
-#if CONFIG_MMAP_READAROUND_LIMIT == 0
-unsigned int mmap_readaround_limit = (VM_MAX_READAHEAD / 4); 		/* page */
-#else
-unsigned int mmap_readaround_limit = CONFIG_MMAP_READAROUND_LIMIT;	/* page */
-#endif
 
 /*
  * lock_page_maybe_drop_mmap - lock the page, possibly dropping the mmap_sem
@@ -2528,32 +2499,10 @@ static int lock_page_maybe_drop_mmap(struct vm_fault *vmf, struct page *page,
 	return 1;
 }
 
-#ifdef CONFIG_TRACING
-static void filemap_tracing_mark_begin(struct file *file,
-		pgoff_t offset, unsigned int size, bool sync)
-{
-	char buf[TRACING_MARK_BUF_SIZE], *path;
-
-	if (!tracing_is_on())
-		return;
-
-	path = file_path(file, buf, TRACING_MARK_BUF_SIZE);
-	if (IS_ERR(path)) {
-		sprintf(buf, "file_path failed(%ld)", PTR_ERR(path));
-		path = buf;
-	}
-
-	tracing_mark_begin("%d , %s , %lu , %d", sync, path, offset, size);
-}
-
-static void filemap_tracing_mark_end(void)
-{
-    tracing_mark_end();
-}
+#if CONFIG_MMAP_READAROUND_LIMIT == 0
+int mmap_readaround_limit = VM_READAHEAD_PAGES; 		/* page */
 #else
-static void filemap_tracing_mark_begin(struct file *file,
-		pgoff_t offset, unsigned int size, bool sync) { }
-static void filemap_tracing_mark_end(void) { }
+int mmap_readaround_limit = CONFIG_MMAP_READAROUND_LIMIT;	/* page */
 #endif
 
 /*
@@ -2580,10 +2529,8 @@ static struct file *do_sync_mmap_readahead(struct vm_fault *vmf)
 
 	if (vmf->vma->vm_flags & VM_SEQ_READ) {
 		fpin = maybe_unlock_mmap_for_io(vmf, fpin);
-		filemap_tracing_mark_begin(file, offset, ra->ra_pages, 1);
 		page_cache_sync_readahead(mapping, ra, file, offset,
 					  ra->ra_pages);
-		filemap_tracing_mark_end();
 		return fpin;
 	}
 
@@ -2606,9 +2553,7 @@ static struct file *do_sync_mmap_readahead(struct vm_fault *vmf)
 	ra->start = max_t(long, 0, offset - ra_pages / 2);
 	ra->size = ra_pages;
 	ra->async_size = ra_pages / 4;
-	filemap_tracing_mark_begin(file, offset, ra_pages, 1);
 	ra_submit(ra, mapping, file);
-	filemap_tracing_mark_end();
 	return fpin;
 }
 
@@ -2633,10 +2578,8 @@ static struct file *do_async_mmap_readahead(struct vm_fault *vmf,
 		ra->mmap_miss--;
 	if (PageReadahead(page)) {
 		fpin = maybe_unlock_mmap_for_io(vmf, fpin);
-		filemap_tracing_mark_begin(file, offset, ra->ra_pages, 0);
 		page_cache_async_readahead(mapping, ra, file,
 					   page, offset, ra->ra_pages);
-		filemap_tracing_mark_end();
 	}
 	return fpin;
 }
@@ -2759,9 +2702,7 @@ page_not_uptodate:
 	 */
 	ClearPageError(page);
 	fpin = maybe_unlock_mmap_for_io(vmf, fpin);
-	filemap_tracing_mark_begin(file, offset, 1, 1);
 	error = mapping->a_ops->readpage(file, page);
-	filemap_tracing_mark_end();
 	if (!error) {
 		wait_on_page_locked(page);
 		if (!PageUptodate(page))
