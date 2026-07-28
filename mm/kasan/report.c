@@ -87,7 +87,6 @@ static void start_report(unsigned long *flags)
 	pr_err("==================================================================\n");
 }
 
-int kasan_panic = true;
 static void end_report(unsigned long *flags, unsigned long addr)
 {
 	trace_error_report_end(ERROR_DETECTOR_KASAN, addr);
