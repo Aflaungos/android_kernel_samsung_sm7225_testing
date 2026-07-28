@@ -96,7 +96,6 @@
 #include <linux/posix-timers.h>
 #include <linux/cpufreq_times.h>
 #include <linux/task_integrity.h>
-#include <linux/proca.h>
 #include <trace/events/oom.h>
 #include "internal.h"
 #include "fd.h"
