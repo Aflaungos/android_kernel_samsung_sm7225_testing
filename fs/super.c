@@ -997,13 +997,8 @@ int reconfigure_super(struct fs_context *fc)
 			     sb->s_type->name, retval);
 		}
 	}
-#ifdef CONFIG_FIVE
-	sb->s_flags = (sb->s_flags & ~MS_RMT_MASK) |
-			(sb_flags & MS_RMT_MASK) | MS_I_VERSION;
-#else
 	WRITE_ONCE(sb->s_flags, ((sb->s_flags & ~fc->sb_flags_mask) |
 				 (fc->sb_flags & fc->sb_flags_mask)));
-#endif
 	/* Needs to be ordered wrt mnt_is_readonly() */
 	smp_wmb();
 	sb->s_readonly_remount = 0;

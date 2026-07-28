@@ -822,10 +822,6 @@ union rcu_special {
 	u32 s; /* Set of bits. */
 };
 
-#ifdef CONFIG_FIVE
-struct task_integrity;
-#endif
-
 enum perf_event_task_context {
 	perf_invalid_context = -1,
 	perf_hw_context = 0,
@@ -1511,9 +1507,6 @@ struct task_struct {
 #endif
 #ifdef CONFIG_DEBUG_ATOMIC_SLEEP
 	unsigned long			task_state_change;
-#endif
-#ifdef CONFIG_FIVE
-	struct task_integrity		*integrity;
 #endif
 	int				pagefault_disabled;
 #ifdef CONFIG_MMU

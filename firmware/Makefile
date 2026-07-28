@@ -57,11 +57,6 @@ endif
 
 fw-external-$(CONFIG_EPEN_WACOM_WEZ01) += epen/wez01_gts7xllite_00.bin epen/wez01_gts7xllite.bin epen/w9021_gts7xllite.bin
 
-# FIVE
-ifeq ($(CONFIG_FIVE_TEE_DRIVER),y)
-include $(srctree)/firmware/five/Makefile
-endif
-
 quiet_cmd_fwbin = MK_FW   $@
       cmd_fwbin = FWNAME="$(patsubst firmware/%.gen.S,%,$@)";		     \
 		  FWSTR="$(subst /,_,$(subst .,_,$(subst -,_,$(patsubst	     \
