@@ -130,7 +130,7 @@ static void dma_buf_release(struct dentry *dentry)
 		dmabuf->ops->release(dmabuf);
 	else
 		pr_warn_ratelimited("Leaking dmabuf %s because destructor failed error:%d\n",
-				    dmabuf->buf_name, dtor_ret);
+				    dmabuf->name, dtor_ret);
 
 	dma_buf_ref_destroy(dmabuf);
 
