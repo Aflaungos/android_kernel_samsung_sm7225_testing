@@ -1184,6 +1184,7 @@ static void sugov_tunables_save(struct cpufreq_policy *policy,
 
 	cached->pl = tunables->pl;
 	cached->hispeed_load = tunables->hispeed_load;
+	cached->rtg_boost_freq = tunables->rtg_boost_freq;
 	cached->hispeed_freq = tunables->hispeed_freq;
 	cached->up_rate_limit_us = tunables->up_rate_limit_us;
 	cached->down_rate_limit_us = tunables->down_rate_limit_us;
@@ -1206,6 +1207,7 @@ static void sugov_tunables_restore(struct cpufreq_policy *policy)
 
 	tunables->pl = cached->pl;
 	tunables->hispeed_load = cached->hispeed_load;
+	tunables->rtg_boost_freq = cached->rtg_boost_freq;
 	tunables->hispeed_freq = cached->hispeed_freq;
 	tunables->up_rate_limit_us = cached->up_rate_limit_us;
 	tunables->down_rate_limit_us = cached->down_rate_limit_us;
