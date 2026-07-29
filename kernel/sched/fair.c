@@ -4013,17 +4013,6 @@ struct find_best_target_env {
 	bool strict_max;
 };
 
-static inline bool prefer_spread_on_idle(int cpu)
-{
-	if (likely(!sysctl_sched_prefer_spread))
-		return false;
-
-	if (is_min_capacity_cpu(cpu))
-		return sysctl_sched_prefer_spread >= 1;
-
-	return sysctl_sched_prefer_spread > 1;
-}
-
 static inline void adjust_cpus_for_packing(struct task_struct *p,
 			int *target_cpu, int *best_idle_cpu,
 			int shallowest_idle_cstate,
