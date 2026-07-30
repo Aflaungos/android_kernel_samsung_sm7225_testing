@@ -94,11 +94,6 @@ u32 ieee80211_channel_to_freq_khz(int chan, enum nl80211_band band)
 		if (chan <= 253)
 			return MHZ_TO_KHZ(5950 + chan * 5);
 		break;
-	case NL80211_BAND_6GHZ:
-		/* see 802.11ax D4.1 27.3.22.2 */
-		if (chan <= 253)
-			return MHZ_TO_KHZ(5950 + chan * 5);
-		break;
 	case NL80211_BAND_60GHZ:
 		if (chan < 7)
 			return MHZ_TO_KHZ(56160 + chan * 2160);
@@ -264,6 +259,9 @@ bool cfg80211_valid_key_idx(struct cfg80211_registered_device *rdev,
 
 	if (pairwise)
 		max_key_idx = 3;
+	else if (wiphy_ext_feature_isset(&rdev->wiphy,
+				    NL80211_EXT_FEATURE_BEACON_PROTECTION))
+		max_key_idx = 7;
 	else if (cfg80211_igtk_cipher_supported(rdev))
 		max_key_idx = 5;
 	else
