@@ -109,12 +109,6 @@
 
 #define SO_BINDTOIFINDEX	62
 
-#ifdef CONFIG_KNOX_NCM
-#define SO_SET_DOMAIN_NAME 1000
-#define SO_SET_DNS_UID 1001
-#define SO_SET_DNS_PID 1002
-#endif
-
 #define SO_TXTIME		61
 #define SCM_TXTIME		SO_TXTIME
 

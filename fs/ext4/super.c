@@ -59,10 +59,6 @@
 #define CREATE_TRACE_POINTS
 #include <trace/events/ext4.h>
 
-#ifdef CONFIG_FSCRYPT_SDP
-#include <linux/fscrypto_sdp_cache.h>
-#endif
-
 extern void (*ufs_debug_func)(void *);
 
 
@@ -1187,12 +1183,6 @@ static struct inode *ext4_alloc_inode(struct super_block *sb)
 static int ext4_drop_inode(struct inode *inode)
 {
 	int drop = generic_drop_inode(inode);
-#ifdef CONFIG_FSCRYPT_SDP
-	if (!drop && fscrypt_sdp_is_locked_sensitive_inode(inode)) {
-		fscrypt_sdp_drop_inode(inode);
-		drop = 1;
-	}
-#endif
 
 	if (!drop)
 		drop = fscrypt_drop_inode(inode);
@@ -1431,18 +1421,6 @@ retry:
 	return res;
 }
 
-#if defined(CONFIG_DDAR) || defined(CONFIG_FSCRYPT_SDP)
-static inline int ext4_get_knox_context(struct inode *inode,
-		const char *name, void *buffer, size_t buffer_size) {
-	return ext4_xattr_get(inode, EXT4_XATTR_INDEX_ENCRYPTION,	name, buffer, buffer_size);
-}
-static inline int ext4_set_knox_context(struct inode *inode,
-		const char *name, const void *value, size_t size, void *fs_data) {
-	return ext4_xattr_set(inode, EXT4_XATTR_INDEX_ENCRYPTION,
-			name ? name : EXT4_XATTR_NAME_ENCRYPTION_CONTEXT, value, size, 0);
-}
-#endif
-
 static const union fscrypt_context *
 ext4_get_dummy_context(struct super_block *sb)
 {
@@ -1471,10 +1449,6 @@ static const struct fscrypt_operations ext4_cryptops = {
 	.get_context		= ext4_get_context,
 	.set_context		= ext4_set_context,
 	.get_dummy_context	= ext4_get_dummy_context,
-#if defined(CONFIG_DDAR) || defined(CONFIG_FSCRYPT_SDP)
-	.get_knox_context	= ext4_get_knox_context,
-	.set_knox_context	= ext4_set_knox_context,
-#endif
 	.empty_dir		= ext4_empty_dir,
 	.max_namelen		= EXT4_NAME_LEN,
 	.has_stable_inodes	= ext4_has_stable_inodes,

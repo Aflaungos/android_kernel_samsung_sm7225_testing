@@ -18,14 +18,6 @@
 #define DSMS_NOT_IMPLEMENTED (-ENOSYS)
 
 // DSMS Kernel Interface
-
-#ifdef CONFIG_SECURITY_DSMS
-
-extern int noinline dsms_send_message(const char *feature_code,
-				      const char *detail, int64_t value);
-
-#else
-
 static inline int dsms_send_message(const char *feature_code,
 				    const char *detail,
 				    int64_t value)
@@ -36,7 +28,5 @@ static inline int dsms_send_message(const char *feature_code,
 	 */
 	return DSMS_NOT_IMPLEMENTED;
 }
-
-#endif /* CONFIG_SECURITY_DSMS */
 
 #endif /* _LINUX_DSMS_H */

@@ -75,10 +75,6 @@
 #include <net/smc.h>
 #include <net/l3mdev.h>
 #include <linux/android_kabi.h>
-#ifdef CONFIG_KNOX_NCM
-#define NAP_PROCESS_NAME_LEN	128
-#define NAP_DOMAIN_NAME_LEN	255
-#endif
 
 /*
  * This structure really needs to be cleaned up.
@@ -491,18 +487,6 @@ struct sock {
 #endif
 	struct sock_cgroup_data	sk_cgrp_data;
 	struct mem_cgroup	*sk_memcg;
-	#ifdef CONFIG_KNOX_NCM
-	uid_t			knox_uid;
-	pid_t			knox_pid;
-	uid_t			knox_dns_uid;
-	char 			domain_name[NAP_DOMAIN_NAME_LEN];
-	char			process_name[NAP_PROCESS_NAME_LEN];
-	uid_t			knox_puid;
-	pid_t			knox_ppid;
-	char			parent_process_name[NAP_PROCESS_NAME_LEN];
-	pid_t			knox_dns_pid;
-	char 			dns_process_name[NAP_PROCESS_NAME_LEN];
-	#endif
 	void			(*sk_state_change)(struct sock *sk);
 	void			(*sk_data_ready)(struct sock *sk);
 	void			(*sk_write_space)(struct sock *sk);

@@ -770,8 +770,6 @@ static int set_online(int event, int state)
 			return 0;
 		}
 	}
-	// for KNOX DT charging
-	pr_info("Knox Desktop connection state = %s\n", state ? "Connected" : "Disconnected");
 #if defined(CONFIG_IFCONN_NOTIFIER)
 	if (state)
 		val.intval = POWER_SUPPLY_TYPE_SMART_NOTG;
