@@ -542,9 +542,6 @@ ifeq ($(LLVM_IAS),0)
 CLANG_FLAGS	+= -fno-integrated-as
 GCC_TOOLCHAIN_DIR := $(dir $(shell which $(CROSS_COMPILE)elfedit))
 CLANG_FLAGS	+= --prefix=$(GCC_TOOLCHAIN_DIR)$(notdir $(CROSS_COMPILE))
-CLANG_FLAGS	+= -Werror=unknown-warning-option
-CLANG_FLAGS	+= $(call cc-option, -Wno-misleading-indentation)
-CLANG_FLAGS	+= $(call cc-option, -Wno-bool-operation)
 else
 CLANG_FLAGS += -fintegrated-as
 endif
@@ -1017,8 +1014,10 @@ KBUILD_CPPFLAGS += $(ARCH_CPPFLAGS) $(KCPPFLAGS)
 KBUILD_AFLAGS   += $(ARCH_AFLAGS)   $(KAFLAGS)
 KBUILD_CFLAGS   += $(ARCH_CFLAGS)   $(KCFLAGS)
 
-KBUILD_LDFLAGS_MODULE += --build-id
-LDFLAGS_vmlinux += --build-id
+# Use --build-id when available.
+LDFLAGS_BUILD_ID := $(call ld-option, --build-id)
+KBUILD_LDFLAGS_MODULE += $(LDFLAGS_BUILD_ID)
+LDFLAGS_vmlinux += $(LDFLAGS_BUILD_ID)
 
 KBUILD_LDFLAGS	+= -z noexecstack
 KBUILD_LDFLAGS	+= $(call ld-option,--no-warn-rwx-segments)
@@ -1514,9 +1513,6 @@ $(clean-dirs):
 vmlinuxclean:
 	$(Q)$(CONFIG_SHELL) $(srctree)/scripts/link-vmlinux.sh clean
 	$(Q)$(if $(ARCH_POSTLINK), $(MAKE) -f $(ARCH_POSTLINK) clean)
-
-legoclean:
-	$(Q)$(CONFIG_SHELL) $(srctree)/scripts/lego/kclean.sh $(srctree)/.legofile
 
 clean: archclean vmlinuxclean
 
