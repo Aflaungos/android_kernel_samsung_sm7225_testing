@@ -363,6 +363,7 @@ struct ufs_qcom_host {
 	struct request *req_pending;
 	struct ufs_vreg *vddp_ref_clk;
 	struct ufs_vreg *vccq_parent;
+	struct ufs_vreg *vccq2_parent;
 	bool work_pending;
 	bool is_phy_pwr_on;
 	/* hw reset info. */
@@ -373,6 +374,9 @@ struct ufs_qcom_host {
 	unsigned long hw_reset_outstanding_tasks;
 	unsigned long hw_reset_outstanding_reqs;
 	struct ufs_stats hw_reset_ufs_stats;
+	bool err_occurred;
+	atomic_t scale_up;
+	atomic_t clks_on;
 };
 
 static inline u32

@@ -810,9 +810,9 @@ static void init_work_routine(struct work_struct *work)
 {
 	struct tas2562_priv *p_tas2562 =
 		container_of(work, struct tas2562_priv, init_work.work);
-	int nResult = 0;
 	//int irqreg;
 	//dev_info(p_tas2562->dev, "%s\n", __func__);
+
 #ifdef CONFIG_TAS2562_CODEC
 	mutex_lock(&p_tas2562->codec_lock);
 #endif
@@ -831,8 +831,7 @@ static void init_work_routine(struct work_struct *work)
 		p_icn_hysteresis,
 		sizeof(p_icn_hysteresis));
 
-	nResult = gpio_get_value(p_tas2562->mn_irq_gpio);
-	//dev_info(p_tas2562->dev, "%s, irq GPIO state: %d\n", __func__, nResult);
+	gpio_get_value(p_tas2562->mn_irq_gpio);
 
 #ifdef CONFIG_TAS2562_CODEC
 	mutex_unlock(&p_tas2562->codec_lock);

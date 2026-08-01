@@ -64,4 +64,7 @@ int cam_common_util_get_string_index(const char **strings,
 uint32_t cam_common_util_remove_duplicate_arr(int32_t *array,
 	uint32_t num);
 
+int cam_common_mem_kdup(void **dst, void *src, size_t size);
+void cam_common_mem_free(void *memory);
+
 #endif /* _CAM_COMMON_UTIL_H_ */

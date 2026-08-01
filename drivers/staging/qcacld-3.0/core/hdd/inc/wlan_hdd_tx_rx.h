@@ -210,7 +210,6 @@ int hdd_rx_ol_init(struct hdd_context *hdd_ctx);
  */
 void hdd_disable_rx_ol_in_concurrency(bool disable);
 
-
 /**
  * hdd_disable_rx_ol_for_low_tput() - Disable Rx offload in low TPUT scenario
  * @hdd_ctx: hdd context

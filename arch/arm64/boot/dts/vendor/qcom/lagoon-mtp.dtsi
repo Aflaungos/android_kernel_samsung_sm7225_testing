@@ -3,6 +3,7 @@
 #include <dt-bindings/input/linux-event-codes.h>
 #include <dt-bindings/iio/qcom,spmi-vadc.h>
 #include "lagoon-sde-display.dtsi"
+#include "camera/lagoon-camera-sensor-mtp.dtsi"
 #include <dt-bindings/pinctrl/qcom,pmic-gpio.h>
 #include "lagoon-thermal-overlay.dtsi"
 
@@ -300,7 +301,7 @@
 	pinctrl-names = "default";
 	qcom,enable-toggle-stat;
 	pinctrl-0 = <&smb_stat_default>;
-	status = "disabled";
+	status = "ok";
 };
 
 &smb1396_div2_cp_master {
@@ -308,13 +309,13 @@
 	qcom,parallel-input-mode = <1>; /* USBIN */
 	qcom,parallel-output-mode = <2>; /* VBAT */
 	qcom,div2-cp-min-ilim-ua = <750000>;
-	status = "disabled";
+	status = "ok";
 };
 
 &smb1396_slave {
-	status = "disabled";
+	status = "ok";
 };
 
 &smb1396_div2_cp_slave {
-	status = "disabled";
+	status = "ok";
 };

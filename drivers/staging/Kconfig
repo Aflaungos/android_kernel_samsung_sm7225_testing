@@ -1,7 +1,7 @@
 menuconfig STAGING
 	bool "Staging drivers"
 	default n
-	---help---
+	help
 	  This option allows you to select a number of drivers that are
 	  not of the "normal" Linux kernel quality level.  These drivers
 	  are placed here in order to get a wider audience to make use of
@@ -114,8 +114,6 @@ source "drivers/staging/mt7621-spi/Kconfig"
 
 source "drivers/staging/mt7621-dma/Kconfig"
 
-source "drivers/staging/mt7621-mmc/Kconfig"
-
 source "drivers/staging/mt7621-eth/Kconfig"
 
 source "drivers/staging/mt7621-dts/Kconfig"
@@ -123,5 +121,7 @@ source "drivers/staging/mt7621-dts/Kconfig"
 source "drivers/staging/gasket/Kconfig"
 
 source "drivers/staging/axis-fifo/Kconfig"
+
+source "drivers/staging/qcacld-3.0/Kconfig"
 
 endif # STAGING

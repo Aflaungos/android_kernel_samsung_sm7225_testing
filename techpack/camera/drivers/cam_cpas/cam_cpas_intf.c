@@ -177,7 +177,6 @@ int cam_cpas_get_camnoc_fifo_fill_level_info(
 	return rc;
 }
 
-
 int cam_cpas_get_hw_info(uint32_t *camera_family,
 	struct cam_hw_version *camera_version,
 	struct cam_hw_version *cpas_version,

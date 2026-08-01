@@ -950,7 +950,7 @@
 
 			config {
 				pins = "gpio41", "gpio42";
-				bias-disable; /* No PULL */
+				bias-pull-up; /* PULL UP*/
 				drive-strength = <2>; /* 2 MA */
 			};
 		};
@@ -964,38 +964,8 @@
 
 			config {
 				pins = "gpio41", "gpio42";
-				bias-disable; /* No PULL */
+				bias-pull-down; /* PULL DOWN */
 				drive-strength = <2>; /* 2 MA */
-			};
-		};
-		
-		cam_sensor_ois_default: cam_sensor_ois_default {
-			mux {
-				/* CLK, DATA */
-				pins = "gpio41", "gpio42";
-				function = "gpio";
-			};
-
-			config {
-				pins = "gpio41", "gpio42";
-				bias-disable; /* No PULL */
-				drive-strength = <4>; /* 4 MA */
-				output-low;
-			};
-		};
-
-		cam_sensor_ois_sleep: cam_sensor_ois_sleep {
-			mux {
-				/* CLK, DATA */
-				pins = "gpio41", "gpio42";
-				function = "gpio";
-			};
-
-			config {
-				pins = "gpio41", "gpio42";
-				bias-disable; /* No PULL */
-				drive-strength = <4>; /* 2 MA */
-				output-low;
 			};
 		};
 
@@ -1030,12 +1000,12 @@
 		cci3_active: cci3_active {
 			mux {
 				/* CLK, DATA */
-				pins = "gpio2","gpio3";
+				pins = "gpio2", "gpio3";
 				function = "CCI_I2C";
 			};
 
 			config {
-				pins = "gpio2","gpio3";
+				pins = "gpio2", "gpio3";
 				bias-pull-up; /* PULL UP*/
 				drive-strength = <2>; /* 2 MA */
 			};
@@ -1044,17 +1014,16 @@
 		cci3_suspend: cci3_suspend {
 			mux {
 				/* CLK, DATA */
-				pins = "gpio2","gpio3";
+				pins = "gpio2", "gpio3";
 				function = "CCI_I2C";
 			};
 
 			config {
-				pins = "gpio2","gpio3";
+				pins = "gpio2", "gpio3";
 				bias-pull-down; /* PULL DOWN */
 				drive-strength = <2>; /* 2 MA */
 			};
 		};
-
 
 		/* Camera GPIOs  CCI*/
 		cam_sensor_mclk0_active: cam_sensor_mclk0_active {

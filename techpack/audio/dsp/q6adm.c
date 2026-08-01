@@ -99,6 +99,7 @@ struct adm_ctl {
 	struct param_outband outband_memmap;
 	struct source_tracking_data sourceTrackingData;
 
+	struct mutex adm_apr_lock;
 	int set_custom_topology;
 	int ec_ref_rx;
 	int num_ec_ref_rx_chans;
@@ -872,6 +873,71 @@ exit:
 	return rc;
 }
 EXPORT_SYMBOL(adm_set_custom_chmix_cfg);
+
+/*
+ * adm_apr_send_pkt : returns 0 on success, negative otherwise.
+ */
+int adm_apr_send_pkt(void *data, wait_queue_head_t *wait,
+			int port_idx, int copp_idx, int opcode)
+{
+	int ret = 0;
+	atomic_t *copp_stat = NULL;
+	int32_t time_out = msecs_to_jiffies(TIMEOUT_MS);
+	wait = &this_adm.copp.wait[port_idx][copp_idx];
+
+	if (!wait)
+		return -EINVAL;
+
+	mutex_lock(&this_adm.adm_apr_lock);
+	pr_debug("%s: port idx  %d copp idx  %d\n", __func__,
+				port_idx, copp_idx);
+	copp_stat = &this_adm.copp.stat[port_idx][copp_idx];
+	atomic_set(copp_stat, -1);
+
+	if (opcode != ADM_CMD_DEVICE_OPEN_V8 &&
+		opcode != ADM_CMD_DEVICE_OPEN_V6 &&
+		opcode != ADM_CMD_DEVICE_OPEN_V5 &&
+		opcode != ADM_CMD_DEVICE_CLOSE_V5) {
+		if (atomic_read(&this_adm.copp.cnt[port_idx][copp_idx])
+			== 0) {
+			pr_err("%s: port[0x%x] copp[0x%x] inactive\n",
+				__func__, port_idx, copp_idx);
+			mutex_unlock(&this_adm.adm_apr_lock);
+			return -EINVAL;
+		}
+	}
+
+	if (opcode == ADM_CMD_DEVICE_OPEN_V8 ||
+		opcode == ADM_CMD_DEVICE_OPEN_V6 ||
+		opcode == ADM_CMD_DEVICE_OPEN_V5) {
+		time_out = msecs_to_jiffies(2 * TIMEOUT_MS);
+	}
+
+	ret = apr_send_pkt(this_adm.apr, data);
+	if (ret > 0) {
+		ret = wait_event_timeout(*wait,
+			atomic_read(copp_stat) >= 0,
+			time_out);
+		if (atomic_read(copp_stat) > 0) {
+			pr_err("%s: DSP returned error[%s]\n", __func__,
+				adsp_err_get_err_str(atomic_read(copp_stat)));
+			ret = adsp_err_get_lnx_err_code(atomic_read(copp_stat));
+		} else	if (!ret) {
+			pr_err_ratelimited("%s: request timedout\n",
+				__func__);
+			ret = -ETIMEDOUT;
+		} else {
+			ret = 0;
+		}
+	} else if (ret == 0) {
+		pr_err("%s: packet not transmitted\n", __func__);
+		/* apr_send_pkt can return 0 when nothing is transmitted */
+		ret = -EINVAL;
+	}
+
+	mutex_unlock(&this_adm.adm_apr_lock);
+	return ret;
+}
 
 /*
  * With pre-packed data, only the opcode differes from V5 and V6.
@@ -2283,7 +2349,6 @@ static void send_adm_cal_type(int cal_index, int path, int port_id,
 			      int acdb_id, int sample_rate)
 {
 	struct cal_block_data		*cal_block = NULL;
-	int ret;
 
 	pr_debug("%s: cal index %d\n", __func__, cal_index);
 
@@ -2299,7 +2364,7 @@ static void send_adm_cal_type(int cal_index, int path, int port_id,
 	if (cal_block == NULL)
 		goto unlock;
 
-	ret = adm_remap_and_send_cal_block(cal_index, port_id, copp_idx,
+	adm_remap_and_send_cal_block(cal_index, port_id, copp_idx,
 		cal_block, perf_mode, app_type, acdb_id, sample_rate);
 
 	cal_utils_mark_cal_used(cal_block);
@@ -5520,6 +5585,7 @@ int __init adm_init(void)
 
 	this_adm.ec_ref_rx = -1;
 	this_adm.ffecns_port_id = -1;
+	mutex_init(&this_adm.adm_apr_lock);
 	init_waitqueue_head(&this_adm.matrix_map_wait);
 	init_waitqueue_head(&this_adm.adm_wait);
 

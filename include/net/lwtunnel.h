@@ -16,9 +16,12 @@
 #define LWTUNNEL_STATE_INPUT_REDIRECT	BIT(1)
 #define LWTUNNEL_STATE_XMIT_REDIRECT	BIT(2)
 
+/* LWTUNNEL_XMIT_CONTINUE should be distinguishable from dst_output return
+ * values (NET_XMIT_xxx and NETDEV_TX_xxx in linux/netdevice.h) for safety.
+ */
 enum {
 	LWTUNNEL_XMIT_DONE,
-	LWTUNNEL_XMIT_CONTINUE,
+	LWTUNNEL_XMIT_CONTINUE = 0x100,
 };
 
 
@@ -118,14 +121,16 @@ int lwtunnel_build_state(u16 encap_type,
 			 unsigned int family, const void *cfg,
 			 struct lwtunnel_state **lws,
 			 struct netlink_ext_ack *extack);
-int lwtunnel_fill_encap(struct sk_buff *skb,
-			struct lwtunnel_state *lwtstate);
+int lwtunnel_fill_encap(struct sk_buff *skb, struct lwtunnel_state *lwtstate,
+			int encap_attr, int encap_type_attr);
 int lwtunnel_get_encap_size(struct lwtunnel_state *lwtstate);
 struct lwtunnel_state *lwtunnel_state_alloc(int hdr_len);
 int lwtunnel_cmp_encap(struct lwtunnel_state *a, struct lwtunnel_state *b);
 int lwtunnel_output(struct net *net, struct sock *sk, struct sk_buff *skb);
 int lwtunnel_input(struct sk_buff *skb);
 int lwtunnel_xmit(struct sk_buff *skb);
+int bpf_lwt_push_ip_encap(struct sk_buff *skb, void *hdr, u32 len,
+			  bool ingress);
 
 static inline void lwtunnel_set_redirect(struct dst_entry *dst)
 {
@@ -217,7 +222,8 @@ static inline int lwtunnel_build_state(u16 encap_type,
 }
 
 static inline int lwtunnel_fill_encap(struct sk_buff *skb,
-				      struct lwtunnel_state *lwtstate)
+				      struct lwtunnel_state *lwtstate,
+				      int encap_attr, int encap_type_attr)
 {
 	return 0;
 }

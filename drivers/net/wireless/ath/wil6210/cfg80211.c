@@ -1050,8 +1050,6 @@ static int wil_cfg80211_change_iface(struct wiphy *wiphy,
 	compressed_rx_status = wil->use_compressed_rx_status;
 	if (type == NL80211_IFTYPE_MONITOR)
 		wil->use_compressed_rx_status = false;
-	else if (wdev->iftype == NL80211_IFTYPE_MONITOR)
-		wil->use_compressed_rx_status =  true;
 
 	/* do not reset FW when there are active VIFs,
 	 * because it can cause significant disruption
@@ -3295,8 +3293,8 @@ static int wil_rf_sector_get_cfg(struct wiphy *wiphy,
 	if (!test_bit(WMI_FW_CAPABILITY_RF_SECTORS, wil->fw_capabilities))
 		return -EOPNOTSUPP;
 
-	rc = nla_parse(tb, QCA_ATTR_WIL_MAX, data, data_len,
-		       wil_rf_sector_policy, NULL);
+	rc = nla_parse_deprecated(tb, QCA_ATTR_WIL_MAX, data,
+				  data_len, wil_rf_sector_policy, NULL);
 	if (rc) {
 		wil_err(wil, "Invalid rf sector ATTR\n");
 		return rc;
@@ -3415,8 +3413,8 @@ static int wil_rf_sector_set_cfg(struct wiphy *wiphy,
 	if (!test_bit(WMI_FW_CAPABILITY_RF_SECTORS, wil->fw_capabilities))
 		return -EOPNOTSUPP;
 
-	rc = nla_parse(tb, QCA_ATTR_WIL_MAX, data, data_len,
-		       wil_rf_sector_policy, NULL);
+	rc = nla_parse_deprecated(tb, QCA_ATTR_WIL_MAX, data,
+				  data_len, wil_rf_sector_policy, NULL);
 	if (rc) {
 		wil_err(wil, "Invalid rf sector ATTR\n");
 		return rc;
@@ -3448,9 +3446,11 @@ static int wil_rf_sector_set_cfg(struct wiphy *wiphy,
 	cmd.sector_type = sector_type;
 	nla_for_each_nested(nl_cfg, tb[QCA_ATTR_DMG_RF_SECTOR_CFG],
 			    tmp) {
-		rc = nla_parse_nested(tb2, QCA_ATTR_DMG_RF_SECTOR_CFG_MAX,
-				      nl_cfg, wil_rf_sector_cfg_policy,
-				      NULL);
+		rc = nla_parse_nested_deprecated(tb2,
+						 QCA_ATTR_DMG_RF_SECTOR_CFG_MAX,
+						 nl_cfg,
+						 wil_rf_sector_cfg_policy,
+						 NULL);
 		if (rc) {
 			wil_err(wil, "invalid sector cfg\n");
 			return -EINVAL;
@@ -3522,8 +3522,8 @@ static int wil_rf_sector_get_selected(struct wiphy *wiphy,
 	if (!test_bit(WMI_FW_CAPABILITY_RF_SECTORS, wil->fw_capabilities))
 		return -EOPNOTSUPP;
 
-	rc = nla_parse(tb, QCA_ATTR_WIL_MAX, data, data_len,
-		       wil_rf_sector_policy, NULL);
+	rc = nla_parse_deprecated(tb, QCA_ATTR_WIL_MAX, data,
+				  data_len, wil_rf_sector_policy, NULL);
 	if (rc) {
 		wil_err(wil, "Invalid rf sector ATTR\n");
 		return rc;
@@ -3630,8 +3630,8 @@ static int wil_rf_sector_set_selected(struct wiphy *wiphy,
 	if (!test_bit(WMI_FW_CAPABILITY_RF_SECTORS, wil->fw_capabilities))
 		return -EOPNOTSUPP;
 
-	rc = nla_parse(tb, QCA_ATTR_WIL_MAX, data, data_len,
-		       wil_rf_sector_policy, NULL);
+	rc = nla_parse_deprecated(tb, QCA_ATTR_WIL_MAX, data,
+				  data_len, wil_rf_sector_policy, NULL);
 	if (rc) {
 		wil_err(wil, "Invalid rf sector ATTR\n");
 		return rc;
@@ -3760,8 +3760,8 @@ static int wil_brp_set_ant_limit(struct wiphy *wiphy, struct wireless_dev *wdev,
 	if (!test_bit(WMI_FW_CAPABILITY_RF_SECTORS, wil->fw_capabilities))
 		return -ENOTSUPP;
 
-	rc = nla_parse(tb, QCA_ATTR_WIL_MAX, data, data_len,
-		       wil_brp_ant_limit_policy, NULL);
+	rc = nla_parse_deprecated(tb, QCA_ATTR_WIL_MAX, data, data_len,
+				  wil_brp_ant_limit_policy, NULL);
 	if (rc) {
 		wil_err(wil, "Invalid ant limit ATTR\n");
 		return rc;
@@ -3870,8 +3870,8 @@ static int wil_nl_60g_handle_cmd(struct wiphy *wiphy, struct wireless_dev *wdev,
 	int rc, len;
 	u32 wil_nl_60g_cmd_type, publish;
 
-	rc = nla_parse(tb, QCA_ATTR_WIL_MAX, data, data_len,
-		       wil_nl_60g_policy, NULL);
+	rc = nla_parse_deprecated(tb, QCA_ATTR_WIL_MAX, data, data_len,
+				  wil_nl_60g_policy, NULL);
 	if (rc) {
 		wil_err(wil, "Invalid nl_60g_cmd ATTR\n");
 		return rc;

@@ -33,6 +33,7 @@
 #include <crypto/b128ops.h>
 #include <crypto/chacha.h>
 #include <crypto/internal/hash.h>
+#include <crypto/internal/poly1305.h>
 #include <crypto/internal/skcipher.h>
 #include <crypto/nhpoly1305.h>
 #include <crypto/scatterwalk.h>
@@ -71,7 +72,7 @@ struct adiantum_tfm_ctx {
 	struct crypto_skcipher *streamcipher;
 	struct crypto_cipher *blockcipher;
 	struct crypto_shash *hash;
-	struct poly1305_key header_hash_key;
+	struct poly1305_core_key header_hash_key;
 };
 
 struct adiantum_request_ctx {
@@ -242,13 +243,13 @@ static void adiantum_hash_header(struct skcipher_request *req)
 
 	BUILD_BUG_ON(sizeof(header) % POLY1305_BLOCK_SIZE != 0);
 	poly1305_core_blocks(&state, &tctx->header_hash_key,
-			     &header, sizeof(header) / POLY1305_BLOCK_SIZE);
+			     &header, sizeof(header) / POLY1305_BLOCK_SIZE, 1);
 
 	BUILD_BUG_ON(TWEAK_SIZE % POLY1305_BLOCK_SIZE != 0);
 	poly1305_core_blocks(&state, &tctx->header_hash_key, req->iv,
-			     TWEAK_SIZE / POLY1305_BLOCK_SIZE);
+			     TWEAK_SIZE / POLY1305_BLOCK_SIZE, 1);
 
-	poly1305_core_emit(&state, &rctx->header_hash);
+	poly1305_core_emit(&state, NULL, &rctx->header_hash);
 }
 
 /* Hash the left-hand part (the "bulk") of the message using NHPoly1305 */
@@ -436,10 +437,10 @@ static int adiantum_init_tfm(struct crypto_skcipher *tfm)
 
 	BUILD_BUG_ON(offsetofend(struct adiantum_request_ctx, u) !=
 		     sizeof(struct adiantum_request_ctx));
-	subreq_size = max(FIELD_SIZEOF(struct adiantum_request_ctx,
+	subreq_size = max(sizeof_field(struct adiantum_request_ctx,
 				       u.hash_desc) +
 			  crypto_shash_descsize(hash),
-			  FIELD_SIZEOF(struct adiantum_request_ctx,
+			  sizeof_field(struct adiantum_request_ctx,
 				       u.streamcipher_req) +
 			  crypto_skcipher_reqsize(streamcipher));
 

@@ -4,7 +4,7 @@
 config QRTR
 	tristate "Qualcomm IPC Router support"
 	depends on ARCH_QCOM || COMPILE_TEST
-	---help---
+	help
 	  Say Y if you intend to use Qualcomm IPC router protocol.  The
 	  protocol is used to communicate with services provided by other
 	  hardware blocks in the system.
@@ -14,16 +14,27 @@ config QRTR
 
 if QRTR
 
+config QRTR_WAKEUP_MS
+	int "QRTR Wakeup timeout"
+	default 0
+	help
+	  This option is used to configure the wakesource timeout that QRTR
+	  should take when a packet is received. The qrtr driver can guarantee
+	  that the packet gets queued to the socket but cannot guarantee the
+	  client process will get time to run if auto sleep is enabled. This
+	  config will help mitigate missed packets on systems where auto sleep
+	  is aggressive.
+
 config QRTR_SMD
 	tristate "SMD IPC Router channels"
 	depends on RPMSG || (COMPILE_TEST && RPMSG=n)
-	---help---
+	help
 	  Say Y here to support SMD based ipcrouter channels.  SMD is the
 	  most common transport for IPC Router.
 
 config QRTR_TUN
 	tristate "TUN device for Qualcomm IPC Router"
-	---help---
+	help
 	  Say Y here to expose a character device that allows user space to
 	  implement endpoints of QRTR, for purpose of tunneling data to other
 	  hosts or testing purposes.

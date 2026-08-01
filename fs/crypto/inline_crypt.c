@@ -44,7 +44,7 @@ static void fscrypt_get_devices(struct super_block *sb, int num_devs,
 
 #define SDHCI "sdhci"
 
-static int fscrypt_find_storage_type(char **device)
+int fscrypt_find_storage_type(char **device)
 {
 	char boot[20] = {'\0'};
 	char *match = (char *)strnstr(saved_command_line,
@@ -61,6 +61,7 @@ static int fscrypt_find_storage_type(char **device)
 	}
 	return -EINVAL;
 }
+EXPORT_SYMBOL(fscrypt_find_storage_type);
 
 static unsigned int fscrypt_get_dun_bytes(const struct fscrypt_info *ci)
 {
@@ -232,8 +233,10 @@ int fscrypt_prepare_inline_crypt_key(struct fscrypt_prepared_key *prep_key,
 		}
 	}
 	/*
-	 * Pairs with READ_ONCE() in fscrypt_is_key_prepared().  (Only matters
-	 * for the per-mode keys, which are shared by multiple inodes.)
+	 * Pairs with the smp_load_acquire() in fscrypt_is_key_prepared().
+	 * I.e., here we publish ->blk_key with a RELEASE barrier so that
+	 * concurrent tasks can ACQUIRE it.  Note that this concurrency is only
+	 * possible for per-mode keys, not for per-file keys.
 	 */
 	smp_store_release(&prep_key->blk_key, blk_key);
 	return 0;

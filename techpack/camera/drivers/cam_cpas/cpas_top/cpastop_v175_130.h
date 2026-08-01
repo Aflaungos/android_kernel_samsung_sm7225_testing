@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 /*
- * Copyright (c) 2019, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2019-2020, The Linux Foundation. All rights reserved.
  */
 
 #ifndef _CPASTOP_V175_130_H_
@@ -765,7 +765,6 @@ static struct cam_camnoc_fifo_lvl_info cam175_cpas130_camnoc_fifo_info = {
 	.IFE1_nRDI_maxwr_offset = 0x5420,
 	.IFE0123_RDI_maxwr_offset = 0x3620,
 };
-
 
 static struct cam_camnoc_info cam175_cpas130_camnoc_info = {
 	.specific = &cam_cpas_v175_130_camnoc_specific[0],

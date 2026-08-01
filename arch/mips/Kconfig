@@ -4,6 +4,7 @@ config MIPS
 	default y
 	select ARCH_BINFMT_ELF_STATE
 	select ARCH_CLOCKSOURCE_DATA
+	select ARCH_HAS_CPU_FINALIZE_INIT
 	select ARCH_DISCARD_MEMBLOCK
 	select ARCH_HAS_ELF_RANDOMIZE
 	select ARCH_HAS_TICK_BROADCAST if GENERIC_CLOCKEVENTS_BROADCAST
@@ -287,6 +288,9 @@ config BCM63XX
 	select SYS_SUPPORTS_32BIT_KERNEL
 	select SYS_SUPPORTS_BIG_ENDIAN
 	select SYS_HAS_EARLY_PRINTK
+	select SYS_HAS_CPU_BMIPS32_3300
+	select SYS_HAS_CPU_BMIPS4350
+	select SYS_HAS_CPU_BMIPS4380
 	select SWAP_IO_SPACE
 	select GPIOLIB
 	select HAVE_CLK
@@ -1377,6 +1381,7 @@ config CPU_LOONGSON3
 	select WEAK_REORDERING_BEYOND_LLSC
 	select MIPS_PGD_C0_CONTEXT
 	select MIPS_L1_CACHE_SHIFT_6
+	select MIPS_FP_SUPPORT
 	select GPIOLIB
 	select SWIOTLB
 	help
@@ -2589,7 +2594,7 @@ config RELOCATION_TABLE_SIZE
 	depends on RELOCATABLE
 	range 0x0 0x01000000
 	default "0x00100000"
-	---help---
+	help
 	  A table of relocation data will be appended to the kernel binary
 	  and parsed at boot to fix up the relocated kernel.
 
@@ -2603,7 +2608,7 @@ config RELOCATION_TABLE_SIZE
 config RANDOMIZE_BASE
 	bool "Randomize the address of the kernel image"
 	depends on RELOCATABLE
-	---help---
+	help
 	   Randomizes the physical and virtual address at which the
 	   kernel image is loaded, as a security feature that
 	   deters exploit attempts relying on knowledge of the location
@@ -2621,7 +2626,7 @@ config RANDOMIZE_BASE_MAX_OFFSET
 	range 0x0 0x40000000 if EVA || 64BIT
 	range 0x0 0x08000000
 	default "0x01000000"
-	---help---
+	help
 	  When kASLR is active, this provides the maximum offset that will
 	  be applied to the kernel image. It should be set according to the
 	  amount of physical RAM available in the target system minus
@@ -2989,7 +2994,7 @@ config HAVE_LATENCYTOP_SUPPORT
 config PGTABLE_LEVELS
 	int
 	default 4 if PAGE_SIZE_4KB && MIPS_VA_BITS_48
-	default 3 if 64BIT && !PAGE_SIZE_64KB
+	default 3 if 64BIT && (!PAGE_SIZE_64KB || MIPS_VA_BITS_48)
 	default 2
 
 config MIPS_AUTO_PFN_OFFSET
@@ -3052,7 +3057,7 @@ config EISA
 	depends on HW_HAS_EISA
 	select ISA
 	select GENERIC_ISA_DMA
-	---help---
+	help
 	  The Extended Industry Standard Architecture (EISA) bus was
 	  developed as an open alternative to the IBM MicroChannel bus.
 

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * Copyright (c) 2016-2019, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
  */
 
 #include <linux/of_platform.h>
@@ -310,6 +311,11 @@ static void dp_audio_setup_sdp(struct dp_audio_private *audio)
 {
 	if (!atomic_read(&audio->session_on)) {
 		DP_WARN("session inactive\n");
+		return;
+	}
+
+	if (!audio->panel || !audio->panel->edid_ctrl) {
+		DP_ERR("Invalid panel data.");
 		return;
 	}
 

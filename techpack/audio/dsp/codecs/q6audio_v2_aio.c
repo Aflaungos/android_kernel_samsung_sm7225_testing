@@ -172,7 +172,6 @@ void audio_aio_async_read_ack(struct q6audio_aio *audio, uint32_t token,
 	unsigned long flags;
 	union msm_audio_event_payload event_payload;
 	struct audio_aio_buffer_node *filled_buf;
-	int ret;
 
 	pr_debug("%s\n", __func__);
 
@@ -216,7 +215,7 @@ void audio_aio_async_read_ack(struct q6audio_aio *audio, uint32_t token,
 				__func__, audio,
 				filled_buf->meta_info.meta_out.num_of_frames,
 				event_payload.aio_buf.data_len);
-			ret = extract_meta_out_info(audio, filled_buf, 0);
+			extract_meta_out_info(audio, filled_buf, 0);
 			audio->eos_rsp = 0;
 		}
 		pr_debug("%s, posting read done to the app here\n", __func__);

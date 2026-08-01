@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
- * Copyright (c) 2018-2020, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2018-2021, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
  */
 
 #include <linux/module.h>
@@ -379,6 +380,12 @@ static int wcd938x_parse_port_mapping(struct device *dev,
 
 	for (i = 0; i < map_length; i++) {
 		port_num = dt_array[NUM_SWRS_DT_PARAMS * i];
+
+		if (port_num >= MAX_PORT || ch_iter >= MAX_CH_PER_PORT) {
+			dev_err(dev, "%s: Invalid port or channel number\n", __func__);
+			goto err_pdata_fail;
+		}
+
 		slave_port_type = dt_array[NUM_SWRS_DT_PARAMS * i + 1];
 		ch_mask = dt_array[NUM_SWRS_DT_PARAMS * i + 2];
 		ch_rate = dt_array[NUM_SWRS_DT_PARAMS * i + 3];
@@ -1656,7 +1663,6 @@ static int wcd938x_codec_enable_adc(struct snd_soc_dapm_widget *w,
 					snd_soc_dapm_to_component(w->dapm);
 	struct wcd938x_priv *wcd938x = snd_soc_component_get_drvdata(component);
 	int clk_rate = 0, mode;
-	int ret = 0;
 
 	dev_dbg(component->dev, "%s wname: %s event: %d\n", __func__,
 		w->name, event);
@@ -1679,7 +1685,7 @@ static int wcd938x_codec_enable_adc(struct snd_soc_dapm_widget *w,
 		}
 		wcd938x_tx_connect_port(component, ADC1 + (w->shift), clk_rate,
 					true);
-		ret = wcd938x_tx_channel_config(component, w->shift, 1);
+		wcd938x_tx_channel_config(component, w->shift, 1);
 		mode = wcd938x_get_adc_mode(wcd938x->tx_mode[w->shift]);
 		if (mode < 0) {
 			dev_info(component->dev,
@@ -1719,7 +1725,7 @@ static int wcd938x_codec_enable_adc(struct snd_soc_dapm_widget *w,
 		default:
 			break;
 		}
-		ret |= wcd938x_tx_channel_config(component, w->shift, 0);
+		wcd938x_tx_channel_config(component, w->shift, 0);
 		break;
 	case SND_SOC_DAPM_POST_PMD:
 		switch (w->shift) {
@@ -1978,15 +1984,14 @@ static int wcd938x_get_logical_addr(struct swr_device *swr_dev)
 	int num_retry = NUM_ATTEMPTS;
 
 	do {
+		/* retry after 1ms */
+		usleep_range(1000, 1010);
 		ret = swr_get_logical_dev_num(swr_dev, swr_dev->addr, &devnum);
-		if (ret) {
-			dev_err(&swr_dev->dev,
-				"%s get devnum %d for dev addr %llx failed\n",
-				__func__, devnum, swr_dev->addr);
-			/* retry after 1ms */
-			usleep_range(1000, 1010);
-		}
 	} while (ret && --num_retry);
+	if (ret)
+		dev_err(&swr_dev->dev,
+			"%s get devnum %d for dev addr %llx failed\n",
+			__func__, devnum, swr_dev->addr);
 	swr_dev->dev_num = devnum;
 	return 0;
 }

@@ -271,18 +271,7 @@ static int __aarch32_alloc_vdso_pages(void)
 	if (ret)
 		return ret;
 
-	ret = aarch32_alloc_kuser_vdso_page();
-	if (ret) {
-		unsigned long c_vvar =
-			(unsigned long)page_to_virt(aarch32_vdso_pages[C_VVAR]);
-		unsigned long c_vdso =
-			(unsigned long)page_to_virt(aarch32_vdso_pages[C_VDSO]);
-
-		free_page(c_vvar);
-		free_page(c_vdso);
-	}
-
-	return ret;
+	return aarch32_alloc_kuser_vdso_page();
 }
 #else
 static int __aarch32_alloc_vdso_pages(void)
@@ -368,7 +357,7 @@ int aarch32_setup_additional_pages(struct linux_binprm *bprm, int uses_interp)
 	struct mm_struct *mm = current->mm;
 	int ret;
 
-	if (down_write_killable(&mm->mmap_sem))
+	if (mmap_write_lock_killable(mm))
 		return -EINTR;
 
 	ret = aarch32_kuser_helpers_setup(mm);
@@ -385,7 +374,7 @@ int aarch32_setup_additional_pages(struct linux_binprm *bprm, int uses_interp)
 #endif /* CONFIG_COMPAT_VDSO */
 
 out:
-	up_write(&mm->mmap_sem);
+	mmap_write_unlock(mm);
 	return ret;
 }
 #endif /* CONFIG_COMPAT */
@@ -429,7 +418,7 @@ int arch_setup_additional_pages(struct linux_binprm *bprm,
 	struct mm_struct *mm = current->mm;
 	int ret;
 
-	if (down_write_killable(&mm->mmap_sem))
+	if (mmap_write_lock_killable(mm))
 		return -EINTR;
 
 	ret = __setup_additional_pages(ARM64_VDSO,
@@ -437,7 +426,7 @@ int arch_setup_additional_pages(struct linux_binprm *bprm,
 				       bprm,
 				       uses_interp);
 
-	up_write(&mm->mmap_sem);
+	mmap_write_unlock(mm);
 
 	return ret;
 }

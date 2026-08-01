@@ -149,6 +149,20 @@ struct cam_vfe_hw_vfe_out_acquire_args {
 	uint32_t                              is_master;
 	uint32_t                              dual_slave_core;
 	struct cam_cdm_utils_ops             *cdm_ops;
+	bool                                  disable_ubwc_comp;
+};
+
+/*
+ * struct cam_vfe_num_of_acquired_resources:
+ *
+ * @num_pix_rsrc:            Number of pix resources acquired in context
+ * @num_pd_rsrc:             Number of pd resources acquired in context
+ * @num_rdi_rsrc:            Number of rdi resources acquired in context
+ */
+struct cam_vfe_num_of_acquired_resources {
+	uint32_t      num_pix_rsrc;
+	uint32_t      num_pd_rsrc;
+	uint32_t      num_rdi_rsrc;
 };
 
 /*

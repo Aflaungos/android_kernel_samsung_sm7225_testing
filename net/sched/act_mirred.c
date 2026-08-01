@@ -110,7 +110,8 @@ static int tcf_mirred_init(struct net *net, struct nlattr *nla,
 		NL_SET_ERR_MSG_MOD(extack, "Mirred requires attributes to be passed");
 		return -EINVAL;
 	}
-	ret = nla_parse_nested(tb, TCA_MIRRED_MAX, nla, mirred_policy, extack);
+	ret = nla_parse_nested_deprecated(tb, TCA_MIRRED_MAX, nla,
+					  mirred_policy, extack);
 	if (ret < 0)
 		return ret;
 	if (!tb[TCA_MIRRED_PARMS]) {
@@ -220,7 +221,7 @@ static int tcf_mirred_act(struct sk_buff *skb, const struct tc_action *a,
 		goto out;
 	}
 
-	if (unlikely(!(dev->flags & IFF_UP))) {
+	if (unlikely(!(dev->flags & IFF_UP)) || !netif_carrier_ok(dev)) {
 		net_notice_ratelimited("tc mirred to Houston: device %s is down\n",
 				       dev->name);
 		goto out;

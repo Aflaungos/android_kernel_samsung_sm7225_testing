@@ -164,7 +164,7 @@ int module_trampoline_target(struct module *mod, unsigned long addr,
 
 	stub = (struct ppc64_stub_entry *)addr;
 
-	if (probe_kernel_read(&magic, &stub->magic, sizeof(magic))) {
+	if (copy_from_kernel_nofault(&magic, &stub->magic, sizeof(magic))) {
 		pr_err("%s: fault reading magic for stub %lx for %s\n", __func__, addr, mod->name);
 		return -EFAULT;
 	}
@@ -174,7 +174,7 @@ int module_trampoline_target(struct module *mod, unsigned long addr,
 		return -EFAULT;
 	}
 
-	if (probe_kernel_read(&funcdata, &stub->funcdata, sizeof(funcdata))) {
+	if (copy_from_kernel_nofault(&funcdata, &stub->funcdata, sizeof(funcdata))) {
 		pr_err("%s: fault reading funcdata for stub %lx for %s\n", __func__, addr, mod->name);
                 return -EFAULT;
 	}
@@ -719,7 +719,7 @@ int apply_relocate_add(Elf64_Shdr *sechdrs,
 			/*
 			 * If found, replace it with:
 			 *	addis r2, r12, (.TOC.-func)@ha
-			 *	addi r2, r12, (.TOC.-func)@l
+			 *	addi  r2,  r2, (.TOC.-func)@l
 			 */
 			((uint32_t *)location)[0] = 0x3c4c0000 + PPC_HA(value);
 			((uint32_t *)location)[1] = 0x38420000 + PPC_LO(value);

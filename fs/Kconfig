@@ -137,7 +137,7 @@ endmenu
 endif # BLOCK
 
 if BLOCK
-menu "DOS/FAT/NT Filesystems"
+menu "DOS/FAT/EXFAT/NT Filesystems"
 
 source "fs/fat/Kconfig"
 source "fs/sdfat/Kconfig"
@@ -226,7 +226,7 @@ endmenu
 menuconfig MISC_FILESYSTEMS
 	bool "Miscellaneous filesystems"
 	default y
-	---help---
+	help
 	  Say Y here to get to see options for various miscellaneous
 	  filesystems, such as filesystems that came from other
 	  operating systems.
@@ -264,6 +264,7 @@ source "fs/pstore/Kconfig"
 source "fs/sysv/Kconfig"
 source "fs/ufs/Kconfig"
 source "fs/exofs/Kconfig"
+source "fs/erofs/Kconfig"
 
 endif # MISC_FILESYSTEMS
 
@@ -273,7 +274,7 @@ menuconfig NETWORK_FILESYSTEMS
 	bool "Network File Systems"
 	default y
 	depends on NET
-	---help---
+	help
 	  Say Y here to get to see options for network filesystems and
 	  filesystem-related networking code, such as NFS daemon and
 	  RPCSEC security modules.

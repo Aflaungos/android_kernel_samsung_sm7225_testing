@@ -245,16 +245,22 @@ static inline void xskq_produce_flush_desc(struct xsk_queue *q)
 
 static inline bool xskq_full_desc(struct xsk_queue *q)
 {
-	return xskq_nb_avail(q, q->nentries) == q->nentries;
+	/* No barriers needed since data is not accessed */
+	return READ_ONCE(q->ring->producer) - READ_ONCE(q->ring->consumer) ==
+		q->nentries;
 }
 
 static inline bool xskq_empty_desc(struct xsk_queue *q)
 {
-	return xskq_nb_free(q, q->prod_tail, q->nentries) == q->nentries;
+	/* No barriers needed since data is not accessed */
+	return READ_ONCE(q->ring->consumer) == READ_ONCE(q->ring->producer);
 }
 
 void xskq_set_umem(struct xsk_queue *q, struct xdp_umem_props *umem_props);
 struct xsk_queue *xskq_create(u32 nentries, bool umem_queue);
 void xskq_destroy(struct xsk_queue *q_ops);
+
+/* Executed by the core when the entire UMEM gets freed */
+void xsk_reuseq_destroy(struct xdp_umem *umem);
 
 #endif /* _LINUX_XSK_QUEUE_H */

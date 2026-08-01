@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 /*
- * Copyright (c) 2019, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2019-2020, The Linux Foundation. All rights reserved.
  */
 
 #ifndef _CPASTOP_V480_100_H_
@@ -703,7 +703,6 @@ struct cam_camnoc_fifo_lvl_info cam480_cpas100_camnoc_fifo_info = {
 	.ife_rdi_wr = 0x1420,
 	.ife_ubwc_stats = 0x1A20,
 };
-
 
 static struct cam_camnoc_info cam480_cpas100_camnoc_info = {
 	.specific = &cam_cpas_v480_100_camnoc_specific[0],

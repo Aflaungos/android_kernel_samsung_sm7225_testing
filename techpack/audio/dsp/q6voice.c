@@ -925,7 +925,7 @@ static int voice_create_mvm_cvs_session(struct voice_data *v)
 	struct cvs_create_full_ctl_session_cmd cvs_full_ctl_cmd;
 	struct mvm_attach_stream_cmd attach_stream_cmd;
 	void *apr_mvm, *apr_cvs, *apr_cvp;
-	u16 mvm_handle, cvs_handle, cvp_handle;
+	u16 mvm_handle, cvs_handle;
 
 	if (v == NULL) {
 		pr_err("%s: v is NULL\n", __func__);
@@ -941,7 +941,6 @@ static int voice_create_mvm_cvs_session(struct voice_data *v)
 	}
 	mvm_handle = voice_get_mvm_handle(v);
 	cvs_handle = voice_get_cvs_handle(v);
-	cvp_handle = voice_get_cvp_handle(v);
 
 	pr_debug("%s: mvm_hdl=%d, cvs_hdl=%d\n", __func__,
 		mvm_handle, cvs_handle);

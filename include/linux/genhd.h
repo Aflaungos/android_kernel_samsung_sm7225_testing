@@ -409,8 +409,9 @@ static inline void free_part_stats(struct hd_struct *part)
 void part_in_flight(struct request_queue *q, struct hd_struct *part,
 		    unsigned int inflight[2]);
 void part_in_flight_rw(struct request_queue *q, struct hd_struct *part,
-		       unsigned int inflight[2]);
-void part_dec_in_flight(struct request_queue *q, struct hd_struct *part,
+ 		       unsigned int inflight[2]);
+extern void part_round_stats(struct request_queue *q, int cpu, struct hd_struct *part);
+ void part_dec_in_flight(struct request_queue *q, struct hd_struct *part,
 			int rw);
 void part_inc_in_flight(struct request_queue *q, struct hd_struct *part,
 			int rw);
@@ -428,8 +429,7 @@ static inline void free_part_info(struct hd_struct *part)
 	kfree(part->info);
 }
 
-/* block/blk-core.c */
-extern void part_round_stats(struct request_queue *q, int cpu, struct hd_struct *part);
+void update_io_ticks(struct hd_struct *part, unsigned long now);
 
 /* block/genhd.c */
 extern void device_add_disk(struct device *parent, struct gendisk *disk);

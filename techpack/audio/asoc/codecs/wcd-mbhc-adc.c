@@ -308,7 +308,6 @@ static int wcd_check_cross_conn(struct wcd_mbhc *mbhc)
 	enum wcd_mbhc_plug_type plug_type = MBHC_PLUG_TYPE_NONE;
 	int hphl_adc_res = 0, hphr_adc_res = 0;
 	u8 fsm_en = 0;
-	int ret = 0;
 	u8 adc_mode = 0;
 	u8 elect_ctl = 0;
 	u8 adc_en = 0;
@@ -344,7 +343,6 @@ static int wcd_check_cross_conn(struct wcd_mbhc *mbhc)
 	hphl_adc_res = wcd_measure_adc_once(mbhc, MUX_CTL_HPH_L);
 	if (hphl_adc_res < 0) {
 		pr_err("%s: hphl_adc_res adc measurement failed\n", __func__);
-		ret = hphl_adc_res;
 		goto done;
 	}
 
@@ -352,7 +350,6 @@ static int wcd_check_cross_conn(struct wcd_mbhc *mbhc)
 	hphr_adc_res = wcd_measure_adc_once(mbhc, MUX_CTL_HPH_R);
 	if (hphr_adc_res < 0) {
 		pr_err("%s: hphr_adc_res adc measurement failed\n", __func__);
-		ret = hphr_adc_res;
 		goto done;
 	}
 
@@ -791,7 +788,7 @@ static void wcd_correct_swch_plug(struct work_struct *work)
 	bool wrk_complete = false;
 	int pt_gnd_mic_swap_cnt = 0;
 	int no_gnd_mic_swap_cnt = 0;
-	bool is_pa_on = false, spl_hs = false, spl_hs_reported = false;
+	bool is_pa_on = false, spl_hs_reported = false;
 	int ret = 0;
 	int spl_hs_count = 0;
 	int output_mv = 0;
@@ -911,14 +908,13 @@ correct_plug_type:
 		if ((output_mv > hs_threshold) &&
 		    (spl_hs_count < WCD_MBHC_SPL_HS_CNT) &&
 		    mbhc->mbhc_cfg->mbhc_spl_headset) {
-			spl_hs = wcd_mbhc_adc_check_for_spl_headset(mbhc,
+			wcd_mbhc_adc_check_for_spl_headset(mbhc,
 								&spl_hs_count);
 			output_mv = wcd_measure_adc_once(mbhc, MUX_CTL_IN2P);
 
 			if (spl_hs_count == WCD_MBHC_SPL_HS_CNT) {
 				hs_threshold = (hs_threshold *
 				     wcd_mbhc_get_micbias(mbhc)) / micbias_mv;
-				spl_hs = true;
 				mbhc->micbias_enable = true;
 			}
 		}

@@ -1872,17 +1872,12 @@ skip_read_msg:
 static void log_msg_proc(struct npu_device *npu_dev, uint32_t *msg)
 {
 	uint32_t msg_id;
-	uint32_t *log_msg;
-	uint32_t size;
 
 	msg_id = msg[LOG_MSG_MSG_ID_INDEX];
-	size = msg[LOG_MSG_TOTAL_SIZE_INDEX] - LOG_MSG_HEADER_SIZE;
 
 	switch (msg_id) {
 	case NPU_IPC_MSG_EVENT_NOTIFY:
 		/* Process the message */
-		log_msg = &(msg[LOG_MSG_START_MSG_INDEX]);
-		npu_process_log_message(npu_dev, log_msg, size);
 		break;
 	default:
 		NPU_ERR("unsupported log response received %d\n", msg_id);

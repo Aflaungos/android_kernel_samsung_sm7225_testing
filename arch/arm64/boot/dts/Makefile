@@ -17,17 +17,16 @@ subdir-y += marvell
 subdir-y += mediatek
 subdir-y += nvidia
 # subdir-y += qcom
-# subdir-y += vendor
 subdir-y += realtek
 subdir-y += renesas
 subdir-y += rockchip
-subdir-y += samsung
 subdir-y += socionext
 subdir-y += sprd
 subdir-y += synaptics
 subdir-y += ti
 subdir-y += xilinx
 subdir-y += zte
+subdir-y += samsung
 
 
 dtstree		:= $(srctree)/$(src)

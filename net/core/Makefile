@@ -34,3 +34,8 @@ obj-$(CONFIG_NET_DEVLINK) += devlink.o
 obj-$(CONFIG_GRO_CELLS) += gro_cells.o
 obj-$(CONFIG_FAILOVER) += failover.o
 obj-$(CONFIG_NET_ANALYTICS) += analytics_logger.o
+ifeq ($(CONFIG_INET),y)
+obj-$(CONFIG_NET_SOCK_MSG) += skmsg.o
+obj-$(CONFIG_BPF_SYSCALL) += sock_map.o
+endif
+obj-$(CONFIG_BPF_SYSCALL) += bpf_sk_storage.o

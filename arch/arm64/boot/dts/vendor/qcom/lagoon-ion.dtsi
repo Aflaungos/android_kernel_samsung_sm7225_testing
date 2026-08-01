@@ -26,7 +26,7 @@
 			qcom,ion-heap-type = "DMA";
 		};
 
-		secure_carveout_heap: qcom,ion-heap@14 { /* SECURE CARVEOUT HEAP */
+		qcom,ion-heap@14 { /* SECURE CARVEOUT HEAP */
 			reg = <14>;
 			qcom,ion-heap-type = "SECURE_CARVEOUT";
 			cdsp {

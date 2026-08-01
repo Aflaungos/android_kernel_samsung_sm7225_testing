@@ -799,10 +799,6 @@ exit:
 
 static int msm_audio_ion_remove(struct platform_device *pdev)
 {
-	struct device *audio_cb_dev;
-
-	audio_cb_dev = msm_audio_ion_data.cb_dev;
-
 	msm_audio_ion_data.smmu_enabled = 0;
 	msm_audio_ion_data.device_status = 0;
 	return 0;

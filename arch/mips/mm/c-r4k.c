@@ -29,7 +29,7 @@
 #include <asm/cpu-type.h>
 #include <asm/io.h>
 #include <asm/page.h>
-#include <asm/pgtable.h>
+#include <linux/pgtable.h>
 #include <asm/r4kcache.h>
 #include <asm/sections.h>
 #include <asm/mmu_context.h>
@@ -1034,7 +1034,7 @@ static void r4k_flush_cache_sigtramp(unsigned long addr)
 	struct flush_cache_sigtramp_args args;
 	int npages;
 
-	down_read(&current->mm->mmap_sem);
+	mmap_read_lock(current->mm);
 
 	npages = get_user_pages_fast(addr, 1, 0, &args.page);
 	if (npages < 1)
@@ -1047,7 +1047,7 @@ static void r4k_flush_cache_sigtramp(unsigned long addr)
 
 	put_page(args.page);
 out:
-	up_read(&current->mm->mmap_sem);
+	mmap_read_unlock(current->mm);
 }
 
 static void r4k_flush_icache_all(void)
@@ -1673,7 +1673,7 @@ static int probe_scache(void)
 	return 1;
 }
 
-static void __init loongson2_sc_init(void)
+static void loongson2_sc_init(void)
 {
 	struct cpuinfo_mips *c = &current_cpu_data;
 

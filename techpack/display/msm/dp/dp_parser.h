@@ -228,6 +228,8 @@ struct dp_parser {
 	struct dp_pinctrl pinctrl;
 	struct dp_io io;
 	struct dp_display_data disp_data;
+	u32 max_hdisplay;
+	u32 max_vdisplay;
 
 	u8 l_map[4];
 	u8 l_pnswap;
@@ -247,6 +249,8 @@ struct dp_parser {
 	u32 max_dp_dsc_input_width_pixs;
 	bool lphw_hpd;
 	u32 mst_fixed_port[MAX_DP_MST_STREAMS];
+
+	const char *display_type;
 
 #ifdef CONFIG_SEC_DISPLAYPORT
 	bool cc_dir_inv;  /* CC_DIR is inversed, e.g, T865 */

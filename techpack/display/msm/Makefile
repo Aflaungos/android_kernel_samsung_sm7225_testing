@@ -64,6 +64,7 @@ msm_drm-$(CONFIG_DRM_MSM_SDE) += sde/sde_crtc.o \
 	sde/sde_hw_catalog.o \
 	sde/sde_hw_cdm.o \
 	sde/sde_hw_dspp.o \
+	sde/sde_hw_rc.o \
 	sde/sde_hw_intf.o \
 	sde/sde_hw_lm.o \
 	sde/sde_hw_ctl.o \

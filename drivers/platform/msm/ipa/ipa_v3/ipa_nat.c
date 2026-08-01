@@ -53,7 +53,7 @@ enum ipa_nat_ipv6ct_table_type {
 
 static bool sram_compatible;
 
-static int ipa3_nat_ipv6ct_vma_fault_remap(struct vm_fault *vmf)
+static vm_fault_t ipa3_nat_ipv6ct_vma_fault_remap(struct vm_fault *vmf)
 {
 	vmf->page = NULL;
 
@@ -1364,8 +1364,9 @@ int ipa3_nat_init_cmd(
 		goto bail;
 	}
 
-	if (init->table_entries == 0) {
-		IPAERR_RL("Table entries is zero\n");
+	if (init->table_entries == 0 ||
+		init->table_entries == U16_MAX) {
+		IPAERR_RL("Table entries is %d\n", init->table_entries);
 		result = -EPERM;
 		goto bail;
 	}
