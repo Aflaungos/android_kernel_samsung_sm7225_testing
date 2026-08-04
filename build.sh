@@ -66,7 +66,7 @@ DTBO_BUILD() {
 }
 
 CLANG_BUILD() {
-	CLANG="${HOME}/linux-x86-main/clang-r487747c/bin"
+	CLANG="${HOME}/clang-r563880/bin"
 	export CLANG_TRIPLE=aarch64-linux-gnu-
 	export PATH="$CLANG:$PATH"
 	make -j8 O=out ARCH=arm64 SUBARCH=arm64 CC=clang LLVM_IAS=1 LLVM=1 vendor/m23xq_eur_open_defconfig > /dev/null
