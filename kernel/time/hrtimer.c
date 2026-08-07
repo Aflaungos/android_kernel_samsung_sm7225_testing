@@ -980,7 +980,6 @@ static int enqueue_hrtimer(struct hrtimer *timer,
 			   enum hrtimer_mode mode)
 {
 	debug_activate(timer, mode);
-	WARN_ON_ONCE(!base->cpu_base->online);
 
 	base->cpu_base->active_bases |= 1 << base->index;
 
@@ -1490,14 +1489,13 @@ static void __run_hrtimer(struct hrtimer_cpu_base *cpu_base,
 	 */
 	raw_spin_unlock_irqrestore(&cpu_base->lock, flags);
 	trace_hrtimer_expire_entry(timer, now);
-	lockdep_hrtimer_enter(timer);
 	sec_debug_msg_log("hrtimer %pS entry", fn);
-	restart = fn(timer);
-	sec_debug_msg_log("hrtimer %pS exit", fn);
+	lockdep_hrtimer_enter(timer);
 
 	restart = fn(timer);
 
 	lockdep_hrtimer_exit(timer);
+	sec_debug_msg_log("hrtimer %pS exit", fn);
 	trace_hrtimer_expire_exit(timer);
 	raw_spin_lock_irq(&cpu_base->lock);
 
