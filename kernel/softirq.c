@@ -294,6 +294,7 @@ restart:
 		kstat_incr_softirqs_this_cpu(vec_nr);
 
 		trace_softirq_entry(vec_nr);
+
 		sec_debug_irq_sched_log(vec_nr, h->action, "softirq", SOFTIRQ_ENTRY);
 		h->action(h);
 		sec_debug_irq_sched_log(vec_nr, h->action, "softirq", SOFTIRQ_EXIT);
@@ -308,8 +309,8 @@ restart:
 		pending >>= softirq_bit;
 	}
 
+	__this_cpu_write(active_softirqs, 0);
 	rcu_bh_qs();
-        __this_cpu_write(active_softirqs, 0);
 	if (__this_cpu_read(ksoftirqd) == current)
 		rcu_softirq_qs();
 	local_irq_disable();
@@ -529,11 +530,12 @@ static void tasklet_action_common(struct softirq_action *a,
 				if (!test_and_clear_bit(TASKLET_STATE_SCHED,
 							&t->state))
 					BUG();
-				trace_tasklet_entry(t->func);
 				sec_debug_irq_sched_log(-1, t->func, "tasklet_action", SOFTIRQ_ENTRY);
+				trace_tasklet_entry(t->func);
 				t->func(t->data);
-				sec_debug_irq_sched_log(-1, t->func, "tasklet_action", SOFTIRQ_EXIT);
 				trace_tasklet_exit(t->func);
+				sec_debug_irq_sched_log(-1, t->func, "tasklet_action", SOFTIRQ_EXIT);
+
 				tasklet_unlock(t);
 				continue;
 			}
