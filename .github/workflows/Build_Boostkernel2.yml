@@ -27,7 +27,7 @@ jobs:
       - name: Setup kernel source
         uses: actions/checkout@v4
         with:
-          ref: BoostKernel2
+          ref: Boostkernel2
           path: kernel-source
 
       - name: Setup submodules
