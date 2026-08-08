@@ -161,7 +161,7 @@ static int led_pwm_set(struct led_classdev *led_cdev,
 	struct led_pwm_data *led_data =
 		container_of(led_cdev, struct led_pwm_data, cdev);
 	unsigned int max = led_data->cdev.max_brightness;
-	unsigned long long duty =  led_data->period;
+	unsigned long long duty = led_data->pwmstate.period;
 
 	duty *= brightness;
 	do_div(duty, max);
