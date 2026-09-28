@@ -142,3 +142,6 @@ Android.bp
 
 # Out folder
 /out
+
+# Script caches
+scripts/crypto/__pycache__/
