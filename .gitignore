@@ -134,10 +134,17 @@ all.config
 # fetched Android config fragments
 kernel/configs/android-*.cfg
 
-# OUT folder
+#
+# Out Folder
+#
 out/
 
 #
-#Ignoring Android.bp link file
+# Ignoring Android.bp link file
 #
 Android.bp
+
+#
+# Python script cache
+#
+scripts/crypto/__pycache__/
