@@ -443,7 +443,7 @@
 			alloc-ranges = <0 0x00000000 0 0xffffffff>;
 			reusable;
 			alignment = <0 0x400000>;
-			size = <0 0x8c00000>;
+			size = <0 0x6800000>;
 		};
 
 		cont_splash_memory: cont_splash_region {
@@ -971,7 +971,7 @@
 		cap-based-alloc-and-pwr-collapse;
 	};
 
-	qcom,msm-imem@146aa000 {
+	msm_imem: qcom,msm-imem@146aa000 {
 		compatible = "qcom,msm-imem";
 		reg = <0x146aa000 0x1000>;
 		ranges = <0x0 0x146aa000 0x1000>;
@@ -1566,6 +1566,7 @@
 		qcom,support-fde;
 		qcom,no-clock-support;
 		qcom,fde-key-size;
+		qcom,appsbl-qseecom-support;
 		qcom,commonlib64-loaded-by-uefi;
 		qcom,qsee-reentrancy-support = <2>;
 	};
@@ -2151,6 +2152,7 @@
 		qcom,fastrpc-adsp-audio-pdr;
 		qcom,fastrpc-adsp-sensors-pdr;
 		qcom,rpc-latency-us = <235>;
+		qcom,secure-domains = <0x0F>;
 		qcom,qos-cores = <0 1 2 3 4 5>;
 
 		qcom,msm_fastrpc_compute_cb1 {
@@ -3192,6 +3194,7 @@
 			<1 608 1338562 4096000>;
 		qcom,bus-bw-vectors-bps = <0 400000 25000000 50000000
 				100000000 200000000 4294967295>;
+		qcom,restore-after-cx-collapse;
 
 		/* PM QoS */
 		qcom,pm-qos-irq-type = "affine_irq";
@@ -4071,7 +4074,7 @@
 	vbus-supply = <&smb5_vbus>;
 	vconn-supply = <&smb5_vconn>;
 };
-
+/*
 &usb0 {
 	extcon = <&pm7250b_pdphy>, <&pm7250b_charger>, <&eud>;
 };
@@ -4079,7 +4082,7 @@
 &usb_qmp_dp_phy {
 	extcon = <&pm7250b_pdphy>;
 };
-
+*/
 &msm_vidc0 {
 	qcom,cx-ipeak-data = <&cx_ipeak_lm 5>;
 	qcom,clock-freq-threshold = <460000000>;

@@ -6,4 +6,5 @@
 	model = "Qualcomm Technologies, Inc. Lagoon SoC";
 	compatible = "qcom,lagoon";
 	qcom,board-id = <0 0>;
+	dtbo-version = <0>;
 };
