@@ -1,29 +1,6 @@
 #!/bin/bash
 set -e
 
-# Initialize Submodules if they're not initialized
-
-if [ -f .gitmodules ]; then
-  UNINITIALIZED_SUBMODULES=$(git submodule status | grep '^-' || true)
-
-  if [ -n "$UNINITIALIZED_SUBMODULES" ]; then
-    echo "The following submodules are missing or uninitialized:"
-    echo "$UNINITIALIZED_SUBMODULES"
-    echo "Initializing and cloning submodules..."
-    git submodule update --init --recursive
-    if [ $? -eq 0 ]; then
-      echo "Submodules initialized and cloned successfully."
-    else
-      echo "Failed to clone submodules. Please check your repository configuration."
-      exit 1
-    fi
-  else
-    echo "All submodules are already initialized."
-  fi
-else
-  echo "No submodules found in this repository."
-fi
-
 # Available models
 VALID_MODELS=("m23xq")
 
@@ -80,37 +57,9 @@ fi
 #    exit 1
 #fi
 
-# Check EUR region restriction
-if [[ "$region_choice" == "eur" && " ${EUR_MODELS[*]} " =~ " $model_choice " ]]; then
-    echo "=============================================="
-    echo "Error: This project doesn't support the EUR region."
-    echo "=============================================="
-    exit 1
-fi
-
-# Yes/No prompt function
-yes_no_prompt() {
-    local var_name=$1
-    local message=$2
-    prompt "$message" "yes" "no (default)"
-    read -p " - Enter your choice: " choice
-    choice=$(echo "$choice" | tr '[:upper:]' '[:lower:]')
-
-    if [[ "$choice" == "y" || "$choice" == "yes" ]]; then
-        eval "$var_name=true"
-    else
-        eval "$var_name=false"
-    fi
-}
-
-echo "=============================================="
-echo "Configuration Summary:"
-echo "Model: $model_choice"
-echo "=============================================="
-
 # Build paths. Must be defined before anything else
 KERNEL_DIR=$(pwd)
-KERNEL_OUT_DIR=$(pwd)/out/obj/KERNEL_OBJ
+KERNEL_OUT_DIR=$(pwd)/out
 
 if [ ! -d "out" ]; then
     mkdir -p "out"
@@ -129,16 +78,11 @@ export PROJECT_NAME="${MODEL}"
 # Target build parameters
 KERNEL_DEFCONFIG="vendor/${CHIPSET_NAME}-perf_defconfig"
 
-if [ -n "$REGION" ]; then
-    PROJECT_CONFIG="vendor/samsung/${MODEL}_${REGION}.config"
-else
-    PROJECT_CONFIG="vendor/samsung/${MODEL}.config"
-fi
+PROJECT_CONFIG="vendor/samsung/${MODEL}.config"
 
 # Set toolchain and build environment
 CLANG_PATH="${HOME}/linux-x86-main/clang-r563880"
 GCC_PATH="${HOME}/aarch64-linux-android-4.9"
-echo "Using AOSP LLVM"
 if [ ! -d "${CLANG_PATH}/bin" ] ; then
     echo "Error: AOSP toolchain directories not found. Exiting."
     exit 1
@@ -164,14 +108,11 @@ FUNC_BUILD_KERNEL() {
 
     echo ""
     echo "=============================================="
-    echo "Starting: FUNC_BUILD_KERNEL"
-    echo "=============================================="
     echo "Build Info"
     echo "=============================================="
     echo "Project: $PROJECT_NAME"
     echo "Common config: $KERNEL_DEFCONFIG"
     echo "Project config: $PROJECT_CONFIG"
-    echo "Output directory: /out"
     echo "=============================================="
     echo ""
 
@@ -181,14 +122,14 @@ FUNC_BUILD_KERNEL() {
     make -C "$KERNEL_DIR" O="$KERNEL_OUT_DIR" $KERNEL_MAKE_PARAM ARCH="$KERNEL_ARCH" \
         $KERNEL_DEFCONFIG \
         "vendor/samsung/lito-sec-common.config" \
-        $SLNX_DEFCONFIG \
         $PROJECT_CONFIG
 
     # Resolve symbols missing from the fragment set without prompting
     make -C "$KERNEL_DIR" O="$KERNEL_OUT_DIR" $KERNEL_MAKE_PARAM ARCH="$KERNEL_ARCH" olddefconfig
 
     make -C "$KERNEL_DIR" O="$KERNEL_OUT_DIR" -j"$BUILD_JOB_NUMBER" $KERNEL_MAKE_PARAM ARCH="$KERNEL_ARCH"
-    cat "$__dts_dir/vendor/qcom"/*.dtb > "/out/dtb.img"
+
+    $(pwd)/tools/mkdtimg create $(pwd)/out/arch/arm64/boot/dtbo.img --page_size=4096 $(find out/arch/arm64/boot/dts/samsung/m23/m23xq/ -name *.dtbo)
 
     # Remove compiled DTBO's after every single compilation
     rm -rf "$__dts_dir/samsung/*"
