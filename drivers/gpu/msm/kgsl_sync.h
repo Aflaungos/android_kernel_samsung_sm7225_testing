@@ -83,8 +83,6 @@ int kgsl_sync_timeline_create(struct kgsl_context *context);
 
 void kgsl_sync_timeline_detach(struct kgsl_sync_timeline *ktimeline);
 
-void kgsl_sync_timeline_detach(struct kgsl_sync_timeline *ktimeline);
-
 void kgsl_sync_timeline_put(struct kgsl_sync_timeline *ktimeline);
 
 struct kgsl_sync_fence_cb *kgsl_sync_fence_async_wait(int fd,
@@ -119,11 +117,6 @@ static inline int kgsl_sync_timeline_create(struct kgsl_context *context)
 {
 	context->ktimeline = NULL;
 	return 0;
-}
-
-static inline void kgsl_sync_timeline_detach(
-					struct kgsl_sync_timeline *ktimeline)
-{
 }
 
 static inline void kgsl_sync_timeline_detach(
