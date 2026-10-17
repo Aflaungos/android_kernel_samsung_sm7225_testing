@@ -1256,18 +1256,6 @@ static void kgsl_process_private_close(struct kgsl_device_private *dev_priv,
 	/* Release all syncsource objects from process private */
 	kgsl_syncsource_process_release_syncsources(private);
 
-	debugfs_remove_recursive(private->debug_root);
-	kgsl_process_uninit_sysfs(private);
-
-	/* When using global pagetables, do not detach global pagetable */
-	if (private->pagetable->name != KGSL_MMU_GLOBAL_PT)
-		kgsl_mmu_detach_pagetable(private->pagetable);
-
-	/* Remove the process struct from the master list */
-	spin_lock(&kgsl_driver.proclist_lock);
-	list_del(&private->list);
-	spin_unlock(&kgsl_driver.proclist_lock);
-
 	mutex_unlock(&kgsl_driver.process_mutex);
 
 	kgsl_process_private_put(private);
