@@ -1696,7 +1696,6 @@ static void _a6xx_do_crashdump(struct kgsl_device *device)
 		/* Wait 1msec to avoid unnecessary looping */
 		usleep_range(100, 1000);
 	}
-	kgsl_regread(device, A6XX_CP_CRASH_DUMP_STATUS, &reg);
 
 	kgsl_regread(device, A6XX_CP_CRASH_DUMP_STATUS, &reg);
 
@@ -2251,11 +2250,6 @@ void a6xx_crashdump_init(struct adreno_device *adreno_dev)
 	/* Increment data size to store last entry in CD */
 	data_size += sizeof(unsigned int);
 
-	/* 16 bytes (2 qwords) for last entry in CD script */
-	script_size += 16;
-	/* Increment data size to store last entry in CD */
-	data_size += sizeof(unsigned int);
-
 	/* Now allocate the script and data buffers */
 
 	/* The script buffers needs 2 extra qwords on the end */
@@ -2314,16 +2308,6 @@ void a6xx_crashdump_init(struct adreno_device *adreno_dev)
 	ptr += _a6xx_crashdump_init_ctx_dbgahb(ptr, &offset);
 
 	ptr += _a6xx_crashdump_init_non_ctx_dbgahb(ptr, &offset);
-	/* Save CD register end pointer to check CD status completion */
-	a6xx_cd_reg_end = a6xx_crashdump_registers.hostptr + offset;
-
-	memset(a6xx_crashdump_registers.hostptr, 0xaa,
-			a6xx_crashdump_registers.size);
-
-	/* Program the capturescript to read the last register entry */
-	*ptr++ = a6xx_crashdump_registers.gpuaddr + offset;
-	*ptr++ = (((uint64_t) A6XX_CP_CRASH_DUMP_STATUS) << 44) | (uint64_t) 1;
-
 	/* Save CD register end pointer to check CD status completion */
 	a6xx_cd_reg_end = a6xx_crashdump_registers.hostptr + offset;
 
