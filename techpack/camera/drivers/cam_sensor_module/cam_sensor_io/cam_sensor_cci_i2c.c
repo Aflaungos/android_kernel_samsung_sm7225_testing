@@ -105,7 +105,8 @@ end:
 static int32_t cam_cci_i2c_write_table_cmd(
 	struct camera_io_master *client,
 	struct cam_sensor_i2c_reg_setting *write_setting,
-	enum cam_cci_cmd_type cmd)
+	enum cam_cci_cmd_type cmd,
+	bool force_low_priority)
 {
 	int32_t rc = -EINVAL;
 	struct cam_cci_ctrl cci_ctrl;
@@ -146,25 +147,27 @@ static int32_t cam_cci_i2c_write_table_cmd(
 
 int32_t cam_cci_i2c_write_table(
 	struct camera_io_master *client,
-	struct cam_sensor_i2c_reg_setting *write_setting)
+	struct cam_sensor_i2c_reg_setting *write_setting,
+	bool force_low_priority)
 {
 	return cam_cci_i2c_write_table_cmd(client, write_setting,
-		MSM_CCI_I2C_WRITE);
+		MSM_CCI_I2C_WRITE, force_low_priority);
 }
 
 int32_t cam_cci_i2c_write_continuous_table(
 	struct camera_io_master *client,
 	struct cam_sensor_i2c_reg_setting *write_setting,
-	uint8_t cam_sensor_i2c_write_flag)
+	uint8_t cam_sensor_i2c_write_flag,
+	bool force_low_priority)
 {
 	int32_t rc = 0;
 
 	if (cam_sensor_i2c_write_flag == 1)
 		rc = cam_cci_i2c_write_table_cmd(client, write_setting,
-			MSM_CCI_I2C_WRITE_BURST);
+			MSM_CCI_I2C_WRITE_BURST, force_low_priority);
 	else if (cam_sensor_i2c_write_flag == 0)
 		rc = cam_cci_i2c_write_table_cmd(client, write_setting,
-			MSM_CCI_I2C_WRITE_SEQ);
+			MSM_CCI_I2C_WRITE_SEQ, force_low_priority);
 
 	return rc;
 }

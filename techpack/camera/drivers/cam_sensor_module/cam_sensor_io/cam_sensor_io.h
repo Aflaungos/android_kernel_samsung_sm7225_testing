@@ -78,7 +78,8 @@ int32_t camera_io_release(struct camera_io_master *io_master_info);
  * This API abstracts write functionality based on master type
  */
 int32_t camera_io_dev_write(struct camera_io_master *io_master_info,
-	struct cam_sensor_i2c_reg_setting *write_setting);
+	struct cam_sensor_i2c_reg_setting *write_setting,
+	bool force_low_priority);
 
 /**
  * @io_master_info: I2C/SPI master information
@@ -90,7 +91,8 @@ int32_t camera_io_dev_write(struct camera_io_master *io_master_info,
  */
 int32_t camera_io_dev_write_continuous(struct camera_io_master *io_master_info,
 	struct cam_sensor_i2c_reg_setting *write_setting,
-	uint8_t cam_sensor_i2c_write_flag);
+	uint8_t cam_sensor_i2c_write_flag,
+	bool force_low_priority);
 
 int32_t camera_io_dev_erase(struct camera_io_master *io_master_info,
 	uint32_t addr, uint32_t size);

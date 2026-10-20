@@ -186,7 +186,7 @@ int cam_sensor_apply_adaptive_mipi_settings(struct cam_sensor_ctrl_t *s_ctrl)
 
 		if (mipi_i2c_list.i2c_settings.size > 0)
 			rc = camera_io_dev_write(&s_ctrl->io_master_info,
-				&(mipi_i2c_list.i2c_settings));
+				&(mipi_i2c_list.i2c_settings), false);
 	}
 
 	return rc;
@@ -474,7 +474,7 @@ static int32_t cam_sensor_i2c_modes_util(
 
 	if (i2c_list->op_code == CAM_SENSOR_I2C_WRITE_RANDOM) {
 		rc = camera_io_dev_write(io_master_info,
-			&(i2c_list->i2c_settings));
+			&(i2c_list->i2c_settings), false);
 		if (rc < 0) {
 			CAM_ERR(CAM_SENSOR,
 				"Failed to random write I2C settings: %d",
@@ -504,7 +504,7 @@ static int32_t cam_sensor_i2c_modes_util(
 		rc = camera_io_dev_write_continuous(
 			io_master_info,
 			&(i2c_list->i2c_settings),
-			0);
+			0, false);
 		if (rc < 0) {
 			CAM_ERR(CAM_SENSOR,
 				"Failed to seq write I2C settings: %d",
@@ -515,7 +515,7 @@ static int32_t cam_sensor_i2c_modes_util(
 		rc = camera_io_dev_write_continuous(
 			io_master_info,
 			&(i2c_list->i2c_settings),
-			1);
+			1, false);
 		if (rc < 0) {
 			CAM_ERR(CAM_SENSOR,
 				"Failed to burst write I2C settings: %d",
@@ -2282,7 +2282,7 @@ int cam_sensor_apply_settings(struct cam_sensor_ctrl_t *s_ctrl,
 					reg_setting.data_type   = CAMERA_SENSOR_I2C_TYPE_WORD;
 					reg_setting.reg_setting = gw1p_seamless_off;
 
-					rc = camera_io_dev_write(&s_ctrl->io_master_info, &reg_setting);
+					rc = camera_io_dev_write(&s_ctrl->io_master_info, &reg_setting, false);
 
 					if (rc < 0) {
 						CAM_ERR(CAM_SENSOR, "GW1P Seamless Off Setting Write Failed");

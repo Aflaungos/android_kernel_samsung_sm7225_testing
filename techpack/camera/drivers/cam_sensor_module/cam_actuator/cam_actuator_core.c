@@ -170,7 +170,7 @@ int32_t cam_actuator_i2c_write(struct cam_actuator_ctrl_t *a_ctrl, uint32_t reg_
 
 	reg_arr.reg_addr = reg_addr;
 	reg_arr.reg_data = reg_data;
-	rc = camera_io_dev_write(&a_ctrl->io_master_info, &reg_setting);
+	rc = camera_io_dev_write(&a_ctrl->io_master_info, &reg_setting, false);
 
 	if (rc < 0) {
  		CAM_ERR(CAM_ACTUATOR, "Failed to random write I2C settings for reg:0x%x data:0x%x err:%d", reg_addr, reg_data, rc);
@@ -478,7 +478,7 @@ static int32_t cam_actuator_i2c_modes_util(
 
 	if (i2c_list->op_code == CAM_SENSOR_I2C_WRITE_RANDOM) {
 		rc = camera_io_dev_write(io_master_info,
-			&(i2c_list->i2c_settings));
+			&(i2c_list->i2c_settings), false);
 		if (rc < 0) {
 			CAM_ERR(CAM_ACTUATOR,
 				"Failed to random write I2C settings: %d",
@@ -489,7 +489,7 @@ static int32_t cam_actuator_i2c_modes_util(
 		rc = camera_io_dev_write_continuous(
 			io_master_info,
 			&(i2c_list->i2c_settings),
-			0);
+			0, false);
 		if (rc < 0) {
 			CAM_ERR(CAM_ACTUATOR,
 				"Failed to seq write I2C settings: %d",
@@ -500,7 +500,7 @@ static int32_t cam_actuator_i2c_modes_util(
 		rc = camera_io_dev_write_continuous(
 			io_master_info,
 			&(i2c_list->i2c_settings),
-			1);
+			1, false);
 		if (rc < 0) {
 			CAM_ERR(CAM_ACTUATOR,
 				"Failed to burst write I2C settings: %d",
