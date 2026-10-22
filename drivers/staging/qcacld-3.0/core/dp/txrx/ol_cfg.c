@@ -211,7 +211,6 @@ struct cdp_cfg *ol_pdev_cfg_attach(qdf_device_t osdev, void *pcfg_param)
     cfg_ctx->tc_ingress_prio = cfg_param->tc_ingress_prio;
 	cfg_ctx->tso_enable = cfg_param->tso_enable;
 	cfg_ctx->lro_enable = cfg_param->lro_enable;
-	cfg_ctx->sg_enable = cfg_param->sg_enable;
 	cfg_ctx->enable_data_stall_detection =
 		cfg_param->enable_data_stall_detection;
 	cfg_ctx->enable_flow_steering = cfg_param->enable_flow_steering;
