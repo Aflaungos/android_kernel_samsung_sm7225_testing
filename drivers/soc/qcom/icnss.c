@@ -4041,6 +4041,8 @@ static void sec_remove_wifi_sysfs(struct icnss_priv *priv)
 				  &sec_sysfs_attr_group);
 		kobject_put(priv->wifi_kobj);
 		priv->wifi_kobj = NULL;
+	}
+}
 
 static void icnss_read_device_configs(struct icnss_priv *priv)
 {
