@@ -204,7 +204,6 @@ obj-$(CONFIG_COMBO_REDRIVER_PS5169)	+= redriver/
 obj-$(CONFIG_SPU_VERIFY) += spu_verify/
 
 # OLOG
-obj-y				+= kperfmon/
 obj-y += misc/drb/ # ADDED BY LEGO AUTOMATICALLY: DO NOT SUBMIT
 obj-y += vibrator/common/ # ADDED BY LEGO AUTOMATICALLY: DO NOT SUBMIT
 obj-y += nfc/nfc_logger/ # ADDED BY LEGO AUTOMATICALLY: DO NOT SUBMIT

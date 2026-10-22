@@ -243,7 +243,6 @@ source "drivers/switch/Kconfig"
 
 source "drivers/spu_verify/Kconfig"
 
-source "drivers/kperfmon/Kconfig"
 source "drivers/misc/drb/Kconfig" # ADDED BY LEGO AUTOMATICALLY: DO NOT SUBMIT
 source "drivers/vibrator/common/Kconfig" # ADDED BY LEGO AUTOMATICALLY: DO NOT SUBMIT
 source "drivers/nfc/nfc_logger/Kconfig" # ADDED BY LEGO AUTOMATICALLY: DO NOT SUBMIT
