@@ -37,5 +37,4 @@
 
 #define QWLAN_VERSIONSTR               "5.2.022.12B"
 
-#endif /* CONFIG_LITHIUM */
 #endif /* QWLAN_VERSION_H */
