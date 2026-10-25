@@ -29,7 +29,7 @@
 
 
 #define CAM_EEPROM_DBG  1
-#define CAM_EEPROM_DBG_DUMP  0
+/* Leave undefined: the code checks #ifdef, so a value of 0 still dumped the whole EEPROM. */
 
 #if defined(CONFIG_SEC_M23XQ_PROJECT)
 #define REAR3_DUAL_CAL_FW_NAME "multical.bin"
