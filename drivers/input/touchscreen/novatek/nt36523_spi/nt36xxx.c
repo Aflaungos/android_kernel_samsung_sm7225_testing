@@ -2148,6 +2148,10 @@ void nvt_ts_ic_status(uint8_t *point_data, bool force_print)
 	if (force_print)
 		return;
 
+	/* This firmware leaves the status bytes at 0xff; don't flood the log on every touch. */
+	if (point_data[FW_STATUS_OFFSET] == 0xff && point_data[FW_STATUS_OFFSET + 1] == 0xff)
+		return;
+
 	switch (point_data[FW_STATUS_OFFSET + 1] & FW_STATUS_REK_STATUS) {
 	case 0:
 		// Do nothing...

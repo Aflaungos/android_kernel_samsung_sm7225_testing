@@ -35,8 +35,11 @@
 #define MAX_SECURE_CONNECTION 10
 #define MAX_VAL 0x7FFFFFFF
 
+/*
+ * The bootloader passes usb_notify_layer.usb_restrict=1 on unlocked/custom
+ * builds, which disables all USB operations. Ignore it.
+ */
 static int usb_restrict;
-module_param(usb_restrict, int, 0444);
 
 struct  ovc {
 	struct otg_notify *o_notify;

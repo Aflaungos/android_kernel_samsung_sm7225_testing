@@ -2251,6 +2251,7 @@ enum cdp_dp_cfg {
 	/* Disable checksum offload for legacy modes */
 	cfg_dp_disable_legacy_mode_csum_offload,
 	cfg_dp_tso_enable,
+	cfg_dp_sg_enable,
 	cfg_dp_lro_enable,
 	cfg_dp_gro_enable,
     cfg_dp_tc_based_dyn_gro_enable,
